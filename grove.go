@@ -84,8 +84,10 @@ func Serve(logger *log.Logger, repodir string, port string) (err error) {
 
 	logger.Println("Starting server")
 	http.HandleFunc("/", HandleWeb)
-	err = http.ListenAndServe(":"+port, nil)
-
+	err := http.ListenAndServe(":"+port, nil)
+	if err != nil {
+		logger.Fatalln("Server crashed:", err)
+	}
 	return
 }
 
