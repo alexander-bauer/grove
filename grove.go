@@ -11,7 +11,7 @@ import (
 
 const (
 	Version     = "0.0"
-	DefaultPort = 8860
+	DefaultPort = "8860"
 )
 
 const (
@@ -38,7 +38,7 @@ func main() {
 	Serve(logger, wd, DefaultPort)
 }
 
-func Serve(logger *log.Logger, repodir string, port int) (err error) {
+func Serve(logger *log.Logger, repodir string, port string) (err error) {
 	g = &GitBackendHandler{
 		Handler: &cgi.Handler{
 			Path:   "git http-backend",
@@ -59,7 +59,7 @@ func Serve(logger *log.Logger, repodir string, port int) (err error) {
 
 	logger.Println("Starting server")
 	http.HandleFunc("/", HandleWeb)
-	err = http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":"+port, nil)
 	return
 }
 
