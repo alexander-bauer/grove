@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/cgi"
 	"os"
+	"os/exec"
+	"path"
 	"strings"
 )
 
@@ -15,7 +17,8 @@ const (
 )
 
 const (
-	usage = "usage: %s [repositorydir]\n"
+	usage          = "usage: %s [repositorydir]\n"
+	gitHttpBackend = "git-http-backend"
 )
 
 var (
@@ -30,18 +33,40 @@ type GitBackendHandler struct {
 func main() {
 	logger := log.New(os.Stdout, "", log.Ltime)
 
-	wd, err := os.Getwd()
-	if err != nil {
-		logger.Fatalln("Error getting working directory:", err)
+	var repodir string
+	if len(os.Args) > 1 {
+		repodir = os.Args[1]
+		if !path.IsAbs(repodir) {
+			wd, err := os.Getwd()
+			if err != nil {
+				logger.Fatalln("Error getting working directory:", err)
+			}
+			path.Join(wd, repodir)
+		}
+	} else {
+		wd, err := os.Getwd()
+		if err != nil {
+			logger.Fatalln("Error getting working directory:", err)
+		}
+		repodir = wd
 	}
 
-	Serve(logger, wd, DefaultPort)
+	Serve(logger, repodir, DefaultPort)
 }
 
 func Serve(logger *log.Logger, repodir string, port string) (err error) {
+	//Use 'git --exec-path' to get the path
+	//of the git executables.
+	var execPath []byte
+	gitExecCmd := exec.Command("git", "--exec-path")
+	execPath, err = gitExecCmd.Output()
+	if err != nil {
+		return
+	}
+
 	g = &GitBackendHandler{
 		Handler: &cgi.Handler{
-			Path:   "git http-backend",
+			Path:   execPath + "/" + gitHttpBackend,
 			Root:   "/",
 			Dir:    repodir,
 			Env:    []string{"GIT_PROJECT_ROOT=" + repodir, "GIT_HTTP_EXPORT_ALL=TRUE"},
@@ -66,7 +91,7 @@ func Serve(logger *log.Logger, repodir string, port string) (err error) {
 func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	//Send the request to the git http backend
 	//if it is to a .git URL.
-	if strings.HasSuffix(req.URL.String(), ".git") {
+	if strings.Contains(req.URL.String(), ".git") {
 		g.Logger.Println("Git request to", req.URL, "from", req.RemoteAddr)
 		g.Handler.ServeHTTP(w, req)
 		return
@@ -74,5 +99,5 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		g.Logger.Println("View of", req.URL, "from", req.RemoteAddr)
 	}
 
-	io.WriteString(w, "<html>Welcome to <a href=\"https://github.com/SashaCrofter/grove\">grove</a>.")
+	io.WriteString(w, "<html>Welcome to <a href=\"https://github.com/SashaCrofter/grove\">grove</a>.</html>")
 }
