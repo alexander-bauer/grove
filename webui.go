@@ -4,10 +4,11 @@ import (
 	"os"
 	"strings"
 	"io/ioutil"
+	"path"
 )
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
-func ShowPath(url string, path string) (page string) {
+func ShowPath(url string, p string) (page string) {
 	
 	css, err := ioutil.ReadFile("style.css")
 	if err != nil {
@@ -15,7 +16,7 @@ func ShowPath(url string, path string) (page string) {
 	}
 	
 	//Retrieve information about the file.
-	fi, err := os.Stat(path)
+	fi, err := os.Stat(p)
 	if err != nil {
 		//If there is an error, present
 		//a 404.
@@ -29,7 +30,7 @@ func ShowPath(url string, path string) (page string) {
 		return "403"
 	}
 
-	f, err := os.Open(path)
+	f, err := os.Open(p)
 	if err != nil || f == nil {
 		//If there is an error opening
 		//the file, return 500.
@@ -59,7 +60,13 @@ func ShowPath(url string, path string) (page string) {
 	}
 
 	if isGit {
-		return "<html><head><style type=\"text/css\">"+string(css)+"</style></head><body>This is a git repository. You can clone it with <pre>" + url + gitDir + "</pre></body></html>"
+		html := "<html><head><style type=\"text/css\">"+string(css)+"</style></head><body><div class=\"title\">"+ path.Base(p) +"</div>"
+		//now add the button things
+		html += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">Master</div></div><div class=\"button\"><div class=\"buttontitle\">Branches</div><br/><div class=\"buttontext\">3</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">3</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">503099ca5b</div></div></div>"
+		//now everything else for right now
+		html += gitDir+"</body></html>"
+		
+		return html
 	} else {
 		var dirList string = "<ul>"
 		if url != "/" {
