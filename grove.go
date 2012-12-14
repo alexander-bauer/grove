@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version     = "0.2"
+	Version     = "0.2.1"
 	DefaultPort = "8860"
 )
 
@@ -99,5 +99,6 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		g.Logger.Println("View of", req.URL, "from", req.RemoteAddr)
 	}
 
-	io.WriteString(w, "<html>Welcome to <a href=\"https://github.com/SashaCrofter/grove\">grove</a>.</html>")
+	path := path.Join(g.Handler.Dir, req.URL.String())
+	io.WriteString(w, ShowPath(path))
 }
