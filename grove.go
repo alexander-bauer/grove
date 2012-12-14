@@ -66,7 +66,7 @@ func Serve(logger *log.Logger, repodir string, port string) (err error) {
 
 	g = &GitBackendHandler{
 		Handler: &cgi.Handler{
-			Path:   execPath + "/" + gitHttpBackend,
+			Path:   strings.TrimRight(string(execPath), "\r\n") + "/" + gitHttpBackend,
 			Root:   "/",
 			Dir:    repodir,
 			Env:    []string{"GIT_PROJECT_ROOT=" + repodir, "GIT_HTTP_EXPORT_ALL=TRUE"},
