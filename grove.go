@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version     = "0.2.2"
+	Version     = "0.2.3"
 	DefaultPort = "8860"
 )
 
@@ -85,6 +85,7 @@ func Serve(logger *log.Logger, repodir string, port string) (err error) {
 	logger.Println("Starting server")
 	http.HandleFunc("/", HandleWeb)
 	err = http.ListenAndServe(":"+port, nil)
+
 	return
 }
 
@@ -99,6 +100,12 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		g.Logger.Println("View of", req.URL, "from", req.RemoteAddr)
 	}
 
+	urlp := req.URL.String()
+	if !strings.HasSuffix(urlp, "/") {
+		urlp += "/"
+	}
 	path := path.Join(g.Handler.Dir, req.URL.String())
-	io.WriteString(w, ShowPath(path))
+	urlp = "http://" + req.Host + urlp
+
+	io.WriteString(w, ShowPath(urlp, path))
 }
