@@ -13,7 +13,6 @@ html {
 }
 
 a {
-	color: #000;
 	text-decoration: none;
 	color: #006B24;
 }
@@ -40,7 +39,7 @@ ul {
 	padding: 10px;
 	font-size: 18px;
 	font-weight: 900;
-	color: #006B24;
+	
 	border-bottom: 1px solid #CCC;
 	background: rgb(255,255,255);
 	background: -moz-linear-gradient(top,  rgba(255,255,255,1) 0%, rgba(229,229,229,1) 100%);

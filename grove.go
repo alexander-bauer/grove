@@ -81,10 +81,11 @@ func Serve(logger *log.Logger, repodir string, port string) (err error) {
 		"\n\tEnv:\t",
 		"\n\t\t", g.Handler.Env[0],
 		"\n\t\t", g.Handler.Env[1])
-
+	
 	logger.Println("Starting server")
 	http.HandleFunc("/", HandleWeb)
 	err = http.ListenAndServe(":"+port, nil)
+	
 	return
 }
 
@@ -105,4 +106,13 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	}
 	path := path.Join(g.Handler.Dir, req.URL.String())
 	io.WriteString(w, ShowPath(urlp, path))
+	/*
+	// THIS BREAKS IT BUT IT REALLY SHOULDN'T
+	hosts := req.Header["Host"]
+	if len(hosts) >= 1 {
+		host := hosts[0]
+		println("Host: ", host)
+		io.WriteString(w, ShowPath("http://" + host + urlp, path))
+	}
+	*/
 }
