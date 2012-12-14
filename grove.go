@@ -105,14 +105,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		urlp += "/"
 	}
 	path := path.Join(g.Handler.Dir, req.URL.String())
+	urlp = "http://" + req.Host + urlp
+
 	io.WriteString(w, ShowPath(urlp, path))
-	/*
-	// THIS BREAKS IT BUT IT REALLY SHOULDN'T
-	hosts := req.Header["Host"]
-	if len(hosts) >= 1 {
-		host := hosts[0]
-		println("Host: ", host)
-		io.WriteString(w, ShowPath("http://" + host + urlp, path))
-	}
-	*/
 }
