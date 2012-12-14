@@ -99,6 +99,10 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		g.Logger.Println("View of", req.URL, "from", req.RemoteAddr)
 	}
 
+	urlp := req.URL.String()
+	if !strings.HasSuffix(urlp, "/") {
+		urlp += "/"
+	}
 	path := path.Join(g.Handler.Dir, req.URL.String())
-	io.WriteString(w, ShowPath(path))
+	io.WriteString(w, ShowPath(urlp, path))
 }
