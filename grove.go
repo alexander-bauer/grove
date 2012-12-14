@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version     = "0.2.2"
+	Version     = "0.2.3"
 	DefaultPort = "8860"
 )
 
@@ -81,11 +81,11 @@ func Serve(logger *log.Logger, repodir string, port string) (err error) {
 		"\n\tEnv:\t",
 		"\n\t\t", g.Handler.Env[0],
 		"\n\t\t", g.Handler.Env[1])
-	
+
 	logger.Println("Starting server")
 	http.HandleFunc("/", HandleWeb)
 	err = http.ListenAndServe(":"+port, nil)
-	
+
 	return
 }
 
