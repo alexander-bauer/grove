@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strings"
 )
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
@@ -52,6 +53,14 @@ func ShowPath(url string, path string) (page string) {
 
 	if isGit {
 		return "<html>This is a git repository. You can clone it with <pre>" + url + url + gitDir + "</pre></html>"
+	} else {
+		var dirList string
+		for _, name := range names {
+			if !strings.HasPrefix(name, ".") {
+				dirList += "<a href=\"" + url + name + "\">" + name + "</a><br/>"
+			}
+		}
+		page = "<html>Welcome to <a href=\"https://github.com/SashaCrofter/grove\">grove</a>.<br/>" + dirList + "</html>"
 	}
-	return "<html>Welcome to <a href=\"https://github.com/SashaCrofter/grove\">grove</a>.</html>"
+	return
 }
