@@ -15,7 +15,7 @@ const (
 )
 
 const (
-	usage = "usage: %s [repositorydir] [logfile]\n"
+	usage = "usage: %s [repositorydir]\n"
 )
 
 var (
