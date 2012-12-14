@@ -1,0 +1,37 @@
+@charset "UTF-8";
+
+body {
+	width: 100%;
+	margin: 0;
+	background-color: #FFF;
+	font-size: 12px;
+	font-family: Helvetica;
+}
+
+html {
+	width: 100%;
+}
+
+a {
+	color: #000;
+	text-decoration: none;
+	color: #006B24;
+}
+
+li, a.li {
+	list-style: none;
+	padding: 5px;
+	background-color: #EEE;
+	border: 1px solid #CCC;
+	margin: 5px;
+}
+
+li:hover {
+	background-color: #006B24;
+	color: #FFF;
+}
+
+ul {
+	margin: 0px;
+	padding: 10px;
+}
