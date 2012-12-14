@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version     = "0.1"
+	Version     = "0.2"
 	DefaultPort = "8860"
 )
 
