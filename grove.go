@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/cgi"
 	"os"
-	"os/exec"
 	"path"
 	"strings"
 )
@@ -51,19 +50,15 @@ func main() {
 		repodir = wd
 	}
 
+	err := setExecPath() //Make sure that the execPath is known
+	if err != nil {
+		logger.Fatalln("Error getting the git exec-path:", err)
+	}
+
 	Serve(logger, repodir, DefaultPort)
 }
 
-func Serve(logger *log.Logger, repodir string, port string) (err error) {
-	//Use 'git --exec-path' to get the path
-	//of the git executables.
-	var execPath []byte
-	gitExecCmd := exec.Command("git", "--exec-path")
-	execPath, err = gitExecCmd.Output()
-	if err != nil {
-		return
-	}
-
+func Serve(logger *log.Logger, repodir string, port string) {
 	g = &GitBackendHandler{
 		Handler: &cgi.Handler{
 			Path:   strings.TrimRight(string(execPath), "\r\n") + "/" + gitHttpBackend,
