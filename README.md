@@ -1,2 +1,1 @@
-grove
-=====
+![Logo by Dansup, many many thanks :D](img/logo.png)
