@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -118,5 +117,5 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	path := path.Join(g.Handler.Dir, req.URL.String())
 	urlp = "http://" + req.Host + urlp
 
-	io.WriteString(w, ShowPath(urlp, path, req.Host))
+	w.Write([]byte(ShowPath(urlp, path, req.Host)))
 }
