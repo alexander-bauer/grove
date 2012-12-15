@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/cgi"
@@ -100,6 +101,12 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 
 		g.Handler.ServeHTTP(w, req)
 		return
+	} else if req.URL.String() == "/favicon.ico" {
+		b, err := ioutil.ReadFile("img/favicon.png")
+		if err != nil {
+			return
+		}
+		w.Write(b)
 	} else {
 		g.Logger.Println("View of", req.URL, "from", req.RemoteAddr)
 	}
