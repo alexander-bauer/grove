@@ -81,7 +81,7 @@ func ShowPath(url string, p string, host string) (page string) {
 				dirList += "<a href=\"" + url + info.Name() + "\"><li>" + info.Name() + "</li></a>"
 			}
 		}
-		page = "<html><head><style type=\"text/css\">" + string(css) + "</style></head><body><a href=\"http://"+host+"\"><div class=\"logo\"></div></a>" + dirList + "</ul></body></html>"
+		page = "<html><head><style type=\"text/css\">" + string(css) + "</style></head><body><a href=\"http://"+host+"\"><div class=\"logo\"></div></a>" + dirList + "</ul><div class=\"version\">" + Version + "</body></html>"
 	}
 	return
 }
