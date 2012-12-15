@@ -59,6 +59,7 @@ func ShowPath(url string, p string, host string) (page string) {
 	}
 
 	if isGit {
+		commit := gitCommit("HEAD", p)
 		branch := gitBranch(p)
 		sha := gitCurrentSHA(p)
 		c := gitTotalCommits(p)
@@ -66,6 +67,9 @@ func ShowPath(url string, p string, host string) (page string) {
 		html := "<html><head><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">git clone " + url + gitDir + "</div></div>"
 		//now add the button things
 		html += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">3</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + c + "</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
+
+		html += commit.Time
+
 		//now everything else for right now
 		html += "</body></html>"
 
