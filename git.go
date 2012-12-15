@@ -27,12 +27,8 @@ func gitBranch(path string) (branch string) {
 	return strings.TrimRight(branch, "\n")
 }
 
-func gitCurrentSHA(branch string, path string) (sha string) {
-	commit, _ := execute(path, "git", "rev-parse", branch)
-	if len(strings.TrimRight(commit, "\r\n")) >= 10 {
-		return strings.TrimRight(commit, "\r\n")[0:10]
-	}
-
+func gitCurrentSHA(path string) (sha string) {
+	commit, _ := execute(path, "git", "rev-parse", "--short=8", "HEAD")
 	return strings.TrimRight(commit, "\n")
 }
 

@@ -60,19 +60,19 @@ func ShowPath(url string, p string, host string) (page string) {
 
 	if isGit {
 		branch := gitBranch(p)
-		sha := gitCurrentSHA(branch, p)
+		sha := gitCurrentSHA(p)
 		c := gitTotalCommits(p)
 
-		html := "<html><head><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">git clone "+ url + gitDir +"</div></div>"
+		html := "<html><head><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">git clone " + url + gitDir + "</div></div>"
 		//now add the button things
-		html += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">3</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">"+ c +"</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">"+ sha +"</div></div></div>"
+		html += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">3</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + c + "</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//now everything else for right now
 		html += "</body></html>"
 
 		return html
 	} else {
 		var dirList string = "<ul>"
-		if url != ("http://"+host+"/") {
+		if url != ("http://" + host + "/") {
 			dirList += "<a href=\"" + url + "..\"><li>..</li></a>"
 		}
 		for _, info := range dirinfos {
@@ -81,7 +81,7 @@ func ShowPath(url string, p string, host string) (page string) {
 				dirList += "<a href=\"" + url + info.Name() + "\"><li>" + info.Name() + "</li></a>"
 			}
 		}
-		page = "<html><head><style type=\"text/css\">" + string(css) + "</style></head><body><a href=\"http://"+host+"\"><div class=\"logo\"></div></a>" + dirList + "</ul><div class=\"version\">" + Version + "</body></html>"
+		page = "<html><head><style type=\"text/css\">" + string(css) + "</style></head><body><a href=\"http://" + host + "\"><div class=\"logo\"></div></a>" + dirList + "</ul><div class=\"version\">" + Version + "</body></html>"
 	}
 	return
 }
