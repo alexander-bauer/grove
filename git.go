@@ -22,6 +22,11 @@ func gitBranch(path string) (branch string) {
 	return strings.TrimRight(branch, "\r\n")
 }
 
+func gitCurrentSHA(branch string, path string) (sha string) {
+	commit, _ := execute(path, "git", "rev-parse", branch)
+	return strings.TrimRight(commit, "\r\n")[0:10]
+}
+
 func execute(dir, command string, args ...string) (output string, err error) {
 	cmd := exec.Command(command, args...)
 	if len(dir) != 0 {
