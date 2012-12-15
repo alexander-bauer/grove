@@ -3,6 +3,7 @@ package main
 import (
 	"os/exec"
 	"strings"
+	"strconv"
 )
 
 var (
@@ -29,6 +30,12 @@ func gitCurrentSHA(branch string, path string) (sha string) {
 	}
 	
 	return strings.TrimRight(commit, "\r\n")
+}
+
+func gitTotalCommits(path string) (commits string) {
+	c, _ := execute(path, "git", "rev-list", "--all")
+	commit := strings.Split(strings.TrimRight(c, "\r\n"), "\n")
+	return strconv.Itoa(len(commit))
 }
 
 func execute(dir, command string, args ...string) (output string, err error) {
