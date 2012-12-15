@@ -91,6 +91,14 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	//if it is to a .git URL.
 	if strings.Contains(req.URL.String(), ".git") {
 		g.Logger.Println("Git request to", req.URL, "from", req.RemoteAddr)
+
+		//Check to make sure that the repository
+		//is globally readable.
+		fi, err := os.Stat(req.URL.String())
+		if err != nil || !(fi.Mode()&0005 == 0005) {
+			return
+		}
+
 		g.Handler.ServeHTTP(w, req)
 		return
 	} else {
