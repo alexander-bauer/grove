@@ -11,7 +11,7 @@ import (
 func ShowPath(url string, p string, host string) (page string) {
 	css, err := ioutil.ReadFile("style.css")
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	//Retrieve information about the file.
@@ -81,7 +81,7 @@ func ShowPath(url string, p string, host string) (page string) {
 				dirList += "<a href=\"" + url + info.Name() + "\"><li>" + info.Name() + "</li></a>"
 			}
 		}
-		page = "<html><head><style type=\"text/css\">" + string(css) + "</style></head><body>Welcome to <a href=\"https://github.com/SashaCrofter/grove\">grove</a>.<br/>" + dirList + "</ul></body></html>"
+		page = "<html><head><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"logo\">&nbsp;</div>" + dirList + "</ul></body></html>"
 	}
 	return
 }
