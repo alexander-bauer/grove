@@ -22,9 +22,9 @@ func ShowPath(url string, p string) (page string) {
 		//TODO create an actual error
 		return "404"
 	}
-	if !fi.IsDir() {
-		//If the file is not a directory,
-		//then return 403 unauthorized.
+	//If is not directory, or starts with ".", or is not globally readable...
+	if !fi.IsDir() || strings.HasPrefix(fi.Name(), ".") || fi.Mode()&0005 == 0 {
+		//Return 403 unauthorized.
 		//TODO create an actual error
 		return "403"
 	}
@@ -36,7 +36,7 @@ func ShowPath(url string, p string) (page string) {
 		//TODO
 		return "500"
 	}
-	names, err := f.Readdirnames(0)
+	dirinfos, err := f.Readdir(0)
 	f.Close()
 	if err != nil {
 		//If the directory could not be
@@ -50,10 +50,10 @@ func ShowPath(url string, p string) (page string) {
 	//bare git repository (name.git)
 	var isGit bool
 	var gitDir string
-	for _, name := range names {
-		if name == ".git" {
+	for _, info := range dirinfos {
+		if info.Name() == ".git" {
 			isGit = true
-			gitDir = name
+			gitDir = info.Name()
 			break
 		}
 	}
@@ -73,9 +73,10 @@ func ShowPath(url string, p string) (page string) {
 		if url != "/" {
 			dirList += "<a href=\"" + url + "..\"><li>..</li></a>"
 		}
-		for _, name := range names {
-			if !strings.HasPrefix(name, ".") {
-				dirList += "<a href=\"" + url + name + "\"><li>" + name + "</li></a>"
+		for _, info := range dirinfos {
+			//If is directory, and does not start with '.', and is globally readable
+			if (info.IsDir()) && !strings.HasPrefix(info.Name(), ".") && (info.Mode()&0005 == 0005) {
+				dirList += "<a href=\"" + url + info.Name() + "\"><li>" + info.Name() + "</li></a>"
 			}
 		}
 		page = "<html><head><style type=\"text/css\">" + string(css) + "</style></head><body>Welcome to <a href=\"https://github.com/SashaCrofter/grove\">grove</a>.<br/>" + dirList + "</ul></body></html>"
