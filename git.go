@@ -24,7 +24,11 @@ func gitBranch(path string) (branch string) {
 
 func gitCurrentSHA(branch string, path string) (sha string) {
 	commit, _ := execute(path, "git", "rev-parse", branch)
-	return strings.TrimRight(commit, "\r\n")[0:10]
+	if len(strings.TrimRight(commit, "\r\n")) >= 10 {
+		return strings.TrimRight(commit, "\r\n")[0:10]
+	}
+	
+	return strings.TrimRight(commit, "\r\n")
 }
 
 func execute(dir, command string, args ...string) (output string, err error) {
