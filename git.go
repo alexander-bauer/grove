@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+const (
+	gitHttpBackend = "git-http-backend"
+)
+
 var (
 	execPath string //The path containing git binaries
 )

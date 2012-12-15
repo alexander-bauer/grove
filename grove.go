@@ -16,8 +16,7 @@ const (
 )
 
 const (
-	usage          = "usage: %s [repositorydir]\n"
-	gitHttpBackend = "git-http-backend"
+	usage = "usage: %s [repositorydir]\n"
 )
 
 var (
