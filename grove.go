@@ -104,5 +104,5 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	path := path.Join(g.Handler.Dir, req.URL.String())
 	urlp = "http://" + req.Host + urlp
 
-	io.WriteString(w, ShowPath(urlp, path))
+	io.WriteString(w, ShowPath(urlp, path, req.Host))
 }

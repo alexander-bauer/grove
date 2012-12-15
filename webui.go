@@ -8,7 +8,7 @@ import (
 )
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
-func ShowPath(url string, p string) (page string) {
+func ShowPath(url string, p string, host string) (page string) {
 	css, err := ioutil.ReadFile("style.css")
 	if err != nil {
 		panic(err)
@@ -70,7 +70,7 @@ func ShowPath(url string, p string) (page string) {
 		return html
 	} else {
 		var dirList string = "<ul>"
-		if url != "/" {
+		if url != ("http://"+host+"/") {
 			dirList += "<a href=\"" + url + "..\"><li>..</li></a>"
 		}
 		for _, info := range dirinfos {
