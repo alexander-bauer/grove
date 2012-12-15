@@ -39,7 +39,7 @@ ul {
 	padding: 10px;
 	font-size: 18px;
 	font-weight: 900;
-	
+	height: 25px;
 	border-bottom: 1px solid #CCC;
 	background: rgb(255,255,255);
 	background: -moz-linear-gradient(top,  rgba(255,255,255,1) 0%, rgba(229,229,229,1) 100%);
@@ -109,4 +109,16 @@ ul {
 .buttontext {
 	display: inline-block;
 	color: #006B24;
+}
+
+.cloneme {
+	font-size: 12px;
+	display: inline-block;
+	font-weight: 400;
+	background-color: #FFF;
+	border: 1px solid #CCC;
+	padding: 5px;
+	box-shadow: inset 0px 1px 1px #CCC;
+	font-family: Monospace;
+	float: right;
 }
