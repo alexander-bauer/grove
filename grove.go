@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/cgi"
@@ -16,8 +17,7 @@ const (
 )
 
 const (
-	usage          = "usage: %s [repositorydir]\n"
-	gitHttpBackend = "git-http-backend"
+	usage = "usage: %s [repositorydir]\n"
 )
 
 var (
@@ -91,8 +91,22 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	//if it is to a .git URL.
 	if strings.Contains(req.URL.String(), ".git") {
 		g.Logger.Println("Git request to", req.URL, "from", req.RemoteAddr)
+
+		//Check to make sure that the repository
+		//is globally readable.
+		fi, err := os.Stat(req.URL.String())
+		if err != nil || !(fi.Mode()&0005 == 0005) {
+			return
+		}
+
 		g.Handler.ServeHTTP(w, req)
 		return
+	} else if req.URL.String() == "/favicon.ico" {
+		b, err := ioutil.ReadFile("img/favicon.png")
+		if err != nil {
+			return
+		}
+		w.Write(b)
 	} else {
 		g.Logger.Println("View of", req.URL, "from", req.RemoteAddr)
 	}
