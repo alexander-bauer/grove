@@ -2,6 +2,7 @@ package main
 
 import (
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -26,6 +27,21 @@ func gitBranch(path string) (branch string) {
 	return strings.TrimRight(branch, "\n")
 }
 
+func gitCurrentSHA(branch string, path string) (sha string) {
+	commit, _ := execute(path, "git", "rev-parse", branch)
+	if len(strings.TrimRight(commit, "\r\n")) >= 10 {
+		return strings.TrimRight(commit, "\r\n")[0:10]
+	}
+
+	return strings.TrimRight(commit, "\n")
+}
+
+func gitTotalCommits(path string) (commits string) {
+	c, _ := execute(path, "git", "rev-list", "--all")
+	commit := strings.Split(strings.TrimRight(c, "\n"), "\n")
+	return strconv.Itoa(len(commit))
+}
+
 //Execute invokes exec.Command() with the given command, arguments, and working directory. All CR ('\r') characters are removed in output.
 func execute(dir, command string, args ...string) (output string, err error) {
 	cmd := exec.Command(command, args...)
@@ -33,5 +49,5 @@ func execute(dir, command string, args ...string) (output string, err error) {
 		cmd.Dir = dir
 	}
 	out, err := cmd.Output()
-	return strings.Replace(string(out), "\r", "", 0), err
+	return string(out), err
 }
