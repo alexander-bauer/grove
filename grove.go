@@ -49,9 +49,9 @@ func main() {
 		repodir = wd
 	}
 
-	err := setExecPath() //Make sure that the execPath is known
+	err := gitVars() //Make sure that the execPath is known
 	if err != nil {
-		logger.Fatalln("Error getting the git exec-path:", err)
+		logger.Fatalln("Error getting git variables:", err)
 	}
 
 	Serve(logger, repodir, DefaultPort)
