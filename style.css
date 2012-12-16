@@ -66,16 +66,15 @@ ul {
 	-webkit-border-radius: 10px;
 	-moz-border-radius: 10px;
 	border-radius: 10px;
-	
 }
 
 .button, a.button {
 	display: inline-block;
 	text-align: center;
-	padding: 10px;
+	padding: 10px 0px;
 	border: 1px solid #CCC;
 	border-right: none;
-	width: 22%;
+	width: 24%;
 	background: rgb(255,255,255);
 	background: -moz-linear-gradient(top,  rgba(255,255,255,1) 0%, rgba(229,229,229,1) 100%);
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,1)), color-stop(100%,rgba(229,229,229,1)));
@@ -129,6 +128,36 @@ a.button:hover, .button:hover {
 	box-shadow: inset 0px 1px 1px #CCC;
 	font-family: Monospace;
 	float: right;
+}
+
+.md {
+	margin-left: auto;
+	margin-right: auto;
+	width: 70%;
+	padding: 10px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	background-color: #FFF;
+	box-shadow: inset 0px 0px 5px #CCC;
+}
+
+.md:hover {
+	box-shadow: inset 0px 0px 5px #66cc33;
+}
+
+pre {
+	background-color: #EEE;
+	border: 1px solid #CCC;
+	padding: 5px;
+}
+
+code {
+	background-color: #EEE;
+}
+
+.log {
+	
 }
 
 .version {
