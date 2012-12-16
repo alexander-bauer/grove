@@ -1,11 +1,12 @@
 package main
 
 import (
+	"github.com/russross/blackfriday"
 	"io/ioutil"
 	"os"
 	"path"
+	"strconv"
 	"strings"
-	"github.com/russross/blackfriday"
 )
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
@@ -60,15 +61,17 @@ func ShowPath(url string, p string, host string) (page string) {
 	}
 
 	if isGit {
+		commits := gitCommits("HEAD", 0, p)
+		commitNum := len(commits)
+		tagNum := gitTotalTags(p)
 		branch := gitBranch(p)
 		sha := gitCurrentSHA(p)
-		c := gitTotalCommits(p)
 
 		html := "<html><head><title>" + userName + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
 		//now add the button things
-		html += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">3</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + c + "</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
+		html += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//add the md
-		html += "<div class=\"md\">"+md(p)+"</div>"
+		html += "<div class=\"md\">" + md(p) + "</div>"
 		//add the log
 		html += "<div class=\"log\">log</div>"
 		//now everything else for right now
@@ -91,9 +94,9 @@ func ShowPath(url string, p string, host string) (page string) {
 	return
 }
 
-func md(path string) (string) {
-	readme, err := ioutil.ReadFile(path+"/README.md")
-	println(path+"README.md")
+func md(path string) string {
+	readme, err := ioutil.ReadFile(path + "/README.md")
+	println(path + "README.md")
 	if err != nil {
 		return ""
 	}

@@ -6,8 +6,18 @@ import (
 	"strings"
 )
 
+type Commit struct {
+	SHA     string //Full SHA of the commit
+	Author  string //Author of the commit
+	Time    string //Relative time of the commit
+	Subject string //Subject of the commit
+	Body    string //Body of the commit
+}
+
 const (
 	gitHttpBackend = "git-http-backend"
+	gitLogFmt      = "%H%n%cr%n%an%n%s%n%b"
+	gitLogSep      = "----GROVE-LOG-SEPARATOR----"
 )
 
 var (
@@ -54,10 +64,58 @@ func gitCurrentSHA(path string) (sha string) {
 	return strings.TrimRight(commit, "\n")
 }
 
+func gitTotalTags(path string) (numOfTags int) {
+	t, _ := execute(path, "git", "tag", "--list")
+	return len(strings.Split(t, "\n"))
+}
+
 func gitTotalCommits(path string) (commits string) {
 	c, _ := execute(path, "git", "rev-list", "--all")
 	commit := strings.Split(strings.TrimRight(c, "\n"), "\n")
 	return strconv.Itoa(len(commit))
+}
+
+//Get Commits from the log, up to the given max.
+func gitCommits(ref string, max int, path string) (commits []*Commit) {
+	var log string
+	if max > 0 {
+		log, _ = execute(path, "git", "--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref, "-n "+strconv.Itoa(max))
+	} else {
+		//TODO THIS DOES NOT ACTUALLY GET ALL OF THE MESSAGES
+		log, _ = execute(path, "git", "--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref)
+	}
+	commitLogs := strings.Split(log, gitLogSep)
+	commits = make([]*Commit, 0, len(commitLogs))
+	for _, l := range commitLogs {
+		commit := gitParseCommit(strings.Split(l, "\n"))
+		if commit != nil {
+			commits = append(commits, commit)
+		}
+	}
+	return
+}
+
+//Log formats, as given by gitLogFmt, should be as follows.
+//    <full hash>
+//    <commit time relative>
+//    <author name>
+//    <nonwrapped commit message>
+func gitParseCommit(log []string) (commit *Commit) {
+	if len(log) < 4 {
+		return
+	}
+	commit = &Commit{
+		SHA:     log[0],
+		Time:    log[1],
+		Author:  log[2],
+		Subject: log[3],
+	}
+	for i := 0; i < len(log)-4; i++ {
+		if log[i] != gitLogSep {
+			commit.Body += log[i]
+		}
+	}
+	return
 }
 
 //Execute invokes exec.Command() with the given command, arguments, and working directory. All CR ('\r') characters are removed in output.
