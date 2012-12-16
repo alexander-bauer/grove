@@ -42,6 +42,11 @@ func gitCurrentSHA(path string) (sha string) {
 	return strings.TrimRight(commit, "\n")
 }
 
+func gitTotalTags(path string) (numOfTags int) {
+	t, _ := execute(path, "git", "tag", "--list")
+	return len(strings.Split(t, "\n"))
+}
+
 func gitTotalCommits(path string) (commits string) {
 	c, _ := execute(path, "git", "rev-list", "--all")
 	commit := strings.Split(strings.TrimRight(c, "\n"), "\n")
