@@ -86,15 +86,25 @@ func Serve(logger *log.Logger, repodir string, port string) {
 }
 
 func HandleWeb(w http.ResponseWriter, req *http.Request) {
+	//Determine the path from the URL
+	urlp := req.URL.String()
+	if !strings.HasSuffix(urlp, "/") {
+		urlp += "/"
+	}
+	path := path.Join(g.Handler.Dir, req.URL.String())
+	urlp = "http://" + req.Host + urlp
+
 	//Send the request to the git http backend
 	//if it is to a .git URL.
 	if strings.Contains(req.URL.String(), ".git") {
+		gitPath := strings.SplitAfter(path, ".git")[0]
 		g.Logger.Println("Git request to", req.URL, "from", req.RemoteAddr)
 
 		//Check to make sure that the repository
 		//is globally readable.
-		fi, err := os.Stat(req.URL.String())
+		fi, err := os.Stat(gitPath)
 		if err != nil || !(fi.Mode()&0005 == 0005) {
+			g.Logger.Println("Git request from", req.RemoteAddr, "denied")
 			return
 		}
 
@@ -109,13 +119,6 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	} else {
 		g.Logger.Println("View of", req.URL, "from", req.RemoteAddr)
 	}
-
-	urlp := req.URL.String()
-	if !strings.HasSuffix(urlp, "/") {
-		urlp += "/"
-	}
-	path := path.Join(g.Handler.Dir, req.URL.String())
-	urlp = "http://" + req.Host + urlp
 
 	w.Write([]byte(ShowPath(urlp, path, req.Host)))
 }
