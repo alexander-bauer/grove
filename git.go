@@ -17,6 +17,7 @@ type Commit struct {
 const (
 	gitHttpBackend = "git-http-backend"
 	gitLogFmt      = "%H%n%cr%n%an%n%s%n%b"
+	gitLogSep      = "----GROVE-LOG-SEPARATOR----"
 )
 
 var (
@@ -47,9 +48,24 @@ func gitTotalCommits(path string) (commits string) {
 	return strconv.Itoa(len(commit))
 }
 
-func gitCommit(ref string, path string) (commit *Commit) {
-	log, _ := execute(path, "git", "--no-pager", "log", "--format=format:'"+gitLogFmt+"'", ref, "-n 1")
-	return gitParseCommit(strings.Split(log, "\n"))
+//Get Commits from the log, up to the given max.
+func gitCommits(ref string, max int, path string) (commits []*Commit) {
+	var log string
+	if max > 0 {
+		log, _ = execute(path, "git", "--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref, "-n "+strconv.Itoa(max))
+	} else {
+		//TODO THIS DOES NOT ACTUALLY GET ALL OF THE MESSAGES
+		log, _ = execute(path, "git", "--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref)
+	}
+	commitLogs := strings.Split(log, gitLogSep)
+	commits = make([]*Commit, 0, len(commitLogs))
+	for _, l := range commitLogs {
+		commit := gitParseCommit(strings.Split(l, "\n"))
+		if commit != nil {
+			commits = append(commits, commit)
+		}
+	}
+	return
 }
 
 //Log formats, as given by gitLogFmt, should be as follows.
@@ -68,7 +84,9 @@ func gitParseCommit(log []string) (commit *Commit) {
 		Subject: log[3],
 	}
 	for i := 0; i < len(log)-4; i++ {
-		commit.Body += log[i]
+		if log[i] != gitLogSep {
+			commit.Body += log[i]
+		}
 	}
 	return
 }
