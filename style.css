@@ -140,6 +140,31 @@ a.button:hover, .button:hover {
 	border-radius: 5px;
 	background-color: #FFF;
 	box-shadow: inset 0px 0px 5px #CCC;
+	font-size: 12px;
+}
+
+h1 {
+	font-size: 30px;
+}
+
+h2 {
+	font-size: 20px;
+}
+
+h3 {
+	font-size: 18px;
+}
+
+h4 {
+	font-size: 16px;
+}
+
+h5 {
+	font-size: 14px;
+}
+
+h6 {
+	font-size: 13px;
 }
 
 .md:hover {
