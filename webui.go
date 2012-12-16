@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"github.com/russross/blackfriday"
 )
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
@@ -63,9 +64,13 @@ func ShowPath(url string, p string, host string) (page string) {
 		sha := gitCurrentSHA(p)
 		c := gitTotalCommits(p)
 
-		html := "<html><head><title>" + userName + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">git clone " + url + gitDir + "</div></div>"
+		html := "<html><head><title>" + userName + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
 		//now add the button things
 		html += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">3</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + c + "</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
+		//add the md
+		html += "<div class=\"md\">"+md(p)+"</div>"
+		//add the log
+		html += "<div class=\"log\">log</div>"
 		//now everything else for right now
 		html += "</body></html>"
 
@@ -84,4 +89,13 @@ func ShowPath(url string, p string, host string) (page string) {
 		page = "<html><head><style type=\"text/css\">" + string(css) + "</style></head><body><a href=\"http://" + host + "\"><div class=\"logo\"></div></a>" + dirList + "</ul><div class=\"version\">" + Version + "</body></html>"
 	}
 	return
+}
+
+func md(path string) (string) {
+	readme, err := ioutil.ReadFile(path+"/README.md")
+	println(path+"README.md")
+	if err != nil {
+		return ""
+	}
+	return string(blackfriday.MarkdownCommon(readme))
 }
