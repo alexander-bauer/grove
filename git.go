@@ -81,7 +81,6 @@ func gitCommits(ref string, max int, path string) (commits []*Commit) {
 	if max > 0 {
 		log, _ = execute(path, "git", "--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref, "-n "+strconv.Itoa(max))
 	} else {
-		//TODO THIS DOES NOT ACTUALLY GET ALL OF THE MESSAGES
 		log, _ = execute(path, "git", "--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref)
 	}
 	commitLogs := strings.Split(log, gitLogSep)
@@ -101,20 +100,42 @@ func gitCommits(ref string, max int, path string) (commits []*Commit) {
 //    <author name>
 //    <nonwrapped commit message>
 func gitParseCommit(log []string) (commit *Commit) {
-	if len(log) < 4 {
-		return
-	}
-	commit = &Commit{
-		SHA:     log[0],
-		Time:    log[1],
-		Author:  log[2],
-		Subject: log[3],
-	}
-	for i := 0; i < len(log)-4; i++ {
-		if log[i] != gitLogSep {
-			commit.Body += log[i]
+	var sha string
+	var time string
+	var author string
+	var subject string
+	var body string
+
+	for _, l := range log {
+		if len(sha) == 0 {
+			//If l is empty, then this will
+			//be run again.
+			sha = l
+			continue
 		}
+		if len(time) == 0 {
+			time = l
+			continue
+		}
+		if len(author) == 0 {
+			author = l
+			continue
+		}
+		if len(subject) == 0 {
+			subject = l
+			continue
+		}
+		body += l
 	}
+
+	commit = &Commit{
+		SHA:     sha,
+		Time:    time,
+		Author:  author,
+		Subject: subject,
+		Body:    body,
+	}
+
 	return
 }
 
