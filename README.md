@@ -8,3 +8,4 @@ Grove provides a way for developers to *easily* use git to share code directly, 
 
 #### Grovelinks
 - [Sasha Crofter](http://[fcdf:db8b:fbf5:d3d7:64a:5aa3:f326:149c]:8860/go/src/github.com/SashaCrofter/grove)
+- [Luke Evers](http://[fc2e:9943:1633:403e:2346:3704:8cd8:1c78]:8860/go/src/grove)
