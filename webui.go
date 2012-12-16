@@ -71,7 +71,7 @@ func ShowPath(url string, p string, host string) (page string) {
 		//now add the button things
 		html += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//add the md
-		html += "<div class=\"md\">"+md(p)+"</div>"
+		html += "<div class=\"md\">" + md(p) + "</div>"
 		//add the log
 		html += "<div class=\"log\">log</div>"
 		//now everything else for right now
