@@ -7,15 +7,30 @@
 # sudo service grove {start|stop|restart|status|check}
 #
 
-GROVE=grove
-LOG=/dev/null
+if [ -z $GROVE ]; then
+	GROVE=grove
+fi
+
+if [ -z $LOG ]; then
+	LOG=grove.log
+fi
+
+if [ -z $DEV ]; then
+	if [ -e ~/dev ]; then
+		DEV=~/dev/
+	elif [ -e ~/development/ ]; then
+		DEV=~/development/ ]
+	elif [ -e ~/code/ ]; then
+		DEV=~/code/
+	fi
+fi
 
 PID=$(pidof -o %PPID $GROVE)
 
 start()
 {
 	if [ -z $PID ]; then
-		$GROVE 2>&1 >> $LOG &
+		$GROVE $DEV &>> $LOG &
 	fi
 }
 stop()
