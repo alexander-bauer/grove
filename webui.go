@@ -96,7 +96,6 @@ func ShowPath(url string, p string, host string) (page string) {
 
 func md(path string) string {
 	readme, err := ioutil.ReadFile(path + "/README.md")
-	println(path + "README.md")
 	if err != nil {
 		return ""
 	}
