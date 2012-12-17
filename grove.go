@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	Version     = "0.4"
+	Version     = "0.4.1"
 	DefaultPort = "8860"
 )
 
