@@ -20,8 +20,9 @@ const (
 )
 
 var (
-	Bind = ""          //Bind interface (such as 127.0.0.1)
-	Port = DefaultPort //Port to listen on
+	Bind   = ""          //Bind interface (such as 127.0.0.1)
+	Port   = DefaultPort //Port to listen on
+	ResDir = "res/"      //Resources directory
 )
 
 var (
@@ -110,7 +111,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		handler.ServeHTTP(w, req)
 		return
 	} else if req.URL.String() == "/favicon.ico" {
-		b, err := ioutil.ReadFile("img/favicon.png")
+		b, err := ioutil.ReadFile(ResDir + "favicon.png")
 		if err != nil {
 			return
 		}

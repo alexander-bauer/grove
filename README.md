@@ -1,4 +1,4 @@
-![Logo by Dansup, many many thanks :D](https://raw.github.com/SashaCrofter/grove/development/img/logo.png)
+![Logo by Dansup, many many thanks :D](https://raw.github.com/SashaCrofter/grove/development/res/logo.png)
 
 Grove is a git hosting application that allows developers to share their local repositories directly with other developers, without needing to push them to a central server. This is all accomplished through a basic web interface, and invocations of the git-http-backend, which comes prepackaged in git distributions.
 
