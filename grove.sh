@@ -8,7 +8,7 @@
 #
 
 if [ -z $GROVE ]; then
-	GROVE=grove
+	GROVE=./grove
 fi
 
 if [ -z $LOG ]; then
