@@ -73,9 +73,15 @@ func ShowPath(url string, p string, host string) (page string) {
 		//add the md
 		html += "<div class=\"md\">" + md(p) + "</div>"
 		//add the log
-		html += "<div class=\"log\">log</div>"
+		html += "<div class=\"log\">"
+		for i := 0; i < 10; i++ {
+			html += "<div class=\"loggy\">"
+			html += commits[i].Author + "&mdash; <div class=\"SHA\">" + commits[i].SHA + "</div> &mdash; " + commits[i].Time + "<br/>"
+			html += "<br/><strong><div class=\"holdem\">" + commits[i].Subject + "</strong><br/><br/>"
+			html += commits[i].Body + "</div></div>"
+		}
 		//now everything else for right now
-		html += "</body></html>"
+		html += "</div></body></html>"
 
 		return html
 	} else {
