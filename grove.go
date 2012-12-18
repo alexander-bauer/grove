@@ -119,6 +119,14 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	} else {
 		l.Println("View of", req.URL, "from", req.RemoteAddr)
 	}
+	body, status := ShowPath(urlp, path, req.Host)
 
-	w.Write([]byte(ShowPath(urlp, path, req.Host)))
+	//If ShowPath gives the status as anything
+	//other than 200 OK, write the error in the
+	//header.
+	if status != http.StatusOK {
+		l.Println("Sending", req.RemoteAddr, "status:", status)
+		w.WriteHeader(status)
+	}
+	w.Write([]byte(body))
 }
