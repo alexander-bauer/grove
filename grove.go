@@ -117,6 +117,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		w.Write(b)
+		return
 	} else {
 		l.Println("View of", req.URL, "from", req.RemoteAddr)
 	}
