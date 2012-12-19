@@ -8,6 +8,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"regexp"
 )
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
@@ -71,6 +72,7 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 	}
 
 	if isGit {
+		phtml := regexp.MustCompile("<|>")
 		commits := gitCommits("HEAD", 0, p)
 		commitNum := len(commits)
 		tagNum := gitTotalTags(p)
@@ -86,9 +88,9 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 		html += "<div class=\"log\">"
 		for i := 0; i < 10; i++ {
 			html += "<div class=\"loggy\">"
-			html += commits[i].Author + "&mdash; <div class=\"SHA\">" + commits[i].SHA + "</div> &mdash; " + commits[i].Time + "<br/>"
-			html += "<br/><strong><div class=\"holdem\">" + commits[i].Subject + "</strong><br/><br/>"
-			html += strings.Replace(commits[i].Body, "\n", "<br/>", -1) + "</div></div>"
+			html += commits[i].Author + " &mdash; <div class=\"SHA\">" + commits[i].SHA + "</div> &mdash; " + commits[i].Time + "<br/>"
+			html += "<br/><strong><div class=\"holdem\">" + string(phtml.ReplaceAll([]byte(commits[i].Subject), []byte(""))) + "</strong><br/><br/>"
+			html += strings.Replace(string(phtml.ReplaceAll([]byte(commits[i].Body), []byte(""))), "\n", "<br/>", -1) + "</div></div>"
 		}
 		//now everything else for right now
 		html += "</div></body></html>"
