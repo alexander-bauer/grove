@@ -76,7 +76,7 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 			html += "<div class=\"loggy\">"
 			html += commits[i].Author + "&mdash; <div class=\"SHA\">" + commits[i].SHA + "</div> &mdash; " + commits[i].Time + "<br/>"
 			html += "<br/><strong><div class=\"holdem\">" + commits[i].Subject + "</strong><br/><br/>"
-			html += commits[i].Body + "</div></div>"
+			html += strings.Replace(commits[i].Body, "\n", "<br/>", -1) + "</div></div>"
 		}
 		//now everything else for right now
 		html += "</div></body></html>"

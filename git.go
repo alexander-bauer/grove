@@ -125,7 +125,8 @@ func gitParseCommit(log []string) (commit *Commit) {
 			subject = l
 			continue
 		}
-		body += l
+
+		body += l + "\n"
 	}
 
 	commit = &Commit{
