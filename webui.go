@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/russross/blackfriday"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"strconv"
@@ -10,40 +11,37 @@ import (
 )
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
-func ShowPath(url string, p string, host string) (page string) {
+func ShowPath(url string, p string, host string) (page string, status int) {
 	css, err := ioutil.ReadFile(ResDir + "style.css")
 	if err != nil {
-		return
+		return page, http.StatusInternalServerError
 	}
 
 	//Retrieve information about the file.
 	fi, err := os.Stat(p)
 	if err != nil {
 		//If there is an error, present
-		//a 404.
-		//TODO create an actual error
-		return "404"
+		//a StatusNotFound.
+		return page, http.StatusNotFound
 	}
 	//If is not directory, or starts with ".", or is not globally readable...
 	if !fi.IsDir() || strings.HasPrefix(fi.Name(), ".") || fi.Mode()&0005 == 0 {
-		//Return 403 unauthorized.
-		//TODO create an actual error
-		return "403"
+		//Return 403 forbidden.
+		return page, http.StatusForbidden
 	}
 
 	f, err := os.Open(p)
 	if err != nil || f == nil {
 		//If there is an error opening
 		//the file, return 500.
-		//TODO
-		return "500"
+		return page, http.StatusInternalServerError
 	}
 	dirinfos, err := f.Readdir(0)
 	f.Close()
 	if err != nil {
 		//If the directory could not be
 		//opened, return 500.
-		return "500"
+		return page, http.StatusInternalServerError
 	}
 
 	//Find whether the directory contains
@@ -83,7 +81,7 @@ func ShowPath(url string, p string, host string) (page string) {
 		//now everything else for right now
 		html += "</div></body></html>"
 
-		return html
+		return html, http.StatusOK
 	} else {
 		var dirList string = "<ul>"
 		if url != ("http://" + host + "/") {
@@ -97,7 +95,7 @@ func ShowPath(url string, p string, host string) (page string) {
 		}
 		page = "<html><head><style type=\"text/css\">" + string(css) + "</style></head><body><a href=\"http://" + host + "\"><div class=\"logo\"></div></a>" + dirList + "</ul><div class=\"version\">" + Version + "</body></html>"
 	}
-	return
+	return page, http.StatusOK
 }
 
 func md(path string) string {
