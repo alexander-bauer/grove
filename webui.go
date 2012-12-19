@@ -8,7 +8,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"regexp"
+	"html"
 )
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
@@ -72,30 +72,29 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 	}
 
 	if isGit {
-		phtml := regexp.MustCompile("<|>")
 		commits := gitCommits("HEAD", 0, p)
 		commitNum := len(commits)
 		tagNum := gitTotalTags(p)
 		branch := gitBranch(p)
 		sha := gitCurrentSHA(p)
 
-		html := "<html><head><title>" + userName + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
+		HTML := "<html><head><title>" + userName + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
 		//now add the button things
-		html += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
+		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//add the md
-		html += "<div class=\"md\">" + md(p) + "</div>"
+		HTML += "<div class=\"md\">" + md(p) + "</div>"
 		//add the log
-		html += "<div class=\"log\">"
+		HTML += "<div class=\"log\">"
 		for i := 0; i < 10; i++ {
-			html += "<div class=\"loggy\">"
-			html += commits[i].Author + " &mdash; <div class=\"SHA\">" + commits[i].SHA + "</div> &mdash; " + commits[i].Time + "<br/>"
-			html += "<br/><strong><div class=\"holdem\">" + string(phtml.ReplaceAll([]byte(commits[i].Subject), []byte(""))) + "</strong><br/><br/>"
-			html += strings.Replace(string(phtml.ReplaceAll([]byte(commits[i].Body), []byte(""))), "\n", "<br/>", -1) + "</div></div>"
+			HTML += "<div class=\"loggy\">"
+			HTML += commits[i].Author + " &mdash; <div class=\"SHA\">" + commits[i].SHA + "</div> &mdash; " + commits[i].Time + "<br/>"
+			HTML += "<br/><strong><div class=\"holdem\">" + html.EscapeString(commits[i].Subject) + "</strong><br/><br/>"
+			HTML += strings.Replace(html.EscapeString(commits[i].Body), "\n", "<br/>", -1) + "</div></div>"
 		}
 		//now everything else for right now
-		html += "</div></body></html>"
+		HTML += "</div></body></html>"
 
-		return html, http.StatusOK
+		return HTML, http.StatusOK
 	} else {
 		var dirList string = "<ul>"
 		if url != ("http://" + host + "/") {
