@@ -36,12 +36,24 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 		//the file, return 500.
 		return page, http.StatusInternalServerError
 	}
-	dirinfos, err := f.Readdir(0)
+
+	//Retrieval of file info is done in two steps
+	//so that we can use os.Stat(), rather than
+	//os.Lstat(), the former of which follows
+	//symlinks.
+	dirnames, err := f.Readdirnames(0)
 	f.Close()
 	if err != nil {
 		//If the directory could not be
 		//opened, return 500.
 		return page, http.StatusInternalServerError
+	}
+	dirinfos := make([]os.FileInfo, 0, len(dirnames))
+	for _, n := range dirnames {
+		info, err := os.Stat(p + "/" + n)
+		if err == nil {
+			dirinfos = append(dirinfos, info)
+		}
 	}
 
 	//Find whether the directory contains
