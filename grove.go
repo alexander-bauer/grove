@@ -7,6 +7,7 @@ import (
 	"net/http/cgi"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 )
 
@@ -126,7 +127,8 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	//header.
 	if status != http.StatusOK {
 		l.Println("Sending", req.RemoteAddr, "status:", status)
-		w.WriteHeader(status)
+		http.Error(w, "Could not serve "+req.URL.String()+"\n"+strconv.Itoa(status), status)
+	} else {
+		w.Write([]byte(body))
 	}
-	w.Write([]byte(body))
 }
