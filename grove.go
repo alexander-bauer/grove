@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -21,9 +22,12 @@ const (
 )
 
 var (
-	Bind   = ""          //Bind interface (such as 127.0.0.1)
-	Port   = DefaultPort //Port to listen on
-	ResDir = "res/"      //Resources directory
+	ResDir = "res/" //Resources directory
+)
+
+var (
+	fBind = flag.String("bind", "", "interface to bind to")
+	fPort = flag.String("port", DefaultPort, "port to listen on")
 )
 
 var (
@@ -34,9 +38,11 @@ var (
 func main() {
 	l = log.New(os.Stdout, "", log.Ltime)
 
+	flag.Parse()
+
 	var repodir string
-	if len(os.Args) > 1 {
-		repodir = os.Args[1]
+	if flag.NArg() > 0 {
+		repodir = flag.Arg(0)
 		if !path.IsAbs(repodir) {
 			wd, err := os.Getwd()
 			if err != nil {
@@ -77,9 +83,9 @@ func Serve(repodir string) {
 		"\n\t\t", handler.Env[0],
 		"\n\t\t", handler.Env[1])
 
-	l.Println("Starting server on", Bind+":"+Port)
+	l.Println("Starting server on", *fBind+":"+*fPort)
 	http.HandleFunc("/", HandleWeb)
-	err := http.ListenAndServe(Bind+":"+Port, nil)
+	err := http.ListenAndServe(*fBind+":"+*fPort, nil)
 	if err != nil {
 		l.Fatalln("Server crashed:", err)
 	}
