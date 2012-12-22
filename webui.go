@@ -12,7 +12,45 @@ import (
 )
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
-func ShowPath(url string, p string, host string) (page string, status int) {
+func ShowPath(url, p, host string) (page string, status int) {
+	object := "HEAD"
+	//Parse out variables, such as in:
+	//    http://host/path/to/repo?o=deadbeef
+	//Keys are:
+	//    o: object, such as SHA or branch name
+	components := strings.Split(url, "?")
+	for i, c := range components {
+		if i == 0 {
+			//The first component is always the url
+			url = c
+			continue
+		}
+
+		parts := strings.SplitN(c, "=", 2)
+		var name string
+		var val string
+		if len(parts) != 2 {
+			//Only continue if it is a properly
+			//formatted variable.
+			continue
+		} else {
+			name = strings.ToLower(parts[0])
+
+			//The value is, unfortunately, always suffixed with
+			//a '/', because of how grove.go handles URLs.
+			val = strings.TrimRight(parts[1], "/")
+		}
+		switch name {
+		case "o":
+			object = val
+			continue
+		}
+	}
+
+	//Now make sure p is usable by taking only the portion
+	//to the left of any '?' characters.
+	p = strings.SplitN(p, "?", 2)[0]
+
 	css, err := ioutil.ReadFile(ResDir + "style.css")
 	if err != nil {
 		return page, http.StatusInternalServerError
