@@ -120,7 +120,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 		//now add the button things
 		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Developer's Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Grove View</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//add the md
-		HTML += "<div class=\"md\">" + getREADME(p) + "</div>"
+		HTML += "<div class=\"md\">" + getREADME(ref, p) + "</div>"
 		//add the log
 		HTML += "<div class=\"log\">"
 		for i := 0; i < 10; i++ {
@@ -149,7 +149,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 	return page, http.StatusOK
 }
 
-func getREADME(path string) string {
-	readme := gitGetFile(path, "HEAD", "README.md")
+func getREADME(ref, path string) string {
+	readme := gitGetFile(path, ref, "README.md")
 	return string(blackfriday.MarkdownCommon(readme))
 }
