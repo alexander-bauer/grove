@@ -59,6 +59,12 @@ func gitBranch(path string) (branch string) {
 	return strings.TrimRight(branch, "\n")
 }
 
+//Retrieve the contents of a file from the repository. The commit is either a SHA or pointer (such as HEAD, or HEAD^).
+func gitGetFile(path, commit, file string) (contents string) {
+	contents, _ = execute(path, "git", "--no-pager", "show", commit+":"+file)
+	return contents
+}
+
 func gitCurrentSHA(path string) (sha string) {
 	commit, _ := execute(path, "git", "rev-parse", "--short=8", "HEAD")
 	return strings.TrimRight(commit, "\n")
