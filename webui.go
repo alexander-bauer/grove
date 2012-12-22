@@ -2,13 +2,13 @@ package main
 
 import (
 	"github.com/russross/blackfriday"
+	"html"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
 	"strconv"
 	"strings"
-	"html"
 )
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
@@ -82,7 +82,7 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 		//now add the button things
 		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//add the md
-		HTML += "<div class=\"md\">" + md(p) + "</div>"
+		HTML += "<div class=\"md\">" + getREADME(p) + "</div>"
 		//add the log
 		HTML += "<div class=\"log\">"
 		for i := 0; i < 10; i++ {
@@ -111,10 +111,7 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 	return page, http.StatusOK
 }
 
-func md(path string) string {
-	readme, err := ioutil.ReadFile(path + "/README.md")
-	if err != nil {
-		return ""
-	}
+func getREADME(path string) string {
+	readme := gitGetFile(path, "HEAD", "README.md")
 	return string(blackfriday.MarkdownCommon(readme))
 }

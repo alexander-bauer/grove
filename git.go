@@ -60,8 +60,8 @@ func gitBranch(path string) (branch string) {
 }
 
 //Retrieve the contents of a file from the repository. The commit is either a SHA or pointer (such as HEAD, or HEAD^).
-func gitGetFile(path, commit, file string) (contents string) {
-	contents, _ = execute(path, "git", "--no-pager", "show", commit+":"+file)
+func gitGetFile(path, commit, file string) (contents []byte) {
+	contents, _ = executeB(path, "git", "--no-pager", "show", commit+":"+file)
 	return contents
 }
 
@@ -148,10 +148,15 @@ func gitParseCommit(log []string) (commit *Commit) {
 
 //Execute invokes exec.Command() with the given command, arguments, and working directory. All CR ('\r') characters are removed in output.
 func execute(dir, command string, args ...string) (output string, err error) {
+	out, err := executeB(dir, command, args...)
+	return string(out), err
+}
+
+func executeB(dir, command string, args ...string) (output []byte, err error) {
 	cmd := exec.Command(command, args...)
 	if len(dir) != 0 {
 		cmd.Dir = dir
 	}
 	out, err := cmd.Output()
-	return string(out), err
+	return out, err
 }
