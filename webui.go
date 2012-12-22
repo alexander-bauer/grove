@@ -13,11 +13,11 @@ import (
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
 func ShowPath(url, p, host string) (page string, status int) {
-	object := "HEAD"
+	ref := "HEAD"
 	//Parse out variables, such as in:
 	//    http://host/path/to/repo?o=deadbeef
 	//Keys are:
-	//    o: object, such as SHA or branch name
+	//    r: ref, such as SHA or branch name
 	components := strings.Split(url, "?")
 	for i, c := range components {
 		if i == 0 {
@@ -41,8 +41,8 @@ func ShowPath(url, p, host string) (page string, status int) {
 			val = strings.TrimRight(parts[1], "/")
 		}
 		switch name {
-		case "o":
-			object = val
+		case "r":
+			ref = val
 			continue
 		}
 	}
@@ -113,12 +113,12 @@ func ShowPath(url, p, host string) (page string, status int) {
 		commits := gitCommits("HEAD", 0, p)
 		commitNum := len(commits)
 		tagNum := gitTotalTags(p)
-		branch := gitBranch(p)
-		sha := gitCurrentSHA(p)
+		branch := gitBranch("HEAD", p)
+		sha := gitSHA(ref, p)
 
 		HTML := "<html><head><title>" + userName + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
 		//now add the button things
-		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
+		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Developer's Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Grove View</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//add the md
 		HTML += "<div class=\"md\">" + getREADME(p) + "</div>"
 		//add the log

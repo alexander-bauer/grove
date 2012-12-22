@@ -54,8 +54,8 @@ func setUser() (err error) {
 	return
 }
 
-func gitBranch(path string) (branch string) {
-	branch, _ = execute(path, "git", "rev-parse", "--abbrev-ref", "HEAD")
+func gitBranch(ref, path string) (branch string) {
+	branch, _ = execute(path, "git", "rev-parse", "--abbrev-ref", ref)
 	return strings.TrimRight(branch, "\n")
 }
 
@@ -65,8 +65,8 @@ func gitGetFile(path, commit, file string) (contents []byte) {
 	return contents
 }
 
-func gitCurrentSHA(path string) (sha string) {
-	commit, _ := execute(path, "git", "rev-parse", "--short=8", "HEAD")
+func gitSHA(ref, path string) (sha string) {
+	commit, _ := execute(path, "git", "rev-parse", "--short=8", ref)
 	return strings.TrimRight(commit, "\n")
 }
 
