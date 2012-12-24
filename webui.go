@@ -111,7 +111,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 
 	if isGit {
 		owner := gitVarUser()
-		commits := gitCommits("HEAD", 0, p)
+		commits := gitCommits(ref, 0, p)
 		commitNum := len(commits)
 		tagNum := gitTotalTags(p)
 		branch := gitBranch("HEAD", p)
