@@ -62,17 +62,12 @@ func main() {
 		repodir = wd
 	}
 
-	err := gitVars() //Make sure that the execPath is known
-	if err != nil {
-		l.Fatalln("Error getting git variables:", err)
-	}
-
 	Serve(repodir)
 }
 
 func Serve(repodir string) {
 	handler = &cgi.Handler{
-		Path:   strings.TrimRight(string(execPath), "\r\n") + "/" + gitHttpBackend,
+		Path:   gitVarExecPath() + "/" + gitHttpBackend,
 		Root:   "/",
 		Dir:    repodir,
 		Env:    []string{"GIT_PROJECT_ROOT=" + repodir, "GIT_HTTP_EXPORT_ALL=TRUE"},

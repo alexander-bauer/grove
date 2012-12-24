@@ -20,37 +20,20 @@ const (
 	gitLogSep      = "----GROVE-LOG-SEPARATOR----"
 )
 
-var (
-	execPath string //The path containing git binaries
-	userName string //The user.name global variable
-)
-
 //Set a number of git variables.
-func gitVars() (err error) {
-	err = setExecPath()
-	if err != nil {
-		return
-	}
-	err = setUser()
-	if err != nil {
-		return
-	}
-	return
-}
-
-func setExecPath() (err error) {
+func gitVarExecPath() (execPath string) {
 	//Use 'git --exec-path' to get the path
 	//of the git executables.
-	path, err := execute("", "git", "--exec-path")
-	execPath = strings.TrimRight(path, "\n")
+	execPath, _ = execute("", "git", "--exec-path")
+	execPath = strings.TrimRight(execPath, "\n")
 	return
 }
 
-func setUser() (err error) {
+func gitVarUser() (user string) {
 	//Use 'git config --global user.name
 	//to retrieve the variable.
-	name, err := execute("", "git", "config", "--global", "user.name")
-	userName = strings.TrimRight(name, "\n")
+	user, _ = execute("", "git", "config", "--global", "user.name")
+	user = strings.TrimRight(user, "\n")
 	return
 }
 
