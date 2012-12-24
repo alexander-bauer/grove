@@ -63,8 +63,8 @@ func ShowPath(url, p, host string) (page string, status int) {
 		//a StatusNotFound.
 		return page, http.StatusNotFound
 	}
-	//If is not directory, or starts with ".", or is not globally readable...
-	if !fi.IsDir() || strings.HasPrefix(fi.Name(), ".") || fi.Mode()&0005 == 0 {
+	//If is not directory, or starts with ".", or is not readable...
+	if !fi.IsDir() || strings.HasPrefix(fi.Name(), ".") || !CheckPerms(fi.Mode()) {
 		//Return 403 forbidden.
 		return page, http.StatusForbidden
 	}
@@ -110,24 +110,41 @@ func ShowPath(url, p, host string) (page string, status int) {
 	}
 
 	if isGit {
+		owner := gitVarUser()
 		commits := gitCommits("HEAD", 0, p)
 		commitNum := len(commits)
 		tagNum := gitTotalTags(p)
 		branch := gitBranch("HEAD", p)
 		sha := gitSHA(ref, p)
 
-		HTML := "<html><head><title>" + userName + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
+		HTML := "<html><head><title>" + owner + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
 		//now add the button things
 		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Developer's Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Grove View</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//add the md
 		HTML += "<div class=\"md\">" + getREADME(ref, p) + "</div>"
 		//add the log
 		HTML += "<div class=\"log\">"
-		for i := 0; i < 10; i++ {
-			HTML += "<div class=\"loggy\">"
-			HTML += commits[i].Author + " &mdash; <div class=\"SHA\">" + commits[i].SHA + "</div> &mdash; " + commits[i].Time + "<br/>"
-			HTML += "<br/><strong><div class=\"holdem\">" + html.EscapeString(commits[i].Subject) + "</strong><br/><br/>"
-			HTML += strings.Replace(html.EscapeString(commits[i].Body), "\n", "<br/>", -1) + "</div></div>"
+
+		for i, c := range commits {
+			if len(c.SHA) == 0 {
+				//If, for some reason, the commit doesn't
+				//have content, skip it.
+				continue
+			}
+
+			var classtype string
+			if c.Author == owner {
+				classtype = "-owner"
+			}
+
+			HTML += "<div class=\"loggy" + classtype + "\">"
+			HTML += c.Author + " &mdash; <div class=\"SHA" + classtype + "\">" + c.SHA + "</div> &mdash; " + c.Time + "<br/>"
+			HTML += "<br/><strong><div class=\"holdem\">" + html.EscapeString(c.Subject) + "</strong><br/><br/>"
+			HTML += strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1) + "</div></div>"
+			if i >= 10 {
+				//but only display the first 10 log messages
+				break
+			}
 		}
 		//now everything else for right now
 		HTML += "</div></body></html>"
@@ -140,11 +157,11 @@ func ShowPath(url, p, host string) (page string, status int) {
 		}
 		for _, info := range dirinfos {
 			//If is directory, and does not start with '.', and is globally readable
-			if (info.IsDir()) && !strings.HasPrefix(info.Name(), ".") && (info.Mode()&0005 == 0005) {
+			if (info.IsDir()) && !strings.HasPrefix(info.Name(), ".") && CheckPerms(info.Mode()) {
 				dirList += "<a href=\"" + url + info.Name() + "\"><li>" + info.Name() + "</li></a>"
 			}
 		}
-		page = "<html><head><title>" + userName + " [Grove]</title></head><style type=\"text/css\">" + string(css) + "</style></head><body><a href=\"http://" + host + "\"><div class=\"logo\"></div></a>" + dirList + "</ul><div class=\"version\">" + Version + "</body></html>"
+		page = "<html><head><title>" + gitVarUser() + " [Grove]</title></head><style type=\"text/css\">" + string(css) + "</style></head><body><a href=\"http://" + host + "\"><div class=\"logo\"></div></a>" + dirList + "</ul><div class=\"version\">" + Version + "</body></html>"
 	}
 	return page, http.StatusOK
 }
