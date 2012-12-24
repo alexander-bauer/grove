@@ -2,13 +2,13 @@ package main
 
 import (
 	"github.com/russross/blackfriday"
+	"html"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
 	"strconv"
 	"strings"
-	"html"
 )
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
@@ -85,11 +85,21 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 		HTML += "<div class=\"md\">" + md(p) + "</div>"
 		//add the log
 		HTML += "<div class=\"log\">"
-		for i := 0; i < 10; i++ {
+		for i, c := range commits {
+			if len(c.SHA) == 0 {
+				//If, for some reason, the commit doesn't
+				//have content, skip it.
+				continue
+			}
+
 			HTML += "<div class=\"loggy\">"
-			HTML += commits[i].Author + " &mdash; <div class=\"SHA\">" + commits[i].SHA + "</div> &mdash; " + commits[i].Time + "<br/>"
-			HTML += "<br/><strong><div class=\"holdem\">" + html.EscapeString(commits[i].Subject) + "</strong><br/><br/>"
-			HTML += strings.Replace(html.EscapeString(commits[i].Body), "\n", "<br/>", -1) + "</div></div>"
+			HTML += c.Author + " &mdash; <div class=\"SHA\">" + c.SHA + "</div> &mdash; " + c.Time + "<br/>"
+			HTML += "<br/><strong><div class=\"holdem\">" + html.EscapeString(c.Subject) + "</strong><br/><br/>"
+			HTML += strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1) + "</div></div>"
+			if i >= 10 {
+				//but only display the first 10 log messages
+				break
+			}
 		}
 		//now everything else for right now
 		HTML += "</div></body></html>"
