@@ -25,8 +25,8 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 		//a StatusNotFound.
 		return page, http.StatusNotFound
 	}
-	//If is not directory, or starts with ".", or is not globally readable...
-	if !fi.IsDir() || strings.HasPrefix(fi.Name(), ".") || fi.Mode()&0005 == 0 {
+	//If is not directory, or starts with ".", or is not readable...
+	if !fi.IsDir() || strings.HasPrefix(fi.Name(), ".") || !CheckPerms(fi.Mode()) {
 		//Return 403 forbidden.
 		return page, http.StatusForbidden
 	}
@@ -112,7 +112,7 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 		}
 		for _, info := range dirinfos {
 			//If is directory, and does not start with '.', and is globally readable
-			if (info.IsDir()) && !strings.HasPrefix(info.Name(), ".") && (info.Mode()&0005 == 0005) {
+			if (info.IsDir()) && !strings.HasPrefix(info.Name(), ".") && CheckPerms(info.Mode()) {
 				dirList += "<a href=\"" + url + info.Name() + "\"><li>" + info.Name() + "</li></a>"
 			}
 		}

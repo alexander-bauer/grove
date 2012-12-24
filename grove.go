@@ -17,12 +17,16 @@ const (
 	DefaultPort = "8860"
 )
 
-const (
-	usage = "usage: %s [repositorydir]\n"
+var (
+	ResDir = "res/"  //Resources directory
+	Perms  = uint(0) //Used to specify which files can be served:
+	//0: readable globally
+	//1: readable by group
+	//2: readable
 )
 
-var (
-	ResDir = "res/" //Resources directory
+const (
+	usage = "usage: %s [repositorydir]\n"
 )
 
 var (
@@ -110,7 +114,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		//Check to make sure that the repository
 		//is globally readable.
 		fi, err := os.Stat(gitPath)
-		if err != nil || !(fi.Mode()&0005 == 0005) {
+		if err != nil || !CheckPerms(fi.Mode()) {
 			l.Println("Git request from", req.RemoteAddr, "denied")
 			return
 		}
@@ -138,4 +142,21 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	} else {
 		w.Write([]byte(body))
 	}
+}
+
+func CheckPerms(mode os.FileMode) (canServe bool) {
+	permBits := 0004
+	if mode.IsDir() {
+		permBits = 0005
+	}
+
+	//For example, consider the following:
+	//       rwl rwl rwl       r-l
+	//    0b 111 101 101 & (0b 101 << 3)  > 0
+	//    0b 111 101 101 & 0b 000 101 000 > 0
+	//    0b 000 101 000                  > 0
+	//    TRUE
+	//Thus, the file is readable and listable by
+	//the group, and therefore okay to serve.
+	return (mode.Perm()&os.FileMode((permBits<<Perms)) > 0)
 }
