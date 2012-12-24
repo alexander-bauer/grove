@@ -195,6 +195,10 @@ h6 {
 	box-shadow: inset 0px 0px 5px #66cc33;
 }
 
+.loggy-owner:hover {
+	box-shadow: inset 0px 0px 05px #66ff66
+}
+
 .holdem {
 	width: 90%;
 	margin-right: auto;
@@ -209,7 +213,16 @@ h6 {
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
-	
+}
+
+.loggy-owner {
+	padding: 10px;
+	font-family: monospace;
+	border: 2px solid #CFD;
+	margin-bottom: 5px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
 }
 
 .SHA {

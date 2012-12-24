@@ -72,19 +72,21 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 	}
 
 	if isGit {
+		owner := gitVarUser()
 		commits := gitCommits("HEAD", 0, p)
 		commitNum := len(commits)
 		tagNum := gitTotalTags(p)
 		branch := gitBranch(p)
 		sha := gitCurrentSHA(p)
 
-		HTML := "<html><head><title>" + gitVarUser() + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
+		HTML := "<html><head><title>" + owner + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
 		//now add the button things
 		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Current Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Current Commit</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//add the md
 		HTML += "<div class=\"md\">" + md(p) + "</div>"
 		//add the log
 		HTML += "<div class=\"log\">"
+
 		for i, c := range commits {
 			if len(c.SHA) == 0 {
 				//If, for some reason, the commit doesn't
@@ -92,7 +94,12 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 				continue
 			}
 
-			HTML += "<div class=\"loggy\">"
+			var classtype string
+			if c.Author == owner {
+				classtype = "-owner"
+			}
+
+			HTML += "<div class=\"loggy" + classtype + "\">"
 			HTML += c.Author + " &mdash; <div class=\"SHA\">" + c.SHA + "</div> &mdash; " + c.Time + "<br/>"
 			HTML += "<br/><strong><div class=\"holdem\">" + html.EscapeString(c.Subject) + "</strong><br/><br/>"
 			HTML += strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1) + "</div></div>"
