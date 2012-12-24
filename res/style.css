@@ -196,7 +196,7 @@ h6 {
 }
 
 .loggy-owner:hover {
-	box-shadow: inset 0px 0px 05px #66ff66
+	box-shadow: inset 0px 0px 05px #ff8888
 }
 
 .holdem {
@@ -218,7 +218,7 @@ h6 {
 .loggy-owner {
 	padding: 10px;
 	font-family: monospace;
-	border: 2px solid #CFD;
+	border: 2px solid #FBB;
 	margin-bottom: 5px;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
@@ -228,6 +228,11 @@ h6 {
 .SHA {
 	display: inline-block;
 	color: #66cc33;
+}
+
+.SHA-owner {
+	display: inline-block;
+	color: #ff6666
 }
 
 pre {

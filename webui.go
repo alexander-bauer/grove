@@ -100,7 +100,7 @@ func ShowPath(url string, p string, host string) (page string, status int) {
 			}
 
 			HTML += "<div class=\"loggy" + classtype + "\">"
-			HTML += c.Author + " &mdash; <div class=\"SHA\">" + c.SHA + "</div> &mdash; " + c.Time + "<br/>"
+			HTML += c.Author + " &mdash; <div class=\"SHA" + classtype + "\">" + c.SHA + "</div> &mdash; " + c.Time + "<br/>"
 			HTML += "<br/><strong><div class=\"holdem\">" + html.EscapeString(c.Subject) + "</strong><br/><br/>"
 			HTML += strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1) + "</div></div>"
 			if i >= 10 {
