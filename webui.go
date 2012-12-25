@@ -48,17 +48,6 @@ func ShowPath(url, p, host string) (page string, status int) {
 	//to the left of any '?' characters.
 	p = strings.SplitN(p, "?", 2)[0]
 
-	//If the request is specified as using the JSON interface,
-	//then we switch to that.
-	if jsoni {
-		return ShowJSON(ref, url, p)
-	}
-
-	css, err := ioutil.ReadFile(ResDir + "style.css")
-	if err != nil {
-		return page, http.StatusInternalServerError
-	}
-
 	//Retrieve information about the file.
 	fi, err := os.Stat(p)
 	if err != nil {
@@ -110,6 +99,18 @@ func ShowPath(url, p, host string) (page string, status int) {
 			gitDir = info.Name()
 			break
 		}
+	}
+
+	//If the request is specified as using the JSON interface,
+	//then we switch to that.
+	if jsoni && isGit {
+		return ShowJSON(ref, url, p)
+	}
+
+	//Otherwise, load the CSS.
+	css, err := ioutil.ReadFile(ResDir + "style.css")
+	if err != nil {
+		return page, http.StatusInternalServerError
 	}
 
 	if isGit {
