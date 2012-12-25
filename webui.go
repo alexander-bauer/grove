@@ -104,7 +104,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 	//If the request is specified as using the JSON interface,
 	//then we switch to that.
 	if jsoni && isGit {
-		return ShowJSON(ref, url, p)
+		return ShowJSON(ref, p)
 	}
 
 	//Otherwise, load the CSS.
