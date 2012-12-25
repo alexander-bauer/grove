@@ -14,6 +14,7 @@ import (
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
 func ShowPath(url, p, host string) (page string, status int) {
 	ref := "HEAD"
+	jsoni := false
 	//Parse out variables, such as in:
 	//    http://host/path/to/repo?o=deadbeef
 	//Keys are:
@@ -26,30 +27,32 @@ func ShowPath(url, p, host string) (page string, status int) {
 			continue
 		}
 
-		parts := strings.SplitN(c, "=", 2)
+		parts := strings.SplitN(strings.TrimRight(c, "/"), "=", 2)
 		var name string
 		var val string
-		if len(parts) != 2 {
-			//Only continue if it is a properly
-			//formatted variable.
-			continue
-		} else {
+		if len(parts) > 0 {
 			name = strings.ToLower(parts[0])
-
-			//The value is, unfortunately, always suffixed with
-			//a '/', because of how grove.go handles URLs.
-			val = strings.TrimRight(parts[1], "/")
+		}
+		if len(parts) > 1 {
+			val = parts[1]
 		}
 		switch name {
 		case "r":
 			ref = val
-			continue
+		case "j":
+			jsoni = true
 		}
 	}
 
 	//Now make sure p is usable by taking only the portion
 	//to the left of any '?' characters.
 	p = strings.SplitN(p, "?", 2)[0]
+
+	//If the request is specified as using the JSON interface,
+	//then we switch to that.
+	if jsoni {
+		return ShowJSON(ref, url, p)
+	}
 
 	css, err := ioutil.ReadFile(ResDir + "style.css")
 	if err != nil {
