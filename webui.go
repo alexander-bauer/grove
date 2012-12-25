@@ -13,8 +13,9 @@ import (
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
 func ShowPath(url, p, host string) (page string, status int) {
-	ref := "HEAD"
-	jsoni := false
+	ref := "HEAD"    //The commit or branch reference
+	maxCommits := 10 //The maximum number of commits to be shown by the log
+	jsoni := false   //Whether or not to use the JSON interface
 	//Parse out variables, such as in:
 	//    http://host/path/to/repo?o=deadbeef
 	//Keys are:
@@ -39,6 +40,12 @@ func ShowPath(url, p, host string) (page string, status int) {
 		switch name {
 		case "r":
 			ref = val
+		case "c":
+			tmax, err := strconv.Atoi(val)
+			if err != nil {
+				continue
+			}
+			maxCommits = tmax
 		case "j":
 			jsoni = true
 		}
@@ -104,7 +111,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 	//If the request is specified as using the JSON interface,
 	//then we switch to that.
 	if jsoni && isGit {
-		return ShowJSON(ref, p)
+		return ShowJSON(ref, p, maxCommits)
 	}
 
 	//Otherwise, load the CSS.
@@ -145,7 +152,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 			HTML += c.Author + " &mdash; <div class=\"SHA" + classtype + "\">" + c.SHA + "</div> &mdash; " + c.Time + "<br/>"
 			HTML += "<br/><strong><div class=\"holdem\">" + html.EscapeString(c.Subject) + "</strong><br/><br/>"
 			HTML += strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1) + "</div></div>"
-			if i >= 10 {
+			if i >= maxCommits {
 				//but only display the first 10 log messages
 				break
 			}

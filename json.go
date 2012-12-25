@@ -16,7 +16,7 @@ func ShowJSON(ref, p string, maxCommits int) (payload string, status int) {
 	summary := &Summary{
 		Owner:         gitVarUser(),
 		CurrentCommit: gitSHA(ref, p),
-		Commits:       gitCommits(ref, 0, p),
+		Commits:       gitCommits(ref, maxCommits, p),
 	}
 	b, err := json.Marshal(summary)
 	if err != nil {
