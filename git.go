@@ -64,6 +64,16 @@ func gitTotalCommits(path string) (commits string) {
 	return strconv.Itoa(len(commit))
 }
 
+func gitRefExists(path, ref string) (exists bool) {
+	//If the exit status of 'git rev-list HEAD..<ref>'
+	//is nonzero, the ref does not exist in the
+	//repository. Cmd.Output(), which is used by
+	//execute(), uses Cmd.Run(), which returns an
+	//error if an exit status other than 0 is returned.
+	_, err := execute(path, "git", "rev-list", "HEAD.."+ref)
+	return err == nil
+}
+
 //Get Commits from the log, up to the given max.
 func gitCommits(ref string, max int, path string) (commits []*Commit) {
 	var log string

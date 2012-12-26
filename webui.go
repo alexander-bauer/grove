@@ -20,6 +20,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 	//    http://host/path/to/repo?o=deadbeef
 	//Keys are:
 	//    r: ref, such as SHA or branch name
+	p = strings.SplitN(p, "?", 2)[0]
 	components := strings.Split(url, "?")
 	for i, c := range components {
 		if i == 0 {
@@ -39,7 +40,9 @@ func ShowPath(url, p, host string) (page string, status int) {
 		}
 		switch name {
 		case "r":
-			ref = val
+			if gitRefExists(p, val) {
+				ref = val
+			}
 		case "c":
 			tmax, err := strconv.Atoi(val)
 			if err != nil {
@@ -50,10 +53,6 @@ func ShowPath(url, p, host string) (page string, status int) {
 			jsoni = true
 		}
 	}
-
-	//Now make sure p is usable by taking only the portion
-	//to the left of any '?' characters.
-	p = strings.SplitN(p, "?", 2)[0]
 
 	//Retrieve information about the file.
 	fi, err := os.Stat(p)
