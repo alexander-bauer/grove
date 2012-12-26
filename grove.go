@@ -109,7 +109,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		//Check to make sure that the repository
 		//is globally readable.
 		fi, err := os.Stat(gitPath)
-		if err != nil || !CheckPerms(fi.Mode()) {
+		if err != nil || !CheckPerms(fi) {
 			l.Println("Git request from", req.RemoteAddr, "denied")
 			return
 		}
@@ -139,9 +139,13 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func CheckPerms(mode os.FileMode) (canServe bool) {
+func CheckPerms(info os.FileInfo) (canServe bool) {
+	if strings.HasPrefix(info.Name(), ".") {
+		return false
+	}
+
 	permBits := 0004
-	if mode.IsDir() {
+	if info.IsDir() {
 		permBits = 0005
 	}
 
@@ -153,5 +157,5 @@ func CheckPerms(mode os.FileMode) (canServe bool) {
 	//    TRUE
 	//Thus, the file is readable and listable by
 	//the group, and therefore okay to serve.
-	return (mode.Perm()&os.FileMode((permBits<<Perms)) > 0)
+	return (info.Mode().Perm()&os.FileMode((permBits<<(Perms*3))) > 0)
 }

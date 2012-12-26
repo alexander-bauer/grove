@@ -63,7 +63,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 		return page, http.StatusNotFound
 	}
 	//If is not directory, or starts with ".", or is not readable...
-	if !fi.IsDir() || strings.HasPrefix(fi.Name(), ".") || !CheckPerms(fi.Mode()) {
+	if !fi.IsDir() || !CheckPerms(fi) {
 		//Return 403 forbidden.
 		return page, http.StatusForbidden
 	}
@@ -96,8 +96,6 @@ func ShowPath(url, p, host string) (page string, status int) {
 
 	//Find whether the directory contains
 	//a .git file.
-	//TODO find if the directory is a
-	//bare git repository (name.git)
 	var isGit bool
 	var gitDir string
 	for _, info := range dirinfos {
@@ -168,7 +166,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 		}
 		for _, info := range dirinfos {
 			//If is directory, and does not start with '.', and is globally readable
-			if (info.IsDir()) && !strings.HasPrefix(info.Name(), ".") && CheckPerms(info.Mode()) {
+			if info.IsDir() && CheckPerms(info) {
 				dirList += "<a href=\"" + url + info.Name() + "\"><li>" + info.Name() + "</li></a>"
 			}
 		}
