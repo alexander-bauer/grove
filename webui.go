@@ -152,8 +152,8 @@ func ShowPath(url, p, host string) (page string, status int) {
 			HTML += c.Author + " &mdash; <div class=\"SHA" + classtype + "\">" + c.SHA + "</div> &mdash; " + c.Time + "<br/>"
 			HTML += "<br/><strong><div class=\"holdem\">" + html.EscapeString(c.Subject) + "</strong><br/><br/>"
 			HTML += strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1) + "</div></div>"
-			if i >= maxCommits {
-				//but only display the first 10 log messages
+			if i == maxCommits-1 {
+				//but only display certain log messages
 				break
 			}
 		}
