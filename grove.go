@@ -17,6 +17,8 @@ const (
 	DefaultPort = "8860"
 )
 
+var minversion string
+
 var (
 	ResDir = "res/"  //Resources directory
 	Perms  = uint(0) //Used to specify which files can be served:
