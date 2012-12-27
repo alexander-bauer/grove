@@ -28,7 +28,8 @@ type git struct {
 func gitVarExecPath() (execPath string) {
 	//Use 'git --exec-path' to get the path
 	//of the git executables.
-	execPath, _ = execute("", "git", "--exec-path")
+	g := &git{}
+	execPath, _ = g.execute("--exec-path")
 	execPath = strings.TrimRight(execPath, "\n")
 	return
 }
@@ -36,34 +37,35 @@ func gitVarExecPath() (execPath string) {
 func gitVarUser() (user string) {
 	//Use 'git config --global user.name
 	//to retrieve the variable.
-	user, _ = execute("", "git", "config", "--global", "user.name")
+	g := &git{}
+	user, _ = g.execute("config", "--global", "user.name")
 	user = strings.TrimRight(user, "\n")
 	return
 }
 
 func (g *git) Branch(ref string) (branch string) {
-	branch, _ = execute(g.Path, "git", "rev-parse", "--abbrev-ref", ref)
+	branch, _ = g.execute("rev-parse", "--abbrev-ref", ref)
 	return strings.TrimRight(branch, "\n")
 }
 
 //Retrieve the contents of a file from the repository. The commit is either a SHA or pointer (such as HEAD, or HEAD^).
 func (g *git) GetFile(commit, file string) (contents []byte) {
-	contents, _ = executeB(g.Path, "git", "--no-pager", "show", commit+":"+file)
+	contents, _ = g.executeB("--no-pager", "show", commit+":"+file)
 	return contents
 }
 
 func (g *git) SHA(ref string) (sha string) {
-	commit, _ := execute(g.Path, "git", "rev-parse", "--short=8", ref)
+	commit, _ := g.execute("rev-parse", "--short=8", ref)
 	return strings.TrimRight(commit, "\n")
 }
 
 func (g *git) Tags() (tags []string) {
-	t, _ := execute(g.Path, "git", "tag", "--list")
+	t, _ := g.execute("tag", "--list")
 	return strings.Split(t, "\n")
 }
 
 func (g *git) TotalCommits() (commits string) {
-	c, _ := execute(g.Path, "git", "rev-list", "--all")
+	c, _ := g.execute("rev-list", "--all")
 	commit := strings.Split(strings.TrimRight(c, "\n"), "\n")
 	return strconv.Itoa(len(commit))
 }
@@ -74,7 +76,7 @@ func (g *git) RefExists(ref string) (exists bool) {
 	//repository. Cmd.Output(), which is used by
 	//execute(), uses Cmd.Run(), which returns an
 	//error if an exit status other than 0 is returned.
-	_, err := execute(g.Path, "git", "rev-list", "HEAD.."+ref)
+	_, err := g.execute("rev-list", "HEAD.."+ref)
 	return err == nil
 }
 
@@ -82,9 +84,9 @@ func (g *git) RefExists(ref string) (exists bool) {
 func (g *git) Commits(ref string, max int) (commits []*Commit) {
 	var log string
 	if max > 0 {
-		log, _ = execute(g.Path, "git", "--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref, "-n "+strconv.Itoa(max))
+		log, _ = g.execute("--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref, "-n "+strconv.Itoa(max))
 	} else {
-		log, _ = execute(g.Path, "git", "--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref)
+		log, _ = g.execute("--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref)
 	}
 	commitLogs := strings.Split(log, gitLogSep)
 	commits = make([]*Commit, 0, len(commitLogs))
@@ -144,15 +146,15 @@ func gitParseCommit(log []string) (commit *Commit) {
 }
 
 //Execute invokes exec.Command() with the given command, arguments, and working directory. All CR ('\r') characters are removed in output.
-func execute(dir, command string, args ...string) (output string, err error) {
-	out, err := executeB(dir, command, args...)
+func (g *git) execute(args ...string) (output string, err error) {
+	out, err := g.executeB(args...)
 	return string(out), err
 }
 
-func executeB(dir, command string, args ...string) (output []byte, err error) {
-	cmd := exec.Command(command, args...)
-	if len(dir) != 0 {
-		cmd.Dir = dir
+func (g *git) executeB(args ...string) (output []byte, err error) {
+	cmd := exec.Command("git", args...)
+	if len(g.Path) != 0 {
+		cmd.Dir = g.Path
 	}
 	out, err := cmd.Output()
 	return out, err
