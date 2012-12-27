@@ -109,7 +109,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		//Check to make sure that the repository
 		//is globally readable.
 		fi, err := os.Stat(gitPath)
-		if err != nil || !CheckPerms(fi) {
+		if err != nil || !CheckPermBits(fi) {
 			l.Println("Git request from", req.RemoteAddr, "denied")
 			return
 		}
@@ -143,7 +143,10 @@ func CheckPerms(info os.FileInfo) (canServe bool) {
 	if strings.HasPrefix(info.Name(), ".") {
 		return false
 	}
+	return CheckPermBits(info)
+}
 
+func CheckPermBits(info os.FileInfo) (canServe bool) {
 	permBits := 0004
 	if info.IsDir() {
 		permBits = 0005
