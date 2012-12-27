@@ -44,6 +44,8 @@ var (
 func main() {
 	l = log.New(os.Stdout, "", log.Ltime)
 
+	l.Println("Verision:", Version+minversion)
+
 	flag.Parse()
 
 	var repodir string
