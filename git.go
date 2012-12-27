@@ -61,7 +61,7 @@ func (g *git) SHA(ref string) (sha string) {
 
 func (g *git) Tags() (tags []string) {
 	t, _ := g.execute("tag", "--list")
-	return strings.Split(t, "\n")
+	return strings.Split(strings.TrimRight(t, "\n"), "\n")
 }
 
 func (g *git) TotalCommits() (commits string) {
