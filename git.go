@@ -20,6 +20,10 @@ const (
 	gitLogSep      = "----GROVE-LOG-SEPARATOR----"
 )
 
+type git struct {
+	Path string //Directory path
+}
+
 //Set a number of git variables.
 func gitVarExecPath() (execPath string) {
 	//Use 'git --exec-path' to get the path
@@ -37,50 +41,50 @@ func gitVarUser() (user string) {
 	return
 }
 
-func gitBranch(ref, path string) (branch string) {
-	branch, _ = execute(path, "git", "rev-parse", "--abbrev-ref", ref)
+func (g *git) Branch(ref string) (branch string) {
+	branch, _ = execute(g.Path, "git", "rev-parse", "--abbrev-ref", ref)
 	return strings.TrimRight(branch, "\n")
 }
 
 //Retrieve the contents of a file from the repository. The commit is either a SHA or pointer (such as HEAD, or HEAD^).
-func gitGetFile(path, commit, file string) (contents []byte) {
-	contents, _ = executeB(path, "git", "--no-pager", "show", commit+":"+file)
+func (g *git) GetFile(commit, file string) (contents []byte) {
+	contents, _ = executeB(g.Path, "git", "--no-pager", "show", commit+":"+file)
 	return contents
 }
 
-func gitSHA(ref, path string) (sha string) {
-	commit, _ := execute(path, "git", "rev-parse", "--short=8", ref)
+func (g *git) SHA(ref string) (sha string) {
+	commit, _ := execute(g.Path, "git", "rev-parse", "--short=8", ref)
 	return strings.TrimRight(commit, "\n")
 }
 
-func gitTotalTags(path string) (numOfTags int) {
-	t, _ := execute(path, "git", "tag", "--list")
-	return len(strings.Split(t, "\n"))
+func (g *git) Tags() (tags []string) {
+	t, _ := execute(g.Path, "git", "tag", "--list")
+	return strings.Split(t, "\n")
 }
 
-func gitTotalCommits(path string) (commits string) {
-	c, _ := execute(path, "git", "rev-list", "--all")
+func (g *git) TotalCommits() (commits string) {
+	c, _ := execute(g.Path, "git", "rev-list", "--all")
 	commit := strings.Split(strings.TrimRight(c, "\n"), "\n")
 	return strconv.Itoa(len(commit))
 }
 
-func gitRefExists(path, ref string) (exists bool) {
+func (g *git) RefExists(ref string) (exists bool) {
 	//If the exit status of 'git rev-list HEAD..<ref>'
 	//is nonzero, the ref does not exist in the
 	//repository. Cmd.Output(), which is used by
 	//execute(), uses Cmd.Run(), which returns an
 	//error if an exit status other than 0 is returned.
-	_, err := execute(path, "git", "rev-list", "HEAD.."+ref)
+	_, err := execute(g.Path, "git", "rev-list", "HEAD.."+ref)
 	return err == nil
 }
 
 //Get Commits from the log, up to the given max.
-func gitCommits(ref string, max int, path string) (commits []*Commit) {
+func (g *git) Commits(ref string, max int) (commits []*Commit) {
 	var log string
 	if max > 0 {
-		log, _ = execute(path, "git", "--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref, "-n "+strconv.Itoa(max))
+		log, _ = execute(g.Path, "git", "--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref, "-n "+strconv.Itoa(max))
 	} else {
-		log, _ = execute(path, "git", "--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref)
+		log, _ = execute(g.Path, "git", "--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref)
 	}
 	commitLogs := strings.Split(log, gitLogSep)
 	commits = make([]*Commit, 0, len(commitLogs))

@@ -13,6 +13,13 @@ import (
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
 func ShowPath(url, p, host string) (page string, status int) {
+	//Create (or retrieve, if caching is possible) a
+	//git object.
+	p = strings.SplitN(p, "?", 2)[0]
+	g := &git{
+		Path: p,
+	}
+
 	ref := "HEAD"    //The commit or branch reference
 	maxCommits := 10 //The maximum number of commits to be shown by the log
 	jsoni := false   //Whether or not to use the JSON interface
@@ -20,7 +27,6 @@ func ShowPath(url, p, host string) (page string, status int) {
 	//    http://host/path/to/repo?o=deadbeef
 	//Keys are:
 	//    r: ref, such as SHA or branch name
-	p = strings.SplitN(p, "?", 2)[0]
 	components := strings.Split(url, "?")
 	for i, c := range components {
 		if i == 0 {
@@ -40,7 +46,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 		}
 		switch name {
 		case "r":
-			if gitRefExists(p, val) {
+			if g.RefExists(val) {
 				ref = val
 			}
 		case "c":
@@ -108,7 +114,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 	//If the request is specified as using the JSON interface,
 	//then we switch to that.
 	if jsoni && isGit {
-		return ShowJSON(ref, p, maxCommits)
+		return g.ShowJSON(ref, maxCommits)
 	}
 
 	//Otherwise, load the CSS.
@@ -119,17 +125,17 @@ func ShowPath(url, p, host string) (page string, status int) {
 
 	if isGit {
 		owner := gitVarUser()
-		commits := gitCommits(ref, 0, p)
+		commits := g.Commits(ref, 0)
 		commitNum := len(commits)
-		tagNum := gitTotalTags(p)
-		branch := gitBranch("HEAD", p)
-		sha := gitSHA(ref, p)
+		tagNum := len(g.Tags())
+		branch := g.Branch("HEAD")
+		sha := g.SHA(ref)
 
 		HTML := "<html><head><title>" + owner + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
 		//now add the button things
 		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Developer's Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Grove View</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//add the md
-		HTML += "<div class=\"md\">" + getREADME(ref, p) + "</div>"
+		HTML += "<div class=\"md\">" + getREADME(g, ref) + "</div>"
 		//add the log
 		HTML += "<div class=\"log\">"
 
@@ -174,7 +180,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 	return page, http.StatusOK
 }
 
-func getREADME(ref, path string) string {
-	readme := gitGetFile(path, ref, "README.md")
+func getREADME(g *git, ref string) string {
+	readme := g.GetFile(ref, "README.md")
 	return string(blackfriday.MarkdownCommon(readme))
 }
