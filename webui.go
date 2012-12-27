@@ -20,9 +20,10 @@ func ShowPath(url, p, host string) (page string, status int) {
 		Path: p,
 	}
 
-	ref := "HEAD"    //The commit or branch reference
-	maxCommits := 10 //The maximum number of commits to be shown by the log
-	jsoni := false   //Whether or not to use the JSON interface
+	ref := "HEAD"       //The commit or branch reference
+	maxCommits := 10    //The maximum number of commits to be shown by the log
+	file := "README.md" //The file to display in the WebUI
+	jsoni := false      //Whether or not to use the JSON interface
 	//Parse out variables, such as in:
 	//    http://host/path/to/repo?o=deadbeef
 	//Keys are:
@@ -55,6 +56,8 @@ func ShowPath(url, p, host string) (page string, status int) {
 				continue
 			}
 			maxCommits = tmax
+		case "f":
+			file = val
 		case "j":
 			jsoni = true
 		}
@@ -134,8 +137,12 @@ func ShowPath(url, p, host string) (page string, status int) {
 		HTML := "<html><head><title>" + owner + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
 		//now add the button things
 		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Developer's Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Grove View</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
-		//add the md
-		HTML += "<div class=\"md\">" + getREADME(g, ref) + "</div>"
+		//add the file, usually README
+		if strings.Contains(file, "README") {
+			HTML += "<div class=\"md\">" + getREADME(g, ref, file) + "</div>"
+		} else {
+			HTML += "<div class=\"md\"><pre>" + strings.Replace(string(g.GetFile(ref, file)), "\n", "<br/>", -1) + "</pre></div>"
+		}
 		//add the log
 		HTML += "<div class=\"log\">"
 
@@ -180,7 +187,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 	return page, http.StatusOK
 }
 
-func getREADME(g *git, ref string) string {
-	readme := g.GetFile(ref, "README.md")
+func getREADME(g *git, ref, file string) string {
+	readme := g.GetFile(ref, file)
 	return string(blackfriday.MarkdownCommon(readme))
 }
