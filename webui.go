@@ -121,7 +121,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 	}
 
 	//Otherwise, load the CSS.
-	css, err := ioutil.ReadFile(ResDir + "style.css")
+	css, err := ioutil.ReadFile(*fRes + "/style.css")
 	if err != nil {
 		return page, http.StatusInternalServerError
 	}

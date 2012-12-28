@@ -12,16 +12,16 @@ import (
 	"strings"
 )
 
-const (
-	Version     = "0.4.6"
-	DefaultPort = "8860"
+var (
+	Version    = "0.4.6"
+	minversion string
+
+	Port      = "8860"       //Port to bind to
+	Resources = "/etc/grove" //Directory to store resources in
 )
 
-var minversion string
-
 var (
-	ResDir = "res/"  //Resources directory
-	Perms  = uint(0) //Used to specify which files can be served:
+	Perms = uint(0) //Used to specify which files can be served:
 	//0: readable globally
 	//1: readable by group
 	//2: readable
@@ -33,7 +33,8 @@ const (
 
 var (
 	fBind = flag.String("bind", "", "interface to bind to")
-	fPort = flag.String("port", DefaultPort, "port to listen on")
+	fPort = flag.String("port", Port, "port to listen on")
+	fRes  = flag.String("res", Resources, "resources directory")
 )
 
 var (
@@ -121,7 +122,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		handler.ServeHTTP(w, req)
 		return
 	} else if req.URL.String() == "/favicon.ico" {
-		b, err := ioutil.ReadFile(ResDir + "favicon.png")
+		b, err := ioutil.ReadFile(*fRes + "favicon.png")
 		if err != nil {
 			return
 		}
