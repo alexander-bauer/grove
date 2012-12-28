@@ -16,8 +16,9 @@ var (
 	Version    = "0.4.6"
 	minversion string
 
-	Port      = "8860"       //Port to bind to
-	Resources = "/etc/grove" //Directory to store resources in
+	Bind      = "0.0.0.0"          //Interface to bind to
+	Port      = "8860"             //Port to bind to
+	Resources = "/usr/share/grove" //Directory to store resources in
 )
 
 var (
@@ -32,9 +33,15 @@ const (
 )
 
 var (
-	fBind = flag.String("bind", "", "interface to bind to")
+	fBind = flag.String("bind", Bind, "interface to bind to")
 	fPort = flag.String("port", Port, "port to listen on")
 	fRes  = flag.String("res", Resources, "resources directory")
+
+	fShowVersion  = flag.Bool("version", false, "print major version and exit")
+	fShowFVersion = flag.Bool("version-full", false, "print full version and exit")
+	fShowBind     = flag.Bool("show-bind", false, "print default bind interface and exit")
+	fShowPort     = flag.Bool("show-port", false, "print default port and exit")
+	fShowRes      = flag.Bool("show-res", false, "print default resources directory and exit")
 )
 
 var (
@@ -45,9 +52,27 @@ var (
 func main() {
 	l = log.New(os.Stdout, "", log.Ltime)
 
-	l.Println("Verision:", Version+minversion)
-
 	flag.Parse()
+
+	switch {
+	case *fShowVersion:
+		println(Version)
+		return
+	case *fShowFVersion:
+		println(Version + minversion)
+		return
+	case *fShowBind:
+		println(Bind)
+		return
+	case *fShowPort:
+		println(Port)
+		return
+	case *fShowRes:
+		println(Resources)
+		return
+	}
+
+	l.Println("Verision:", Version+minversion)
 
 	var repodir string
 	if flag.NArg() > 0 {
