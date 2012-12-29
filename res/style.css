@@ -208,6 +208,7 @@ h6 {
 .loggy {
 	padding: 10px;
 	font-family: monospace;
+	white-space: pre;
 	border: 1px solid #CCC;
 	margin-bottom: 5px;
 	-webkit-border-radius: 5px;
@@ -218,6 +219,7 @@ h6 {
 .loggy-owner {
 	padding: 10px;
 	font-family: monospace;
+	white-space: pre;
 	border: 1px solid #66cc33;
 	margin-bottom: 5px;
 	box-shadow: inset 0px 0px 3px #66cc33;
