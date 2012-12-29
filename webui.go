@@ -31,12 +31,13 @@ func ShowPath(url, p, host string) (page string, status int) {
 	components := strings.Split(url, "?")
 	for i, c := range components {
 		if i == 0 {
-			//The first component is always the url
-			url = c
+			//The first component is always the url,
+			//and trim out any trailing slashes.
+			url = strings.TrimRight(c, "/")
 			continue
 		}
 
-		parts := strings.SplitN(strings.TrimRight(c, "/"), "=", 2)
+		parts := strings.SplitN(c, "=", 2)
 		var name string
 		var val string
 		if len(parts) > 0 {
@@ -134,7 +135,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 		branch := g.Branch("HEAD")
 		sha := g.SHA(ref)
 
-		HTML := "<html><head><title>" + owner + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
+		HTML := "<html><head><title>" + owner + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "/..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
 		//now add the button things
 		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Developer's Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Grove View</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//add the file, usually README
@@ -174,12 +175,12 @@ func ShowPath(url, p, host string) (page string, status int) {
 	} else {
 		var dirList string = "<ul>"
 		if url != ("http://" + host + "/") {
-			dirList += "<a href=\"" + url + "..\"><li>..</li></a>"
+			dirList += "<a href=\"" + url + "/..\"><li>..</li></a>"
 		}
 		for _, info := range dirinfos {
 			//If is directory, and does not start with '.', and is globally readable
 			if info.IsDir() && CheckPerms(info) {
-				dirList += "<a href=\"" + url + info.Name() + "\"><li>" + info.Name() + "</li></a>"
+				dirList += "<a href=\"" + url + "/" + info.Name() + "\"><li>" + info.Name() + "</li></a>"
 			}
 		}
 		page = "<html><head><title>" + gitVarUser() + " [Grove]</title></head><style type=\"text/css\">" + string(css) + "</style></head><body><a href=\"http://" + host + "\"><div class=\"logo\"></div></a>" + dirList + "</ul><div class=\"version\">" + Version + minversion + "</body></html>"
