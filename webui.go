@@ -25,9 +25,12 @@ func ShowPath(url, p, host string) (page string, status int) {
 	var file string  //The file to display in the WebUI
 	jsoni := false   //Whether or not to use the JSON interface
 	//Parse out variables, such as in:
-	//    http://host/path/to/repo?o=deadbeef
+	//    http://host/path/to/repo?r=deadbeef
 	//Keys are:
 	//    r: ref, such as SHA or branch name
+	//    c: number of commits to display
+	//    f: file or directory to browse (directories have a trailing slash)
+	//    j: use the JSON interface if present
 	components := strings.Split(url, "?")
 	for i, c := range components {
 		if i == 0 {
