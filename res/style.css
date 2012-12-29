@@ -157,6 +157,35 @@ a.button:hover, .button:hover {
 	color: #000;
 }
 
+.view-file {
+	font-family: monospace;
+	white-space: pre;
+	margin-left: auto;
+	margin-right: auto;
+	width: 70%;
+	padding: 10px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	background-color: #FFF;
+	box-shadow: inset 0px 0px 5px #CCC;
+	font-size: 12px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.view-file a {
+	color: #66cc33;
+}
+
+.view-file a:hover {
+	color: #000;
+}
+
+.view-file li a {
+	color: #000;
+}
+
 .log {
 	margin-left: auto;
 	margin-right: auto;
