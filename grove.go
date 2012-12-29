@@ -123,11 +123,8 @@ func Serve(repodir string) {
 
 func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	//Determine the path from the URL
-	urlp := req.URL.String()
-	if !strings.HasSuffix(urlp, "/") {
-		urlp += "/"
-	}
-	path := path.Join(handler.Dir, req.URL.String())
+	urlp := strings.TrimRight(req.URL.String(), "/")
+	path := path.Join(handler.Dir, urlp)
 	urlp = "http://" + req.Host + urlp
 
 	//Send the request to the git http backend

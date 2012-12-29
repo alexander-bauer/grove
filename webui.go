@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-//ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL to have a trailing "/".
+//ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL not to have a trailing "/".
 func ShowPath(url, p, host string) (page string, status int) {
 	//Create (or retrieve, if caching is possible) a
 	//git object.
