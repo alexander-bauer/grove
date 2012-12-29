@@ -123,7 +123,7 @@ func Serve(repodir string) {
 
 func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	//Determine the path from the URL
-	urlp := strings.TrimRight(req.URL.String(), "/")
+	urlp := req.URL.String()
 	path := path.Join(handler.Dir, urlp)
 	urlp = "http://" + req.Host + urlp
 

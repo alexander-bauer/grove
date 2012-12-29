@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-//ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It expects the given URL not to have a trailing "/".
+//ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It makes no assumptions regarding the presence of a trailing slash.
 func ShowPath(url, p, host string) (page string, status int) {
 	//Create (or retrieve, if caching is possible) a
 	//git object.
@@ -20,10 +20,10 @@ func ShowPath(url, p, host string) (page string, status int) {
 		Path: p,
 	}
 
-	ref := "HEAD"       //The commit or branch reference
-	maxCommits := 10    //The maximum number of commits to be shown by the log
-	file := "README.md" //The file to display in the WebUI
-	jsoni := false      //Whether or not to use the JSON interface
+	ref := "HEAD"    //The commit or branch reference
+	maxCommits := 10 //The maximum number of commits to be shown by the log
+	var file string  //The file to display in the WebUI
+	jsoni := false   //Whether or not to use the JSON interface
 	//Parse out variables, such as in:
 	//    http://host/path/to/repo?o=deadbeef
 	//Keys are:
@@ -139,10 +139,14 @@ func ShowPath(url, p, host string) (page string, status int) {
 		//now add the button things
 		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Developer's Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Grove View</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//add the file, usually README
-		if strings.Contains(file, "README") {
-			HTML += "<div class=\"md\">" + getREADME(g, ref, file) + "</div>"
+		if len(file) == 0 {
+			HTML += "<div class=\"md\">" + getREADME(g, ref, "README.md") + "</div>"
 		} else {
-			HTML += "<div class=\"md\"><pre>" + strings.Replace(string(g.GetFile(ref, file)), "\n", "<br/>", -1) + "</pre></div>"
+			if strings.HasSuffix(file, "/") {
+				HTML += "<div class=\"view-dir\">standin</div>"
+			} else {
+				HTML += "<div class=\"view-file\">" + strings.Replace(string(g.GetFile(ref, file)), "\n", "<br/>", -1) + "</div>"
+			}
 		}
 		//add the log
 		HTML += "<div class=\"log\">"

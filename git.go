@@ -54,6 +54,12 @@ func (g *git) GetFile(commit, file string) (contents []byte) {
 	return contents
 }
 
+//Retrieve a list of items in a directory from the repository. The commit is either a SHA or a pointer (such as HEAD, or HEAD^).
+func (g *git) GetDir(commit, dir string) (files []string) {
+	output, _ := g.execute("--no-pager", "ls-tree", "--name-only", commit, dir)
+	return strings.Split(strings.TrimRight(output, "\n"), "\n")
+}
+
 func (g *git) SHA(ref string) (sha string) {
 	commit, _ := g.execute("rev-parse", "--short=8", ref)
 	return strings.TrimRight(commit, "\n")
