@@ -183,7 +183,7 @@ func SplitRepository(p string) (repository, file string, status int) {
 		//if i is not 0.
 		if i != 0 {
 			//Traverse upward.
-			file = path.Base(repository) + "/" + file
+			file = path.Join(path.Base(repository), file)
 			repository = path.Dir(repository)
 			if strings.HasPrefix(file, "/") {
 				status = http.StatusNotFound
