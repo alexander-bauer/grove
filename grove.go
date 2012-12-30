@@ -129,8 +129,8 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 
 	//Send the request to the git http backend
 	//if it is to a .git URL.
-	if strings.Contains(req.URL.String(), ".git") {
-		gitPath := strings.SplitAfter(path, ".git")[0]
+	if strings.Contains(req.URL.String(), ".git/") {
+		gitPath := strings.SplitAfter(path, ".git/")[0]
 		l.Println("Git request to", req.URL, "from", req.RemoteAddr)
 
 		//Check to make sure that the repository
