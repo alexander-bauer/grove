@@ -150,17 +150,17 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		}
 		w.Write(b)
 		return
-	} else {
-		l.Println("View of", req.URL, "from", req.RemoteAddr)
 	}
+	l.Println("View of", req.URL, "from", req.RemoteAddr)
 
 	//Figure out which directory is being requested,
 	//and check whether we're allowed to serve it.
 	repository, file, status := SplitRepository(path)
 	if status == http.StatusOK {
-		body, status := ShowPath(urlp, repository, file, req.Host)
+		body, status := ShowPath(urlp, repository, file, "", req.Host)
 		if status == http.StatusOK {
 			w.Write([]byte(body))
+			return
 		}
 	}
 
