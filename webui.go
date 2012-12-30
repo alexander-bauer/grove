@@ -255,7 +255,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 				t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.tmpl")
 			} else {
 				//view file
-				pageinfo.Content = template.HTML(strings.Replace(string(g.GetFile(ref, file)), "\n", "<br/>", -1))
+				pageinfo.Content = template.HTML(html.EscapeString(string(g.GetFile(ref, file))))
 				t, _ = template.ParseFiles(*fRes + "/templates" + "/file.tmpl")
 			}
 		}
