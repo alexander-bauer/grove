@@ -147,7 +147,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 		} else {
 			if strings.HasSuffix(file, "/") {
 				HTML += "<div class=\"view-dir\"><ul>"
-				files := g.GetDir(ref, p)
+				files := g.GetDir(ref, file)
 				for _, f := range files {
 					HTML += "<a href=\"?f=" + f + "\"><li>" + f + "</li></a>"
 				}
