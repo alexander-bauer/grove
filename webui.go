@@ -82,7 +82,7 @@ func ShowPath(url, repository, file, queries, host string) (page string, status 
 	//Is we're doing a directory listing, then
 	//we need to retrieve the directory list.
 	var dirinfos []os.FileInfo
-	if isGit {
+	if !isGit {
 		//Open the file so that it can be read.
 		f, err := os.Open(repository)
 		if err != nil || f == nil {
@@ -105,7 +105,7 @@ func ShowPath(url, repository, file, queries, host string) (page string, status 
 		dirinfos = make([]os.FileInfo, 0, len(dirnames))
 		for _, n := range dirnames {
 			info, err := os.Stat(repository + "/" + n)
-			if err == nil {
+			if err == nil && CheckPerms(info) {
 				dirinfos = append(dirinfos, info)
 			}
 		}
