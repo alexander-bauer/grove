@@ -12,34 +12,23 @@ import (
 )
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It makes no assumptions regarding the presence of a trailing slash.
-func ShowPath(url, p, host string) (page string, status int) {
-	//Create (or retrieve, if caching is possible) a
-	//git object.
-	p = strings.SplitN(p, "?", 2)[0]
+//To view a git repository, pass both a repository and a file. To view just a directory tree, leave file empty, and be sure that the repository argument is a valid directory that does not contain a .git directory.
+func ShowPath(url, repository, file, queries, host string) (page string, status int) {
 	g := &git{
-		Path: p,
+		Path: repository,
 	}
 
 	ref := "HEAD"    //The commit or branch reference
 	maxCommits := 10 //The maximum number of commits to be shown by the log
-	var file string  //The file to display in the WebUI
 	jsoni := false   //Whether or not to use the JSON interface
 	//Parse out variables, such as in:
 	//    http://host/path/to/repo?r=deadbeef
 	//Keys are:
 	//    r: ref, such as SHA or branch name
 	//    c: number of commits to display
-	//    f: file or directory to browse (directories have a trailing slash)
 	//    j: use the JSON interface if present
-	components := strings.Split(url, "?")
-	for i, c := range components {
-		if i == 0 {
-			//The first component is always the url,
-			//and trim out any trailing slashes.
-			url = strings.TrimRight(c, "/")
-			continue
-		}
-
+	components := strings.Split(strings.TrimLeft(queries, "?"), "?")
+	for _, c := range components {
 		parts := strings.SplitN(c, "=", 2)
 		var name string
 		var val string
@@ -60,68 +49,66 @@ func ShowPath(url, p, host string) (page string, status int) {
 				continue
 			}
 			maxCommits = tmax
-		case "f":
-			file = val
 		case "j":
 			jsoni = true
 		}
 	}
 
-	//Retrieve information about the file.
-	fi, err := os.Stat(p)
-	if err != nil {
-		//If there is an error, present
-		//a StatusNotFound.
-		return page, http.StatusNotFound
-	}
-	//If is not directory, or starts with ".", or is not readable...
-	if !fi.IsDir() || !CheckPerms(fi) {
-		//Return 403 forbidden.
-		return page, http.StatusForbidden
-	}
+	//We do not need to check if we can serve the
+	//repository that we've been passed. That's
+	//already been done.
 
-	f, err := os.Open(p)
-	if err != nil || f == nil {
-		//If there is an error opening
-		//the file, return 500.
-		return page, http.StatusInternalServerError
-	}
-
-	//Retrieval of file info is done in two steps
-	//so that we can use os.Stat(), rather than
-	//os.Lstat(), the former of which follows
-	//symlinks.
-	dirnames, err := f.Readdirnames(0)
-	f.Close()
-	if err != nil {
-		//If the directory could not be
-		//opened, return 500.
-		return page, http.StatusInternalServerError
-	}
-	dirinfos := make([]os.FileInfo, 0, len(dirnames))
-	for _, n := range dirnames {
-		info, err := os.Stat(p + "/" + n)
-		if err == nil {
-			dirinfos = append(dirinfos, info)
-		}
-	}
-
-	//Find whether the directory contains
-	//a .git file.
+	//Check for a .git directory in the repository
+	//argument. If one does not exist, we will
+	//generate a directory listing, rather than a
+	//repository view.
 	var isGit bool
 	var gitDir string
-	for _, info := range dirinfos {
-		if info.Name() == ".git" {
-			isGit = true
-			gitDir = info.Name()
-			break
-		}
+	_, err := os.Stat(repository + "/.git")
+	if err == nil {
+		//Note that if err EQUALS nil
+		isGit = true
+		gitDir = ".git"
 	}
 
 	//If the request is specified as using the JSON interface,
-	//then we switch to that.
+	//then we switch to that. This usually isn't done, but
+	//it is better to do it here than to wait until the
+	//dirinfos are retrieved.
 	if jsoni && isGit {
 		return g.ShowJSON(ref, maxCommits)
+	}
+
+	//Is we're doing a directory listing, then
+	//we need to retrieve the directory list.
+	var dirinfos []os.FileInfo
+	if isGit {
+		//Open the file so that it can be read.
+		f, err := os.Open(repository)
+		if err != nil || f == nil {
+			//If there is an error opening
+			//the file, return 500.
+			return page, http.StatusInternalServerError
+		}
+
+		//Retrieval of file info is done in two steps
+		//so that we can use os.Stat(), rather than
+		//os.Lstat(), the former of which follows
+		//symlinks.
+		dirnames, err := f.Readdirnames(0)
+		f.Close()
+		if err != nil {
+			//If the directory could not be
+			//opened, return 500.
+			return page, http.StatusInternalServerError
+		}
+		dirinfos = make([]os.FileInfo, 0, len(dirnames))
+		for _, n := range dirnames {
+			info, err := os.Stat(repository + "/" + n)
+			if err == nil {
+				dirinfos = append(dirinfos, info)
+			}
+		}
 	}
 
 	//Otherwise, load the CSS.
@@ -138,7 +125,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 		branch := g.Branch("HEAD")
 		sha := g.SHA(ref)
 
-		HTML := "<html><head><title>" + owner + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "/..\">.. / </a>" + path.Base(p) + "<div class=\"cloneme\">" + url + gitDir + "</div></div>"
+		HTML := "<html><head><title>" + owner + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "/..\">.. / </a>" + path.Base(repository) + "<div class=\"cloneme\">" + url[:len(url)-len(file)] + gitDir + "</div></div>"
 		//now add the button things
 		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Developer's Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Grove View</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
 		//add the file, usually README
