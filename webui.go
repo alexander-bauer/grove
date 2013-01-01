@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-type GitPage struct {
+type gitPage struct {
 	Owner     string
 	CSS       template.CSS
 	BasePath  string
@@ -25,12 +25,12 @@ type GitPage struct {
 	CommitNum string
 	SHA       string
 	Content   template.HTML
-	List      []DirList
-	Logs      []GitLog
+	List      []*dirList
+	Logs      []*gitLog
 	Location  template.URL
 }
 
-type GitLog struct {
+type gitLog struct {
 	Author    string
 	Classtype string
 	SHA       string
@@ -39,7 +39,7 @@ type GitLog struct {
 	Body      template.HTML
 }
 
-type DirList struct {
+type dirList struct {
 	URL   template.URL
 	Name  string
 	Class string
@@ -180,7 +180,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 	var doc bytes.Buffer
 	t := template.New("Grove!")
 
-	pageinfo := GitPage{
+	pageinfo := &gitPage{
 		Owner:     owner,
 		CSS:       template.CSS(css),
 		BasePath:  path.Base(p),
@@ -194,7 +194,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 	}
 	if isGit {
 
-		Logs := make([]GitLog, 0)
+		Logs := make([]*gitLog, 0)
 		for i, c := range commits {
 			if len(c.SHA) == 0 {
 				//If, for some reason, the commit doesn't
@@ -206,7 +206,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 				classtype = "-owner"
 			}
 
-			Logs = append(Logs, GitLog{
+			Logs = append(Logs, &gitLog{
 				Author:    c.Author,
 				Classtype: classtype,
 				SHA:       c.SHA,
@@ -228,27 +228,27 @@ func ShowPath(url, p, host string) (page string, status int) {
 			//view directory
 			pageinfo.Location = template.URL("/" + file)
 			if strings.HasSuffix(file, "/") {
-				List := make([]DirList, 0)
+				List := make([]*dirList, 0)
 				files := g.GetDir(ref, file)
 				for _, f := range files {
 					/*
 						// This code is to specify file or directory but does not work with
 						// the information I have available in this spot, I think...
-								List = append(List, DirList{
+								List = append(List, dirList{
 									URL:   template.URL("?f=" + file + f),
 									Name:  f,
 									Class: "dir",
 								}) 
 
 							if f.IsDir() {
-								List = append(List, DirList{
+								List = append(List, dirList{
 									URL:   template.URL("?f=" + file + f),
 									Name:  info.Name(),
 									Class: "dir",
 								})
 							} else {
 					*/
-					List = append(List, DirList{
+					List = append(List, &dirList{
 						URL:   template.URL("?f=" + file + f),
 						Name:  f,
 						Class: "file",
@@ -276,9 +276,9 @@ func ShowPath(url, p, host string) (page string, status int) {
 		var doc bytes.Buffer
 
 		pageinfo.Location = template.URL("/" + file)
-		List := make([]DirList, 0)
+		List := make([]*dirList, 0)
 		if url != ("http://" + host + "/") {
-			List = append(List, DirList{
+			List = append(List, &dirList{
 				URL:   template.URL(url),
 				Name:  "..",
 				Class: "dir",
@@ -288,13 +288,13 @@ func ShowPath(url, p, host string) (page string, status int) {
 			//If is directory, and does not start with '.', and is globally readable
 			if CheckPerms(info) {
 				if info.IsDir() {
-					List = append(List, DirList{
+					List = append(List, &dirList{
 						URL:   template.URL(info.Name() + "/"),
 						Name:  info.Name(),
 						Class: "dir",
 					})
 				} else {
-					List = append(List, DirList{
+					List = append(List, &dirList{
 						URL:   template.URL(info.Name()),
 						Name:  info.Name(),
 						Class: "file",
