@@ -218,7 +218,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 		//view readme
 		if len(file) == 0 {
 			pageinfo.Content = template.HTML(getREADME(g, ref, "README.md"))
-			t, _ = template.ParseFiles(*fRes + "/templates" + "/gitpage.tmpl")
+			t, _ = template.ParseFiles(*fRes + "/templates" + "/gitpage.html")
 		} else {
 			//view directory
 			pageinfo.Location = template.URL("/" + file)
@@ -252,11 +252,11 @@ func ShowPath(url, p, host string) (page string, status int) {
 				}
 
 				pageinfo.List = List
-				t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.tmpl")
+				t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.html")
 			} else {
 				//view file
 				pageinfo.Content = template.HTML(html.EscapeString(string(g.GetFile(ref, file))))
-				t, _ = template.ParseFiles(*fRes + "/templates" + "/file.tmpl")
+				t, _ = template.ParseFiles(*fRes + "/templates" + "/file.html")
 			}
 		}
 
@@ -300,7 +300,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 		}
 		//println(*fRes)
 		pageinfo.List = List
-		t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.tmpl")
+		t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.html")
 		err = t.Execute(&doc, pageinfo)
 		if err != nil {
 			l.Println(err)

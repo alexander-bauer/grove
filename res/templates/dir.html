@@ -1,0 +1,28 @@
+<html>
+	<head>
+		<title>{{.Owner}} [Grove]</title>
+		<style type="text/css">{{.CSS}}</style>
+	</head>
+	<body>
+		<div class="logo"></div>
+		<div class="view-dir">
+			<ul>
+				{{range $l := .List}}
+					<a href="{{$l.URL}}"><li class="{{$l.Class}}">{{$l.Name}}</li></a>
+				{{end}}
+			</ul>
+		</div>
+		<div class="log">
+			{{range $l := .Logs}}
+				<div class="loggy">
+					{{$l.Author}} &mdash; <span class="SHA{{$l.Classtype}}">{{$l.SHA}}</span> &mdash; {{$l.Time}}<br/><br/>
+						<div class="holdem">
+							<strong>{{$l.Subject}}</strong>
+							<br/><br/>
+							{{$l.Body}}
+						</div>
+				</div>
+			{{end}}
+		</div>
+	</body>
+</html>

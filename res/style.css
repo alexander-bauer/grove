@@ -62,13 +62,13 @@ ul {
 	width: 80%;
 	margin-top: 20px;
 	margin-bottom: 10px;
-	//border: 1px solid #CCC;
 	-webkit-border-radius: 10px;
 	-moz-border-radius: 10px;
 	border-radius: 10px;
 }
 
 .button, a.button {
+	margin-left: -3px;
 	display: inline-block;
 	text-align: center;
 	padding: 10px 0px;
