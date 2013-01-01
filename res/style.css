@@ -157,7 +157,7 @@ a.button:hover, .button:hover {
 }
 
 .view-file {
-	//font-family: monospace;
+	font-family: monospace;
 	white-space: pre-wrap;
 	margin-left: auto;
 	margin-right: auto;
