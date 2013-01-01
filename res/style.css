@@ -68,7 +68,6 @@ ul {
 }
 
 .button, a.button {
-	margin-left: -3px;
 	display: inline-block;
 	text-align: center;
 	padding: 10px 0px;
@@ -158,7 +157,7 @@ a.button:hover, .button:hover {
 }
 
 .view-file {
-	font-family: monospace;
+	//font-family: monospace;
 	white-space: pre-wrap;
 	margin-left: auto;
 	margin-right: auto;

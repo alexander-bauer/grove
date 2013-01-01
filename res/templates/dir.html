@@ -16,11 +16,11 @@
 			{{range $l := .Logs}}
 				<div class="loggy">
 					{{$l.Author}} &mdash; <span class="SHA{{$l.Classtype}}">{{$l.SHA}}</span> &mdash; {{$l.Time}}<br/><br/>
-						<div class="holdem">
-							<strong>{{$l.Subject}}</strong>
-							<br/><br/>
-							{{$l.Body}}
-						</div>
+                    <div class="holdem">
+                        <strong>{{$l.Subject}}</strong>
+                        <br/><br/>
+                        {{$l.Body}}
+                    </div>
 				</div>
 			{{end}}
 		</div>

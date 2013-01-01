@@ -13,46 +13,10 @@
 		</div>
 		
 		<div class="wrapper">
-			<div class="button">
-				<div class="buttontitle">
-					Developer's Branch
-				</div>
-				<br/>
-				<div class="buttontext">
-					{{.Branch}}
-				</div>
-			</div>
-			<div class="button">
-				<div class="buttontitle">
-					Tags
-				</div>
-				<br/>
-				<div class="buttontext">
-					{{.TagNum}}
-				</div>
-			</div>
-			<div class="button">
-				<div class="buttontitle">Commits</div>
-					<br/>
-					<div class="buttontext">
-					{{.CommitNum}}
-				</div>
-			</div>
-			<div class="button">
-				<div class="buttontitle">
-					Grove View
-				</div>
-				<br/>
-				<div class="buttontext">
-					{{.SHA}}
-				</div>
-			</div>
+			<div class="button"><div class="buttontitle">Developer's Branch</div><br/><div class="buttontext">{{.Branch}}</div></div><div class="button"><div class="buttontitle">Tags</div><br/><div class="buttontext">{{.TagNum}}</div></div><div class="button"><div class="buttontitle">Commits</div><br/><div class="buttontext">{{.CommitNum}}</div></div><div class="button"><div class="buttontitle">Grove View</div><br/><div class="buttontext">{{.SHA}}</div></div>
 		</div>
         
-		<div class="view-file">
-			<div class="file-holder">
-				{{.Content}}
-			</div>
+		<div class="view-file">{{.Content}}
 		</div>
         
 		<div class="log">
