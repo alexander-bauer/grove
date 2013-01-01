@@ -169,7 +169,7 @@ func ShowPath(url, p, host string) (page string, status int) {
 	if len(file) != 0 {
 		commits = g.CommitsByFile(ref, file, maxCommits)
 	} else {
-		commits = g.Commits(ref, 0)
+		commits = g.Commits(ref, maxCommits)
 	}
 	commitNum := len(commits)
 	tagNum := len(g.Tags())
@@ -319,4 +319,20 @@ func ShowPath(url, p, host string) (page string, status int) {
 func getREADME(g *git, ref, file string) string {
 	readme := g.GetFile(ref, file)
 	return string(blackfriday.MarkdownCommon(readme))
+}
+
+func MakePage(template string, args string) (string, int) {
+	var page string
+	if template == "dir" {
+		
+		return page, http.StatusOK
+	} else if template == "file" {
+		
+		return page, http.StatusOK
+	} else if template == "gitpage" {
+		
+		return page, http.StatusOK
+	}
+	
+	return "", http.StatusInternalServerError
 }
