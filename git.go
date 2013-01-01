@@ -115,7 +115,7 @@ func (g *git) Commits(ref string, max int) (commits []*Commit) {
 func (g *git) CommitsByFile(ref, file string, max int) (commits []*Commit) {
 	var log string
 	if max > 0 {
-		log, _ = g.execute("--no-pager", "log", ref, "--follow", "--format=format:"+gitLogFmt+gitLogSep, "--", file, "-n "+strconv.Itoa(max))
+		log, _ = g.execute("--no-pager", "log", ref, "--follow", "--format=format:"+gitLogFmt+gitLogSep, "-n "+strconv.Itoa(max), "--", file)
 	} else {
 		log, _ = g.execute("--no-pager", "log", ref, "--follow", "--format=format:"+gitLogFmt+gitLogSep, "--", file)
 	}

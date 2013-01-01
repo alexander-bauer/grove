@@ -166,7 +166,12 @@ func ShowPath(url, p, host string) (page string, status int) {
 		return page, http.StatusInternalServerError
 	}
 	owner := gitVarUser()
-	commits := g.Commits(ref, 0)
+	var commits []*Commit
+	if len(file) != 0 {
+		commits = g.CommitsByFile(ref, file, maxCommits)
+	} else {
+		commits = g.Commits(ref, 0)
+	}
 	commitNum := len(commits)
 	tagNum := len(g.Tags())
 	branch := g.Branch("HEAD")

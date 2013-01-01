@@ -22,3 +22,6 @@ _cgo_export.*
 _testmain.go
 
 *.exe
+
+# Stupid OS X Files
+.DS_STORE
