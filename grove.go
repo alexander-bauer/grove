@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -56,19 +57,19 @@ func main() {
 
 	switch {
 	case *fShowVersion:
-		println(Version)
+		fmt.Fprintln(os.Stdout, Version)
 		return
 	case *fShowFVersion:
-		println(Version + minversion)
+		fmt.Fprintln(os.Stdout, Version+minversion)
 		return
 	case *fShowBind:
-		println(Bind)
+		fmt.Fprintln(os.Stdout, Bind)
 		return
 	case *fShowPort:
-		println(Port)
+		fmt.Fprintln(os.Stdout, Port)
 		return
 	case *fShowRes:
-		println(Resources)
+		fmt.Fprintln(os.Stdout, Resources)
 		return
 	}
 
