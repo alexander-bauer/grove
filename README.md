@@ -4,28 +4,51 @@ Grove is a git hosting application that allows developers to share their local r
 
 This use of the very efficient git http capabilities allows developers to utilize the true peer to peer abilities of git, and share cutting-edge changes long even before they've reached the main server.
 
-This sort of workflow, in which project members collaborate directly with other members, is one of many encouraged on [git-scm.com](http://git-scm.com/about/distributed). It ties development groups much closer together, and gives all members access to the most absolutely recent versions of branches.
+This sort of workflow, in which project members collaborate directly with other members, is [encouraged with git](http://git-scm.com/about/distributed). It ties development groups much closer together, and gives all members access to the most absolutely recent versions of branches.
 
 ## To Install
-*Note: Grove is in alpha. It has (since v0.3.2) succeeded in its basic goal: to allow developers to share git repositories via http. Despite that, it is likely not suitable for general use.*
+As Grove is reaching beta, it has become more suitable for general use. It is now packaged with an install script, but bear in mind that Go, the [language](http://golang.org) that Grove is written in, must be installed and configured already. To install Golang, please follow [these instructions](http://golang.org/doc/install).
 
-Grove is written in [golang](http://golang.org). This means that, if you already use Go and have it configured, you can simply type `go install github.com/SashaCrofter/grove`, and it will be downloaded, built, and placed in `$GOPATH/bin`.
+If Go is already installed (or you've just installed and configured it,) the installation of Grove is as follows.
 
-If you do not have Go installed, you could either [install and configure it](http://golang.org/doc/install), or download a prebuilt binary. If there is none available, or none recent enough, you may request one, either by [filing an issue](https://github.com/SashaCrofter/grove/issues) or contacting us another way. We'd love to make you one. After all, it means that more people are using our software!
+1. Clone the repository. You may need to run this as root. (Prepend `sudo` to the commands.)
+    - via the Go tool
 
-## To Use
-Currently, Grove runs perfectly fine from within its git repository. If you clone it from one of our git instances, and build it directly in the repository, it will run without a problem. Bear in mind, though, that if it is moved, its visual elements will break.
+        go get github.com/SashaCrofter/grove
+		// The repository will be at $GOPATH/src/github.com/SashaCrofter/grove
 
-To specify a directory to display, just run Grove with an argument. For example:
-```
-grove ~/dev/
-```
-This will start Grove by pointing it at `dev/` in your home directory. Thus, you can visit [localhost:8860](http://localhost:8860/) and see your projects.
+	- via Git
 
-Grove will only display directories and projects if they are **globally readable**. They must have at least file mode `o+rX`. This can be set with `chmod -R o+rX <dir>`, but *please* be careful.
+	  	git clone https://github.com/SashaCrofter/grove.git
+		// The repository will be in the current directory under grove/
 
-Full instructions for running and administering will come as Grove nears a more finished state.
+2. Change directories to the repository.
+    - if installed via the Go tool,
+
+	    cd $GOPATH/src/github.com/SashaCrofter/grove
+		//If $GOPATH is not set, replace it with /usr/local/go
+
+	- if installed via Git
+
+	  	cd grove
+
+3. Retrieve dependencies. You may need to run this as root.
+
+    go get
+
+4. Build.
+
+    go build
+
+5. Install. (This should run as root.)
+
+    sudo ./install.sh skipbuild
+
+
+Full instructions for running and administering will come as Grove reaches beta.
 
 #### Grovelinks
 - [Sasha Crofter](http://[fcdf:db8b:fbf5:d3d7:64a:5aa3:f326:149c]:8860/go/src/github.com/SashaCrofter/grove)
 - [Luke Evers](http://[fc2e:9943:1633:403e:2346:3704:8cd8:1c78]:8860/go/src/grove)
+- [inhies](http://[fc82:58f9:945f:1b6b:b44:40b:5d89:380f]:8860/)
+- [dylwhich](http://[fc8a:9a25:1d90:4677:13ae:9a61:ea8c:66b5]:8860/)
