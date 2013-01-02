@@ -321,18 +321,17 @@ func getREADME(g *git, ref, file string) string {
 	return string(blackfriday.MarkdownCommon(readme))
 }
 
-func MakePage(template string, args string) (string, int) {
-	var page string
+func MakePage(template string, args string) (page string, status int) {
+	status = http.StatusOK
 	if template == "dir" {
 		
-		return page, http.StatusOK
 	} else if template == "file" {
 		
-		return page, http.StatusOK
 	} else if template == "gitpage" {
 		
-		return page, http.StatusOK
+	} else {
+		status = http.StatusInternalServerError
 	}
 	
-	return "", http.StatusInternalServerError
+	return
 }
