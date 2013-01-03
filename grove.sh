@@ -16,28 +16,20 @@ if [ -z $LOG ]; then
 fi
 
 if [ -z $DEV ]; then
-	if [ -e ~/dev ]; then
-		DEV=~/dev/
-	elif [ -e ~/development/ ]; then
-		DEV=~/development/ ]
-	elif [ -e ~/code/ ]; then
-		DEV=~/code/
-	fi
+	DEV=~/dev
 fi
 
 PID=$(pidof -o %PPID $GROVE)
 
 start()
 {
-	if [ -z $PID ]; then
-		if [ ! -z $(which $GROVE) ]; then
-			$GROVE $DEV >> $LOG &
-			echo "Started $GROVE"
-			exit 0
-		fi
-		echo "$GROVE not found."
-		exit 1
+	if [ ! -z $(which $GROVE) ]; then
+		$GROVE $DEV >> $LOG &
+		echo "Started $GROVE"
+		return 0
 	fi
+	echo "$GROVE not found."
+	return 1
 }
 
 stop()
@@ -72,9 +64,9 @@ check()
 	if [ $? == 1 ]; then
 		echo "Grove was not running."
 		start
-		exit 0
+		return 0
 	fi
-	echo "Grove was running."
+	echo "Grove is running."
 }
 
 case "$1" in
