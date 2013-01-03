@@ -13,6 +13,12 @@ fi
 if [ -z $INSTALLDIR ]; then
 	INSTALLDIR=/usr/bin
 fi
+if [ -z $STARTUPSCRIPT ]; then
+	STARTUPSCRIPT=grove.sh
+fi
+if [ -z $STARTUPSCRIPTLOC ]; then
+	STARTUPSCRIPTLOC=/etc/init.d/grove
+fi
 
 if [ "$1" != "skipbuild" ]; then
 	if [ "$(whoami)" = "root" ]; then
@@ -28,20 +34,28 @@ if [ "$1" != "skipbuild" ]; then
 	echo " done."
 fi
 
+if [ ! -e "$GROVE" ]; then
+	echo "The file '$GROVE' not found. Perhaps you should build first?"
+	exit 1
+fi
+
 RESDIR=$(./$GROVE --show-res)
 VERSION=$(./$GROVE --version)
 echo "Resources directory: $RESDIR"
 
 mkdir -p -m 755 $RESDIR
 echo "Copying resources to $RESDIR"
+cp res/* $RESDIR/
 
-cp -f res/* $RESDIR/
+echo "Copying the $STARTUPSCRIPT startup script to $STARTUPSCRIPTLOC"
+cp $STARTUPSCRIPT $STARTUPSCRIPTLOC
+chmod +x $STARTUPSCRIPTLOC
 
 echo "Moving $GROVE executable to $INSTALLDIR"
 chmod 755 $GROVE
-mv -f $GROVE $INSTALLDIR/
+mv $GROVE $INSTALLDIR/
 
-echo "\033[1;32mInstallation finished. Version $VERSION\033[0m"
+echo "\033[1;32m### Installation finished. Version $VERSION\033[0m"
 echo "You can invoke Grove as follows."
 echo "  $GROVE /path/to/serve"
 echo "The path argument is generally either a specific repository, which"

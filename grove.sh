@@ -8,11 +8,11 @@
 #
 
 if [ -z $GROVE ]; then
-	GROVE=./grove
+	GROVE=grove
 fi
 
 if [ -z $LOG ]; then
-	LOG=grove.log
+	LOG=/tmp/grove.log
 fi
 
 if [ -z $DEV ]; then
@@ -30,37 +30,51 @@ PID=$(pidof -o %PPID $GROVE)
 start()
 {
 	if [ -z $PID ]; then
-		$GROVE $DEV &>> $LOG &
+		if [ ! -z $(which $GROVE) ]; then
+			$GROVE $DEV >> $LOG &
+			echo "Started $GROVE"
+			exit 0
+		fi
+		echo "$GROVE not found."
+		exit 1
 	fi
 }
+
 stop()
 {
 	if [ ! -z $PID ]; then
+		echo "Killing '$GROVE', PID $PID"
 		kill $PID
 	fi
 }
+
 restart()
 {
 	stop
 	start
 }
+
 status()
 {
 	echo -n "* Grove is "
 	if [ -z $PID ]; then
 		echo "not running."
-		exit 1
+		return 1
 	else
 		echo "running."
-		exit 0
+		return 0
 	fi
 }
+
 check()
 {
 	status > /dev/null
 	if [ $? == 1 ]; then
+		echo "Grove was not running."
 		start
+		exit 0
 	fi
+	echo "Grove was running."
 }
 
 case "$1" in
