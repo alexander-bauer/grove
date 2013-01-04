@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 )
 
 var (
-	Version    = "0.4.6"
+	Version    = "0.4.7"
 	minversion string
 
 	Bind      = "0.0.0.0"          //Interface to bind to
@@ -56,19 +57,19 @@ func main() {
 
 	switch {
 	case *fShowVersion:
-		println(Version)
+		fmt.Fprintln(os.Stdout, Version)
 		return
 	case *fShowFVersion:
-		println(Version + minversion)
+		fmt.Fprintln(os.Stdout, Version+minversion)
 		return
 	case *fShowBind:
-		println(Bind)
+		fmt.Fprintln(os.Stdout, Bind)
 		return
 	case *fShowPort:
-		println(Port)
+		fmt.Fprintln(os.Stdout, Port)
 		return
 	case *fShowRes:
-		println(Resources)
+		fmt.Fprintln(os.Stdout, Resources)
 		return
 	}
 
@@ -150,20 +151,87 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		}
 		w.Write(b)
 		return
-	} else {
-		l.Println("View of", req.URL, "from", req.RemoteAddr)
 	}
-	body, status := ShowPath(urlp, path, req.Host)
+	l.Println("View of", req.URL, "from", req.RemoteAddr)
+
+	//Figure out which directory is being requested,
+	//and check whether we're allowed to serve it.
+	repository, file, status := SplitRepository(handler.Dir, path)
+	if status == http.StatusOK {
+		body, status := ShowPath(urlp, repository, file, "", req.Host)
+		if status == http.StatusOK {
+			w.Write([]byte(body))
+			return
+		}
+	}
 
 	//If ShowPath gives the status as anything
 	//other than 200 OK, write the error in the
 	//header.
-	if status != http.StatusOK {
-		l.Println("Sending", req.RemoteAddr, "status:", status)
-		http.Error(w, "Could not serve "+req.URL.String()+"\n"+strconv.Itoa(status), status)
-	} else {
-		w.Write([]byte(body))
+	l.Println("Sending", req.RemoteAddr, "status:", status)
+	http.Error(w, "Could not serve "+req.URL.String()+"\n"+strconv.Itoa(status), status)
+}
+
+//SplitRepository checks each directory in the path (p), traversing upward, until it finds a .git folder. If the parent directory of this .git directory is not permissable to serve (globally readable and listable, by default), or a .git directory could not be found, or the path is invalid, this function will return an appropriate exit code.
+//This function will only recurse upward until it reaches the path indicated by toplevel.
+func SplitRepository(toplevel, p string) (repository, file string, status int) {
+	path.Clean(toplevel)
+	//Set the repository to the path for
+	//the moment, to simplify the loop
+	repository = p
+	i := 0
+	for {
+		//We behave differently on the first
+		//run through, so only do this step
+		//if i is not 0.
+		if i != 0 {
+			//Traverse upward.
+			file = path.Join(path.Base(repository), file)
+			repository = path.Dir(repository)
+		}
+
+		//Check if we shouldn't continue.
+		if repository == toplevel {
+			repository = path.Join(repository, file)
+			file = ""
+			status = http.StatusOK
+			return
+		}
+
+		//Check if the path has a .git folder.
+		_, err := os.Stat(repository + "/.git")
+		if err != nil {
+			//If not, traverse up and start again.
+			i++
+			continue
+		}
+
+		//If the .git directory was discovered,
+		//then we now have to check if we are
+		//allowed to serve the parent directory.
+		fi, err := os.Stat(repository)
+		if err != nil {
+			//An error at this point would
+			//imply that the server is in error.
+			status = http.StatusInternalServerError
+			return
+		}
+
+		//If all is well, check if it's servable.
+		if CheckPerms(fi) {
+			//If it's good, return 200 OK.
+			status = http.StatusOK
+			return
+		} else {
+			println(repository)
+			//If not, 403 Forbidden.
+			status = http.StatusForbidden
+			return
+		}
 	}
+	//We should never get here.
+	status = http.StatusInternalServerError
+	return
 }
 
 func CheckPerms(info os.FileInfo) (canServe bool) {
