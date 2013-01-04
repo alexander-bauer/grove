@@ -267,7 +267,7 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 		List := make([]*dirList, 0)
 		if url != ("http://" + host + "/") {
 			List = append(List, &dirList{
-				URL:   template.URL(url),
+				URL:   template.URL(url+".."),
 				Name:  "..",
 				Class: "dir",
 			})
