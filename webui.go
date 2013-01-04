@@ -239,8 +239,7 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 				temp_content := strings.SplitAfter(string(pageinfo.Content), "\n")
 				
 				for j := 1; j <= lines+1; j++ {
-					
-					temp_html += "<div id=\"L-"+strconv.Itoa(j)+"\">" + temp_content[j-1] + "</div>"
+					temp_html += "<div id=\"L-"+strconv.Itoa(j)+"\">" + html.EscapeString(temp_content[j-1]) + "</div>"
 					temp += "<a href=\"#L-"+strconv.Itoa(j)+"\" class=\"line\">"+strconv.Itoa(j)+"</a><br/>"
 				}
 				
