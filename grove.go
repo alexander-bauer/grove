@@ -246,7 +246,7 @@ func SplitRepository(toplevel, p string) (repository, file string, isFile bool, 
 				//to make it "/" instead.
 				file = strings.SplitAfterN(file, "/", 2)[1]
 				if len(file) == 0 {
-					file = "/"
+					file = "./"
 				}
 			} else {
 				status = http.StatusNotFound

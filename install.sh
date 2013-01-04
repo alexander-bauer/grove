@@ -45,7 +45,7 @@ echo "Resources directory: $RESDIR"
 
 mkdir -p -m 755 $RESDIR
 echo "Copying resources to $RESDIR"
-cp res/* $RESDIR/
+cp -r res/* $RESDIR/
 
 echo "Copying the $STARTUPSCRIPT startup script to $STARTUPSCRIPTLOC"
 cp $STARTUPSCRIPT $STARTUPSCRIPTLOC
