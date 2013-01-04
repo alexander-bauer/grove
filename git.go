@@ -56,8 +56,12 @@ func (g *git) GetFile(commit, file string) (contents []byte) {
 
 //Retrieve a list of items in a directory from the repository. The commit is either a SHA or a pointer (such as HEAD, or HEAD^).
 func (g *git) GetDir(commit, dir string) (files []string) {
-	output, _ := g.execute("--no-pager", "ls-tree", "--name-only", commit, dir)
-	return strings.Split(strings.TrimRight(output, "\n"), "\n")
+	output, _ := g.execute("--no-pager", "show", "--name-only", commit+":"+dir)
+	parts := strings.SplitN(output, "\n\n", 2) //Split on the blank line
+	if len(parts) == 2 && strings.HasPrefix(parts[0], "tree") {
+		return strings.Split(strings.TrimRight(parts[1], "\n"), "\n")
+	}
+	return
 }
 
 func (g *git) SHA(ref string) (sha string) {
@@ -93,6 +97,25 @@ func (g *git) Commits(ref string, max int) (commits []*Commit) {
 		log, _ = g.execute("--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref, "-n "+strconv.Itoa(max))
 	} else {
 		log, _ = g.execute("--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref)
+	}
+	commitLogs := strings.Split(log, gitLogSep)
+	commits = make([]*Commit, 0, len(commitLogs))
+	for _, l := range commitLogs {
+		commit := gitParseCommit(strings.Split(l, "\n"))
+		if commit != nil {
+			commits = append(commits, commit)
+		}
+	}
+	return
+}
+
+//Get Commits which modify or otherwise affect a file, up to the given max.
+func (g *git) CommitsByFile(ref, file string, max int) (commits []*Commit) {
+	var log string
+	if max > 0 {
+		log, _ = g.execute("--no-pager", "log", ref, "--follow", "--format=format:"+gitLogFmt+gitLogSep, "-n "+strconv.Itoa(max), "--", file)
+	} else {
+		log, _ = g.execute("--no-pager", "log", ref, "--follow", "--format=format:"+gitLogFmt+gitLogSep, "--", file)
 	}
 	commitLogs := strings.Split(log, gitLogSep)
 	commits = make([]*Commit, 0, len(commitLogs))

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"github.com/russross/blackfriday"
 	"html"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -11,9 +13,41 @@ import (
 	"strings"
 )
 
+type gitPage struct {
+	Owner     string
+	CSS       template.CSS
+	BasePath  string
+	URL       string
+	GitDir    string
+	Branch    string
+	TagNum    string
+	CommitNum string
+	SHA       string
+	Content   template.HTML
+	List      []*dirList
+	Logs      []*gitLog
+	Location  template.URL
+	Numbers   template.HTML
+}
+
+type gitLog struct {
+	Author    string
+	Classtype string
+	SHA       string
+	Time      string
+	Subject   string
+	Body      template.HTML
+}
+
+type dirList struct {
+	URL   template.URL
+	Name  string
+	Class string
+}
+
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It makes no assumptions regarding the presence of a trailing slash.
 //To view a git repository, pass both a repository and a file. To view just a directory tree, leave file empty, and be sure that the repository argument is a valid directory that does not contain a .git directory.
-func ShowPath(url, repository, file, queries, host string) (page string, status int) {
+func ShowPath(url, repository, file string, isFile bool, queries, host string) (page string, status int) {
 	g := &git{
 		Path: repository,
 	}
@@ -116,73 +150,168 @@ func ShowPath(url, repository, file, queries, host string) (page string, status 
 	if err != nil {
 		return page, http.StatusInternalServerError
 	}
+	owner := gitVarUser()
+	var commits []*Commit
+	if len(file) != 0 {
+		commits = g.CommitsByFile(ref, file, maxCommits)
+	} else {
+		commits = g.Commits(ref, maxCommits)
+	}
+	commitNum := len(commits)
+	tagNum := len(g.Tags())
+	branch := g.Branch("HEAD")
+	sha := g.SHA(ref)
 
+	var doc bytes.Buffer
+	t := template.New("Grove!")
+
+	pageinfo := &gitPage{
+		Owner:     owner,
+		CSS:       template.CSS(css),
+		BasePath:  path.Base(repository),
+		URL:       url,
+		GitDir:    gitDir,
+		Branch:    branch,
+		TagNum:    strconv.Itoa(tagNum),
+		CommitNum: strconv.Itoa(commitNum),
+		SHA:       sha,
+		Location:  template.URL(""),
+	}
 	if isGit {
-		owner := gitVarUser()
-		commits := g.Commits(ref, 0)
-		commitNum := len(commits)
-		tagNum := len(g.Tags())
-		branch := g.Branch("HEAD")
-		sha := g.SHA(ref)
-
-		HTML := "<html><head><title>" + owner + " [Grove]</title><style type=\"text/css\">" + string(css) + "</style></head><body><div class=\"title\"><a href=\"" + url + "/..\">.. / </a>" + path.Base(repository) + "<div class=\"cloneme\">" + url[:len(url)-len(file)] + gitDir + "</div></div>"
-		//now add the button things
-		HTML += "<div class=\"wrapper\"><div class=\"button\"><div class=\"buttontitle\">Developer's Branch</div><br/><div class=\"buttontext\">" + branch + "</div></div><div class=\"button\"><div class=\"buttontitle\">Tags</div><br/><div class=\"buttontext\">" + strconv.Itoa(tagNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Commits</div><br/><div class=\"buttontext\">" + strconv.Itoa(commitNum) + "</div></div><div class=\"button\"><div class=\"buttontitle\">Grove View</div><br/><div class=\"buttontext\">" + sha + "</div></div></div>"
-		//add the file, usually README
-		if len(file) == 0 {
-			HTML += "<div class=\"md\">" + getREADME(g, ref, "README.md") + "</div>"
-		} else {
-			if strings.HasSuffix(file, "/") {
-				HTML += "<div class=\"view-dir\">standin</div>"
-			} else {
-				HTML += "<div class=\"view-file\">" + strings.Replace(string(g.GetFile(ref, file)), "\n", "<br/>", -1) + "</div>"
-			}
-		}
-		//add the log
-		HTML += "<div class=\"log\">"
-
+		Logs := make([]*gitLog, 0)
 		for i, c := range commits {
 			if len(c.SHA) == 0 {
 				//If, for some reason, the commit doesn't
 				//have content, skip it.
 				continue
 			}
-
 			var classtype string
 			if c.Author == owner {
 				classtype = "-owner"
 			}
 
-			HTML += "<div class=\"loggy" + classtype + "\">"
-			HTML += c.Author + " &mdash; <div class=\"SHA" + classtype + "\">" + c.SHA + "</div> &mdash; " + c.Time + "<br/>"
-			HTML += "<br/><strong><div class=\"holdem\">" + html.EscapeString(c.Subject) + "</strong><br/><br/>"
-			HTML += strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1) + "</div></div>"
+			Logs = append(Logs, &gitLog{
+				Author:    c.Author,
+				Classtype: classtype,
+				SHA:       c.SHA,
+				Time:      c.Time,
+				Subject:   html.EscapeString(c.Subject),
+				Body:      template.HTML(strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1)),
+			})
 			if i == maxCommits-1 {
 				//but only display certain log messages
 				break
 			}
 		}
-		//now everything else for right now
-		HTML += "</div></body></html>"
+		pageinfo.Logs = Logs
+		//view readme
+		if len(file) == 0 {
+			pageinfo.Content = template.HTML(getREADME(g, ref, "README.md"))
+			t, _ = template.ParseFiles(*fRes + "/templates" + "/gitpage.html")
+		} else {
+			//view directory
+			pageinfo.Location = template.URL("/" + file)
+			if strings.HasSuffix(file, "/") {
+				List := make([]*dirList, 0)
+				files := g.GetDir(ref, file)
+				for _, f := range files {
+					List = append(List, &dirList{
+						URL:   template.URL("?f=" + file + f),
+						Name:  f,
+						Class: "file",
+					})
+				}
 
-		return HTML, http.StatusOK
+				pageinfo.List = List
+				t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.html")
+			} else {
+				// DON'T FUCKING TOUCH ANYTHING IN THIS ELSE BLOCK
+				// YES, THAT MEANS YOU.
+				
+				// First we need to get the content
+				pageinfo.Content = template.HTML(string(g.GetFile(ref, file)))
+				// Then we need to figure out how many lines there are.
+				lines := strings.Count(string(pageinfo.Content), "\n")
+				// For each of the lines, we want to prepend '<div id=\"L-"+j+"\">' and append '</div>'
+				// Also, we want to add line numbers.
+				temp := ""
+				temp_html := ""				
+				temp_content := strings.SplitAfter(string(pageinfo.Content), "\n")
+				
+				for j := 1; j <= lines+1; j++ {
+					
+					temp_html += "<div id=\"L-"+strconv.Itoa(j)+"\">" + temp_content[j-1] + "</div>"
+					temp += "<a href=\"#L-"+strconv.Itoa(j)+"\" class=\"line\">"+strconv.Itoa(j)+"</a><br/>"
+				}
+				
+				pageinfo.Numbers = template.HTML(temp)
+				pageinfo.Content = template.HTML(temp_html)
+				
+				
+				// Finally, parse it.
+				t, _ = template.ParseFiles(*fRes + "/templates" + "/file.html")
+			}
+		}
+
+		err := t.Execute(&doc, pageinfo)
+		if err != nil {
+			l.Println(err)
+			return page, http.StatusInternalServerError
+		}
+
+		return doc.String(), http.StatusOK
 	} else {
-		var dirList string = "<ul>"
+		var doc bytes.Buffer
+
+		pageinfo.Location = template.URL("/" + file)
+		List := make([]*dirList, 0)
 		if url != ("http://" + host + "/") {
-			dirList += "<a href=\"" + url + "/..\"><li>..</li></a>"
+			List = append(List, &dirList{
+				URL:   template.URL(url+".."),
+				Name:  "..",
+				Class: "dir",
+			})
 		}
 		for _, info := range dirinfos {
 			//If is directory, and does not start with '.', and is globally readable
 			if info.IsDir() && CheckPerms(info) {
-				dirList += "<a href=\"" + url + "/" + info.Name() + "\"><li>" + info.Name() + "</li></a>"
+				List = append(List, &dirList{
+					URL:   template.URL(info.Name() + "/"),
+					Name:  info.Name(),
+					Class: "dir",
+				})
 			}
+
 		}
-		page = "<html><head><title>" + gitVarUser() + " [Grove]</title></head><style type=\"text/css\">" + string(css) + "</style></head><body><a href=\"http://" + host + "\"><div class=\"logo\"></div></a>" + dirList + "</ul><div class=\"version\">" + Version + minversion + "</body></html>"
+		pageinfo.List = List
+		t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.html")
+		err = t.Execute(&doc, pageinfo)
+		if err != nil {
+			l.Println(err)
+			return page, http.StatusInternalServerError
+		}
+
+		return doc.String(), http.StatusOK
 	}
-	return page, http.StatusOK
+	return page, http.StatusInternalServerError
 }
 
 func getREADME(g *git, ref, file string) string {
 	readme := g.GetFile(ref, file)
 	return string(blackfriday.MarkdownCommon(readme))
+}
+
+func MakePage(template string, args string) (page string, status int) {
+	status = http.StatusOK
+	if template == "dir" {
+		
+	} else if template == "file" {
+		
+	} else if template == "gitpage" {
+		
+	} else {
+		status = http.StatusInternalServerError
+	}
+	
+	return
 }

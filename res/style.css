@@ -17,7 +17,7 @@ a {
 	color: #000;
 }
 
-li, a.li {
+.li-long, a.li-long {
 	list-style: none;
 	padding: 5px;
 	border: 1px solid #CCC;
@@ -26,9 +26,9 @@ li, a.li {
 	box-shadow: inset 0px 1px 1px #FFF;
 }
 
-li:hover {
+.li-long:hover {
 	background: #66cc33;
-	border: 1px solid #66cc33;
+	border: 1px solid #66cc3;;
 	box-shadow: none;
 	color: #FFF;
 }
@@ -62,7 +62,6 @@ ul {
 	width: 80%;
 	margin-top: 20px;
 	margin-bottom: 10px;
-	//border: 1px solid #CCC;
 	-webkit-border-radius: 10px;
 	-moz-border-radius: 10px;
 	border-radius: 10px;
@@ -157,6 +156,67 @@ a.button:hover, .button:hover {
 	color: #000;
 }
 
+.view-file {
+	margin-left: auto;
+	margin-right: auto;
+	width: 80%;
+}
+
+.container {
+	font-family: monospace;
+	font-size: 12px;
+	margin-left: auto;
+	margin-right: auto;
+	width: 80%;
+}
+
+.heman {
+	/* I HAVE THE POWER TO SET THE HEIGHT TO AUTO */
+	height: auto !important;
+}
+
+.line, a.line {
+	color: #CCC;
+}
+
+a.line:hover {
+	color: #66cc33;
+}
+
+.numbers {
+	padding: 5px;
+	float: left;
+	color: #CCC;
+	width: auto;
+	position: absolute;
+	text-align: right;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	background-color: #FFF;
+}
+
+:target {
+	background-color: #CCC;
+	-webkit-transition: all 1s ease-in-out;
+  -moz-transition: all 1s ease-in-out;
+  -ms-transition: all 1s ease-in-out;
+  -o-transition: all 1s ease-in-out;
+  transition: all 1s ease-in-out;
+}
+
+.content {
+	padding: 5px 5px 5px 35px;
+	display: inline-block;
+	white-space: pre;
+	overflow: auto;
+	width: 100%;
+	background-color: #FFF;
+}
+
 .log {
 	margin-left: auto;
 	margin-right: auto;
@@ -208,7 +268,6 @@ h6 {
 .loggy {
 	padding: 10px;
 	font-family: monospace;
-	white-space: pre;
 	border: 1px solid #CCC;
 	margin-bottom: 5px;
 	-webkit-border-radius: 5px;
@@ -219,7 +278,6 @@ h6 {
 .loggy-owner {
 	padding: 10px;
 	font-family: monospace;
-	white-space: pre;
 	border: 1px solid #66cc33;
 	margin-bottom: 5px;
 	box-shadow: inset 0px 0px 3px #66cc33;

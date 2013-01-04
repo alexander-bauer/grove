@@ -1,0 +1,16 @@
+<html>
+	<head>
+		<title>{{.Owner}} [Grove]</title>
+		<style type="text/css"> {{.CSS}} </style>
+	</head>
+	<body>
+		<a href="/"><div class="logo"></div></a>
+		<div class="view-dir">
+			<ul>
+				{{range $l := .List}}
+					<a href="{{$l.URL}}"><li class="li-long">{{$l.Name}}</li></a>
+				{{end}}
+			</ul>
+		</div>
+	</body>
+</html>
