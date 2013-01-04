@@ -158,7 +158,8 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	//and check whether we're allowed to serve it.
 	repository, file, status := SplitRepository(handler.Dir, path)
 	if status == http.StatusOK {
-		body, status := ShowPath(urlp, repository, file, "", req.Host)
+		var body string
+		body, status = ShowPath(urlp, repository, file, "", req.Host)
 		if status == http.StatusOK {
 			w.Write([]byte(body))
 			return
