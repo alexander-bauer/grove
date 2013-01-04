@@ -159,53 +159,62 @@ a.button:hover, .button:hover {
 .view-file {
 	margin-left: auto;
 	margin-right: auto;
-	width: 70%;
-	margin-top: 10px;
-	margin-bottom: 10px;
+	width: 80%;
 }
 
 .container {
 	font-family: monospace;
 	font-size: 12px;
-	background-color: #FFF;
 	margin-left: auto;
 	margin-right: auto;
+	width: 80%;
+}
+
+.heman {
+	/* I HAVE THE POWER TO SET THE HEIGHT TO AUTO */
+	height: auto !important;
+}
+
+.line, a.line {
+	color: #CCC;
+}
+
+a.line:hover {
+	color: #66cc33;
 }
 
 .numbers {
+	padding: 5px;
 	float: left;
-	background-color: #EEE;
-	color: #AAA;
-	min-width: 20px;
-	max-width: 20px;
-	width: 20px;
+	color: #CCC;
+	width: auto;
 	position: absolute;
 	text-align: right;
-	border: 1px solid #CCC;
-	-webkit-border-top-left-radius: 5px;
-	-webkit-border-bottom-left-radius: 5px;
-	-moz-border-radius-topleft: 5px;
-	-moz-border-radius-bottomleft: 5px;
-	border-top-left-radius: 5px;
-	border-bottom-left-radius: 5px;
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
 	-khtml-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
+	background-color: #FFF;
+}
+
+:target {
+	background-color: #CCC;
+	-webkit-transition: all 1s ease-in-out;
+  -moz-transition: all 1s ease-in-out;
+  -ms-transition: all 1s ease-in-out;
+  -o-transition: all 1s ease-in-out;
+  transition: all 1s ease-in-out;
 }
 
 .content {
-	width: 800px;
-	background-color: #FFD;
-	padding-left: 30px;
+	padding: 5px 5px 5px 35px;
 	display: inline-block;
-	white-space: pre-wrap;
-	border: 1px solid #CCC;
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	border-radius: 5px;
+	white-space: pre;
+	overflow: auto;
+	width: 100%;
+	background-color: #FFF;
 }
 
 .log {

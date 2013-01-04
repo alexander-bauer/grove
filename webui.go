@@ -27,7 +27,7 @@ type gitPage struct {
 	List      []*dirList
 	Logs      []*gitLog
 	Location  template.URL
-	Numbers   string
+	Numbers   template.HTML
 }
 
 type gitLog struct {
@@ -259,17 +259,30 @@ func ShowPath(url, p, host string) (page string, status int) {
 				pageinfo.List = List
 				t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.html")
 			} else {
-				//view file
-				pageinfo.Content = template.HTML(html.EscapeString(string(g.GetFile(ref, file))))
+				// DON'T FUCKING TOUCH ANYTHING IN THIS ELSE BLOCK
+				// YES, THAT MEANS YOU.
 				
-				i := strings.Count(string(pageinfo.Content), "\n")
+				// First we need to get the content
+				pageinfo.Content = template.HTML(string(g.GetFile(ref, file)))
+				// Then we need to figure out how many lines there are.
+				lines := strings.Count(string(pageinfo.Content), "\n")
+				// For each of the lines, we want to prepend '<div id=\"L-"+j+"\">' and append '</div>'
+				// Also, we want to add line numbers.
 				temp := ""
-				for j := 1; j <= i; j++ {
-					temp += strconv.Itoa(j)+" \n "
+				temp_html := ""				
+				temp_content := strings.SplitAfter(string(pageinfo.Content), "\n")
+				
+				for j := 1; j <= lines+1; j++ {
+					
+					temp_html += "<div id=\"L-"+strconv.Itoa(j)+"\">" + temp_content[j-1] + "</div>"
+					temp += "<a href=\"#L-"+strconv.Itoa(j)+"\" class=\"line\">"+strconv.Itoa(j)+"</a><br/>"
 				}
 				
-				pageinfo.Numbers = temp
+				pageinfo.Numbers = template.HTML(temp)
+				pageinfo.Content = template.HTML(temp_html)
 				
+				
+				// Finally, parse it.
 				t, _ = template.ParseFiles(*fRes + "/templates" + "/file.html")
 			}
 		}
