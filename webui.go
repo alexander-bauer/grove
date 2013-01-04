@@ -20,7 +20,9 @@ type gitPage struct {
 	URL       string
 	GitDir    string
 	Branch    string
+	Host      string
 	TagNum    string
+	Path      string
 	CommitNum string
 	SHA       string
 	Content   template.HTML
@@ -164,6 +166,8 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 
 	var doc bytes.Buffer
 	t := template.New("Grove!")
+	
+	pathto := strings.SplitAfter(string(repository), handler.Dir)
 
 	pageinfo := &gitPage{
 		Owner:     owner,
@@ -171,6 +175,8 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 		BasePath:  path.Base(repository),
 		URL:       url,
 		GitDir:    gitDir,
+		Host:      host,
+		Path:      pathto[1],
 		Branch:    branch,
 		TagNum:    strconv.Itoa(tagNum),
 		CommitNum: strconv.Itoa(commitNum),
