@@ -109,6 +109,25 @@ func (g *git) Commits(ref string, max int) (commits []*Commit) {
 	return
 }
 
+//Get Commits which modify or otherwise affect a file, up to the given max.
+func (g *git) CommitsByFile(ref, file string, max int) (commits []*Commit) {
+	var log string
+	if max > 0 {
+		log, _ = g.execute("--no-pager", "log", ref, "--follow", "--format=format:"+gitLogFmt+gitLogSep, "-n "+strconv.Itoa(max), "--", file)
+	} else {
+		log, _ = g.execute("--no-pager", "log", ref, "--follow", "--format=format:"+gitLogFmt+gitLogSep, "--", file)
+	}
+	commitLogs := strings.Split(log, gitLogSep)
+	commits = make([]*Commit, 0, len(commitLogs))
+	for _, l := range commitLogs {
+		commit := gitParseCommit(strings.Split(l, "\n"))
+		if commit != nil {
+			commits = append(commits, commit)
+		}
+	}
+	return
+}
+
 //Log formats, as given by gitLogFmt, should be as follows.
 //    <full hash>
 //    <commit time relative>
