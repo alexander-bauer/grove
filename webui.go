@@ -13,7 +13,7 @@ import (
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It makes no assumptions regarding the presence of a trailing slash.
 //To view a git repository, pass both a repository and a file. To view just a directory tree, leave file empty, and be sure that the repository argument is a valid directory that does not contain a .git directory.
-func ShowPath(url, repository, file, queries, host string) (page string, status int) {
+func ShowPath(url, repository, file string, isFile bool, queries, host string) (page string, status int) {
 	g := &git{
 		Path: repository,
 	}
@@ -132,7 +132,7 @@ func ShowPath(url, repository, file, queries, host string) (page string, status 
 		if len(file) == 0 {
 			HTML += "<div class=\"md\">" + getREADME(g, ref, "README.md") + "</div>"
 		} else {
-			if strings.HasSuffix(file, "/") {
+			if !isFile {
 				HTML += "<div class=\"view-dir\"><ul>"
 				files := g.GetDir(ref, file)
 				for _, f := range files {

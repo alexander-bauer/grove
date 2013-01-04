@@ -156,9 +156,9 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 
 	//Figure out which directory is being requested,
 	//and check whether we're allowed to serve it.
-	repository, file, status := SplitRepository(handler.Dir, path)
+	repository, file, isFile, status := SplitRepository(handler.Dir, path)
 	if status == http.StatusOK {
-		body, status := ShowPath(urlp, repository, file, "", req.Host)
+		body, status := ShowPath(urlp, repository, file, isFile, "", req.Host)
 		if status == http.StatusOK {
 			w.Write([]byte(body))
 			return
@@ -174,7 +174,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 
 //SplitRepository checks each directory in the path (p), traversing upward, until it finds a .git folder. If the parent directory of this .git directory is not permissable to serve (globally readable and listable, by default), or a .git directory could not be found, or the path is invalid, this function will return an appropriate exit code.
 //This function will only recurse upward until it reaches the path indicated by toplevel.
-func SplitRepository(toplevel, p string) (repository, file string, status int) {
+func SplitRepository(toplevel, p string) (repository, file string, isFile bool, status int) {
 	path.Clean(toplevel)
 	//Set the repository to the path for
 	//the moment, to simplify the loop
@@ -218,16 +218,42 @@ func SplitRepository(toplevel, p string) (repository, file string, status int) {
 		}
 
 		//If all is well, check if it's servable.
-		if CheckPerms(fi) {
-			//If it's good, return 200 OK.
-			status = http.StatusOK
-			return
-		} else {
-			println(repository)
+		if !CheckPerms(fi) {
 			//If not, 403 Forbidden.
 			status = http.StatusForbidden
 			return
 		}
+
+		//If the file is prefixed with /blob/,
+		//then treat it as a file. If it has
+		// /tree/, then treat it as a
+		//directory. In either case, chop off
+		//the prefix.
+		//If it has neither, 404.
+		if len(file) != 0 {
+			//The trailing slash trickery involves
+			//avoiding runtime errors and splitting
+			//the strings sanely.
+			file += "/"
+			if strings.HasPrefix(file, "blob/") {
+				file = strings.SplitAfterN(file, "/", 2)[1]
+				isFile = true
+				file = strings.TrimRight(file, "/")
+			} else if strings.HasPrefix(file, "tree/") {
+				//Remove the /tree/, but be sure
+				//that, if the file is blank,
+				//to make it "/" instead.
+				file = strings.SplitAfterN(file, "/", 2)[1]
+				if len(file) == 0 {
+					file = "/"
+				}
+			} else {
+				status = http.StatusNotFound
+				return
+			}
+		}
+		status = http.StatusOK
+		return
 	}
 	//We should never get here.
 	status = http.StatusInternalServerError

@@ -56,7 +56,6 @@ func (g *git) GetFile(commit, file string) (contents []byte) {
 
 //Retrieve a list of items in a directory from the repository. The commit is either a SHA or a pointer (such as HEAD, or HEAD^).
 func (g *git) GetDir(commit, dir string) (files []string) {
-	println(commit, dir)
 	output, _ := g.execute("--no-pager", "show", "--name-only", commit+":"+dir)
 	parts := strings.SplitN(output, "\n\n", 2) //Split on the blank line
 	if len(parts) == 2 && strings.HasPrefix(parts[0], "tree") {
