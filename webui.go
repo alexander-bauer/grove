@@ -174,12 +174,12 @@ func ShowPath(url, repository, file, queries, host string) (page string, status 
 	} else {
 		var dirList string = "<ul>"
 		if url != ("http://" + host + "/") {
-			dirList += "<a href=\"" + url + "/..\"><li>..</li></a>"
+			dirList += "<a href=\"" + url + "/..\"><li class=\"li-long\">..</li></a>"
 		}
 		for _, info := range dirinfos {
 			//If is directory, and does not start with '.', and is globally readable
 			if info.IsDir() && CheckPerms(info) {
-				dirList += "<a href=\"" + url + "/" + info.Name() + "\"><li>" + info.Name() + "</li></a>"
+				dirList += "<a href=\"" + url + "/" + info.Name() + "\"><li class=\"li-long\">" + info.Name() + "</li></a>"
 			}
 		}
 		page = "<html><head><title>" + gitVarUser() + " [Grove]</title></head><style type=\"text/css\">" + string(css) + "</style></head><body><a href=\"http://" + host + "\"><div class=\"logo\"></div></a>" + dirList + "</ul><div class=\"version\">" + Version + minversion + "</body></html>"
