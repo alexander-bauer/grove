@@ -61,7 +61,6 @@ func (g *git) GetDir(commit, dir string) (files []string) {
 	if len(parts) == 2 && strings.HasPrefix(parts[0], "tree") {
 		return strings.Split(strings.TrimRight(parts[1], "\n"), "\n")
 	}
-	println(output)
 	return
 }
 
