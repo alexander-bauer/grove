@@ -37,7 +37,7 @@ type gitLog struct {
 	Classtype string
 	SHA       string
 	Time      string
-	Subject   string
+	Subject   template.HTML
 	Body      template.HTML
 }
 
@@ -201,7 +201,7 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 				Classtype: classtype,
 				SHA:       c.SHA,
 				Time:      c.Time,
-				Subject:   html.EscapeString(c.Subject),
+				Subject:   template.HTML(html.EscapeString(c.Subject)),
 				Body:      template.HTML(strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1)),
 			})
 			if i == maxCommits-1 {
@@ -222,7 +222,7 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 				files := g.GetDir(ref, file)
 				for _, f := range files {
 					List = append(List, &dirList{
-						URL:   template.URL("?f=" + file + f),
+						URL:   template.URL("" + file + f),
 						Name:  f,
 						Class: "file",
 					})
