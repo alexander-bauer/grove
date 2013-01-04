@@ -157,36 +157,55 @@ a.button:hover, .button:hover {
 }
 
 .view-file {
-	font-family: monospace;
-	white-space: pre-wrap;
 	margin-left: auto;
 	margin-right: auto;
 	width: 70%;
-	padding: 10px;
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	border-radius: 5px;
-	background-color: #FFF;
-	box-shadow: inset 0px 0px 5px #CCC;
-	font-size: 12px;
 	margin-top: 10px;
 	margin-bottom: 10px;
 }
 
-.view-file a {
-	color: #66cc33;
+.container {
+	font-family: monospace;
+	font-size: 12px;
+	background-color: #FFF;
+	margin-left: auto;
+	margin-right: auto;
 }
 
-.view-file a:hover {
-	color: #000;
+.numbers {
+	float: left;
+	background-color: #EEE;
+	color: #AAA;
+	min-width: 20px;
+	max-width: 20px;
+	width: 20px;
+	position: absolute;
+	text-align: right;
+	border: 1px solid #CCC;
+	-webkit-border-top-left-radius: 5px;
+	-webkit-border-bottom-left-radius: 5px;
+	-moz-border-radius-topleft: 5px;
+	-moz-border-radius-bottomleft: 5px;
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
-.view-file li a {
-	color: #000;
-}
-
-.file-holder {
-	
+.content {
+	width: 800px;
+	background-color: #FFD;
+	padding-left: 30px;
+	display: inline-block;
+	white-space: pre-wrap;
+	border: 1px solid #CCC;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
 }
 
 .log {

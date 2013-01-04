@@ -27,6 +27,7 @@ type gitPage struct {
 	List      []*dirList
 	Logs      []*gitLog
 	Location  template.URL
+	Numbers   string
 }
 
 type gitLog struct {
@@ -260,6 +261,15 @@ func ShowPath(url, p, host string) (page string, status int) {
 			} else {
 				//view file
 				pageinfo.Content = template.HTML(html.EscapeString(string(g.GetFile(ref, file))))
+				
+				i := strings.Count(string(pageinfo.Content), "\n")
+				temp := ""
+				for j := 1; j <= i; j++ {
+					temp += strconv.Itoa(j)+" \n "
+				}
+				
+				pageinfo.Numbers = temp
+				
 				t, _ = template.ParseFiles(*fRes + "/templates" + "/file.html")
 			}
 		}
