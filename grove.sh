@@ -1,7 +1,7 @@
 #!/bin/bash
 ### Startup Script for Grove ###
 # To enable: (on debian)
-# ln -s /etc/init.d/grove /path/to/this/script/grove.sh
+#   ln -s /etc/init.d/grove /path/to/this/script/grove.sh
 #
 # To use:
 # sudo service grove {start|stop|restart|status|check}
