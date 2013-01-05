@@ -297,18 +297,26 @@ h6 {
 }
 
 pre {
-	background-color: #EEE;
-	border: 1px solid #CCC;
+	background-color: #F8F8F8;
+	border: 1px solid #DDD;
 	padding: 5px;
 }
 
 pre code {
-	border: 0;
+	background-color: transparent;
+	border: none;
+	padding: 0;
 }
 
 code {
-	background-color: #EEE;
-	border: 1px solid #CCC;
+	background-color: #F8F8F8;
+	border: 1px solid #DDD;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	padding: 0px 5px;
+	line-height: 17px;
+	font-size: 11px;
 }
 
 .version {
