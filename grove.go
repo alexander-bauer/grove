@@ -125,13 +125,13 @@ func Serve(repodir string) {
 func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	//Determine the path from the URL
 	urlp := req.URL.String()
-	path := path.Join(handler.Dir, urlp)
+	p := path.Join(handler.Dir, urlp)
 	urlp = "http://" + req.Host + urlp
 
 	//Send the request to the git http backend
 	//if it is to a .git URL.
 	if strings.Contains(req.URL.String(), ".git/") {
-		gitPath := strings.SplitAfter(path, ".git/")[0]
+		gitPath := strings.SplitAfter(p, ".git/")[0]
 		l.Println("Git request to", req.URL, "from", req.RemoteAddr)
 
 		//Check to make sure that the repository
@@ -145,7 +145,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		handler.ServeHTTP(w, req)
 		return
 	} else if req.URL.String() == "/favicon.ico" {
-		b, err := ioutil.ReadFile(*fRes + "favicon.png")
+		b, err := ioutil.ReadFile(path.Join(*fRes, "favicon.png"))
 		if err != nil {
 			return
 		}
@@ -156,7 +156,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 
 	//Figure out which directory is being requested,
 	//and check whether we're allowed to serve it.
-	repository, file, isFile, status := SplitRepository(handler.Dir, path)
+	repository, file, isFile, status := SplitRepository(handler.Dir, p)
 	if status == http.StatusOK {
 		var body string
 		body, status = ShowPath(urlp, repository, file, isFile, "", req.Host)

@@ -166,7 +166,7 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 
 	var doc bytes.Buffer
 	t := template.New("Grove!")
-	
+
 	pathto := strings.SplitAfter(string(repository), handler.Dir)
 
 	pageinfo := &gitPage{
@@ -233,7 +233,7 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 			} else {
 				// DON'T FUCKING TOUCH ANYTHING IN THIS ELSE BLOCK
 				// YES, THAT MEANS YOU.
-				
+
 				// First we need to get the content
 				pageinfo.Content = template.HTML(string(g.GetFile(ref, file)))
 				// Then we need to figure out how many lines there are.
@@ -241,18 +241,17 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 				// For each of the lines, we want to prepend '<div id=\"L-"+j+"\">' and append '</div>'
 				// Also, we want to add line numbers.
 				temp := ""
-				temp_html := ""				
+				temp_html := ""
 				temp_content := strings.SplitAfter(string(pageinfo.Content), "\n")
-				
+
 				for j := 1; j <= lines+1; j++ {
-					temp_html += "<div id=\"L-"+strconv.Itoa(j)+"\">" + html.EscapeString(temp_content[j-1]) + "</div>"
-					temp += "<a href=\"#L-"+strconv.Itoa(j)+"\" class=\"line\">"+strconv.Itoa(j)+"</a><br/>"
+					temp_html += "<div id=\"L-" + strconv.Itoa(j) + "\">" + html.EscapeString(temp_content[j-1]) + "</div>"
+					temp += "<a href=\"#L-" + strconv.Itoa(j) + "\" class=\"line\">" + strconv.Itoa(j) + "</a><br/>"
 				}
-				
+
 				pageinfo.Numbers = template.HTML(temp)
 				pageinfo.Content = template.HTML(temp_html)
-				
-				
+
 				// Finally, parse it.
 				t, _ = template.ParseFiles(*fRes + "/templates" + "/file.html")
 			}
@@ -272,7 +271,7 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 		List := make([]*dirList, 0)
 		if url != ("http://" + host + "/") {
 			List = append(List, &dirList{
-				URL:   template.URL(url+".."),
+				URL:   template.URL(url + ".."),
 				Name:  "..",
 				Class: "dir",
 			})
@@ -309,14 +308,14 @@ func getREADME(g *git, ref, file string) string {
 func MakePage(template string, args string) (page string, status int) {
 	status = http.StatusOK
 	if template == "dir" {
-		
+
 	} else if template == "file" {
-		
+
 	} else if template == "gitpage" {
-		
+
 	} else {
 		status = http.StatusInternalServerError
 	}
-	
+
 	return
 }
