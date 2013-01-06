@@ -51,7 +51,7 @@ mkdir -p -m 755 $RESDIR
 echo "Copying resources to $RESDIR"
 cp -r res/* $RESDIR/
 
-if [ "$NOINITD" != FALSE ]; then
+if [ "$NOINITD" != TRUE ]; then
 	echo "Copying the $STARTUPSCRIPT startup script to $STARTUPSCRIPTLOC"
 	cp $STARTUPSCRIPT $STARTUPSCRIPTLOC
 	chmod +x $STARTUPSCRIPTLOC
@@ -74,7 +74,7 @@ echo
 echo "\033[1;32m### Installation finished. Version $VERSION\033[0m"
 echo
 
-if [ "$NOINITD" != FALSE ]; then
+if [ "$NOINITD" != TRUE ]; then
 	echo "You can invoke Grove as follows:"
 	echo "  service $(basename $STARTUPSCRIPTLOC) start"
 	echo
