@@ -19,22 +19,23 @@ if [ -z $DEV ]; then
 	DEV=~/dev
 fi
 
-PID=$(pidof -o %PPID $GROVE)
+PID=$(pgrep $GROVE | tr "\n" " ")
 
 start()
 {
-	if [ ! -z $(which $GROVE) ]; then
+	if [ ! -z "$(which $GROVE)" ]; then
 		$GROVE $DEV >> $LOG &
 		echo "Started $GROVE"
 		return 0
 	fi
+
 	echo "$GROVE not found."
 	return 1
 }
 
 stop()
 {
-	if [ ! -z $PID ]; then
+	if [ ! -z "$PID" ]; then
 		echo "Killing '$GROVE', PID $PID"
 		kill $PID
 	fi
@@ -49,7 +50,7 @@ restart()
 status()
 {
 	echo -n "* Grove is "
-	if [ -z $PID ]; then
+	if [ -z "$PID" ]; then
 		echo "not running."
 		return 1
 	else
