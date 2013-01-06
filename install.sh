@@ -17,7 +17,11 @@ if [ -z $STARTUPSCRIPT ]; then
 	STARTUPSCRIPT=grove.sh
 fi
 if [ -z $STARTUPSCRIPTLOC ]; then
-	STARTUPSCRIPTLOC=/etc/init.d/grove
+	if [ ! -e "/etc/init.d" ]; then
+		NOINITD=TRUE
+	else
+		STARTUPSCRIPTLOC=/etc/init.d/grove
+	fi
 fi
 
 if [ "$1" = "--build" ] || [ "$1" = "-b" ]; then
@@ -51,9 +55,18 @@ echo "Copying the $STARTUPSCRIPT startup script to $STARTUPSCRIPTLOC"
 cp $STARTUPSCRIPT $STARTUPSCRIPTLOC
 chmod +x $STARTUPSCRIPTLOC
 
-echo "Moving $GROVE executable to $INSTALLDIR"
-chmod 755 $GROVE
-mv $GROVE $INSTALLDIR/
+if [ "$NOINITD" != FALSE ]; then
+	echo "Moving $GROVE executable to $INSTALLDIR"
+	chmod 755 $GROVE
+	mv $GROVE $INSTALLDIR/
+else
+	echo "\033[1;31mPlease note:\033[1;0m"
+	echo "/etc/init.d doesn't exist, so you're probably not running"
+	echo "Debian or Ubuntu/Mint. As such, the startup script couldn't"
+	echo "be copied to a proper location. You may want to move grove.sh"
+	echo "to a place which is easy to access, so that you can start it"
+	echo "up easily."
+fi
 
 echo "\033[1;32m### Installation finished. Version $VERSION\033[0m"
 echo
