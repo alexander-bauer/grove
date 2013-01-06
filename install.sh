@@ -51,28 +51,35 @@ mkdir -p -m 755 $RESDIR
 echo "Copying resources to $RESDIR"
 cp -r res/* $RESDIR/
 
-echo "Copying the $STARTUPSCRIPT startup script to $STARTUPSCRIPTLOC"
-cp $STARTUPSCRIPT $STARTUPSCRIPTLOC
-chmod +x $STARTUPSCRIPTLOC
-
 if [ "$NOINITD" != FALSE ]; then
-	echo "Moving $GROVE executable to $INSTALLDIR"
-	chmod 755 $GROVE
-	mv $GROVE $INSTALLDIR/
+	echo "Copying the $STARTUPSCRIPT startup script to $STARTUPSCRIPTLOC"
+	cp $STARTUPSCRIPT $STARTUPSCRIPTLOC
+	chmod +x $STARTUPSCRIPTLOC
 else
+	echo
 	echo "\033[1;31mPlease note:\033[1;0m"
 	echo "/etc/init.d doesn't exist, so you're probably not running"
 	echo "Debian or Ubuntu/Mint. As such, the startup script couldn't"
 	echo "be copied to a proper location. You may want to move grove.sh"
 	echo "to a place which is easy to access, so that you can start it"
 	echo "up easily."
+	echo
 fi
 
+echo "Moving $GROVE executable to $INSTALLDIR"
+chmod 755 $GROVE
+mv $GROVE $INSTALLDIR/
+
+echo
 echo "\033[1;32m### Installation finished. Version $VERSION\033[0m"
 echo
-echo "You can invoke Grove as follows:"
-echo "  service $(basename $STARTUPSCRIPTLOC) start"
-echo
+
+if [ "$NOINITD" != FALSE ]; then
+	echo "You can invoke Grove as follows:"
+	echo "  service $(basename $STARTUPSCRIPTLOC) start"
+	echo
+fi
+
 echo "The path argument is generally either a specific repository, which"
 echo "you might be looking to serve with Grove, or your entire development"
 echo "directory, such as ~/dev or ~/src."
