@@ -77,13 +77,14 @@ func main() {
 
 	var repodir string
 	if flag.NArg() > 0 {
-		repodir = flag.Arg(0)
+		repodir = path.Clean(flag.Arg(0))
+
 		if !path.IsAbs(repodir) {
 			wd, err := os.Getwd()
 			if err != nil {
 				l.Fatalln("Error getting working directory:", err)
 			}
-			path.Join(wd, repodir)
+			repodir = path.Join(wd, repodir)
 		}
 	} else {
 		wd, err := os.Getwd()
