@@ -19,11 +19,12 @@
         <div class="readmebitch">
         	<script type="text/javascript">
             	if (document.URL.split('#')[1] != "readme") {
-					document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href='http://{{.Host}}{{.Path}}#readme' class='hideornot'>Display README file.</a>";
+					document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href='http://{{.Host}}{{.Path}}#readme' class='hideornot'>Display README file</a>";
 					}
-				else document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href='http://{{.Host}}{{.Path}}/' class='hideornot'>Hide README file.</a>";
+				else document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href='http://{{.Host}}{{.Path}}/' class='hideornot'>Hide README file</a>";
             </script>
         	
+        <a href="http://{{.Host}}{{.Path}}/tree" class="hideornot">View directory tree</a>
            
         </div>
         
