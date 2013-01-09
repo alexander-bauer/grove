@@ -1,5 +1,23 @@
 @charset "UTF-8";
 
+@-webkit-keyframes fade {
+	from { opacity: 0; }
+	50% { opacity: .5; }
+	to { opacity: 1; }
+}
+
+@-moz-keyframes fade {
+	from { opacity: 0; }
+	50% { opacity: .5; }
+	to { opacity: 1; }
+}
+
+@keyframes fade {
+	from { opacity: 0; }
+	50% { opacity: .5; }
+	to { opacity: 1; }
+}
+
 body {
 	width: 100%;
 	margin: 0;
@@ -142,6 +160,12 @@ a.button:hover, .button:hover {
 	font-size: 12px;
 	margin-top: 10px;
 	margin-bottom: 10px;
+	display: none;
+	opacity: 0;
+}
+
+.readmebitch {
+	text-align: center;
 }
 
 .md a {
@@ -154,6 +178,15 @@ a.button:hover, .button:hover {
 
 .md li a {
 	color: #000;
+}
+
+.md:target {
+	background-color: #FFF;
+	-webkit-animation: fade .2s linear;
+	-moz-animation: fade .2s linear;
+	animation: fade 1s linear;
+	display: block;
+	opacity: 1;
 }
 
 .view-file {
@@ -202,10 +235,10 @@ a.line:hover {
 :target {
 	background-color: #DDD;
 	-webkit-transition: all 1s ease-in-out;
-  -moz-transition: all 1s ease-in-out;
-  -ms-transition: all 1s ease-in-out;
-  -o-transition: all 1s ease-in-out;
-  transition: all 1s ease-in-out;
+	-moz-transition: all 1s ease-in-out;
+	-ms-transition: all 1s ease-in-out;
+	-o-transition: all 1s ease-in-out;
+	transition: all 1s ease-in-out;
 }
 
 .content {

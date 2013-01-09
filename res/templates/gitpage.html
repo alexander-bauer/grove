@@ -14,9 +14,20 @@
 		
 		<div class="wrapper">
 			<div class="button"><div class="buttontitle">Developer's Branch</div><br/><div class="buttontext">{{.Branch}}</div></div><div class="button"><div class="buttontitle">Tags</div><br/><div class="buttontext">{{.TagNum}}</div></div><div class="button"><div class="buttontitle">Commits</div><br/><div class="buttontext">{{.CommitNum}}</div></div><div class="button"><div class="buttontitle">Grove View</div><br/><div class="buttontext">{{.SHA}}</div></div>
-		</div>
+        </div>
         
-		<div class="md">
+        <div class="readmebitch">
+        	<script type="text/javascript">
+            	if (document.URL.split('#')[1] != "readme") {
+					document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href='http://{{.Host}}{{.Path}}#readme' class='hideornot'>Display README file.</a>";
+					}
+				else document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href='http://{{.Host}}{{.Path}}/' class='hideornot'>Hide README file.</a>";
+            </script>
+        	
+           
+        </div>
+        
+		<div id="readme" class="md">
 			{{.Content}}
 		</div>
         
