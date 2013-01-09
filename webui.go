@@ -302,6 +302,7 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 
 func getREADME(g *git, ref, file string) string {
 	readme := g.GetFile(ref, file)
+	readme = []byte(html.EscapeString(string(readme)))
 	return string(blackfriday.MarkdownCommon(readme))
 }
 
