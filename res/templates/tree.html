@@ -1,0 +1,28 @@
+<html>
+	<head>
+		<title>{{.Owner}} [Grove]</title>
+		<style type="text/css"> {{.CSS}} </style>
+	</head>
+	<body>
+    
+		<div class="title">
+			<a href="http://{{.Host}}{{.Path}}/..">.. / </a>{{.BasePath}}{{.Location}}
+			<div class="cloneme">
+				{{.URL}}{{.GitDir}}
+			</div>   
+		</div>
+		
+		<div class="wrapper">
+			<div class="button"><div class="buttontitle">Developer's Branch</div><br/><div class="buttontext">{{.Branch}}</div></div><div class="button"><div class="buttontitle">Tags</div><br/><div class="buttontext">{{.TagNum}}</div></div><div class="button"><div class="buttontitle">Commits</div><br/><div class="buttontext">{{.CommitNum}}</div></div><div class="button"><div class="buttontitle">Grove View</div><br/><div class="buttontext">{{.SHA}}</div></div>
+        </div>
+        
+		<div class="view-dir">
+			<ul>
+				{{range $l := .List}}
+					<a href="{{$l.URL}}"><li class="li-long">{{$l.Name}}</li></a>
+				{{end}}
+			</ul>
+		</div>
+	</body>
+</html>
+
