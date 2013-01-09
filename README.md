@@ -1,6 +1,8 @@
-<p align="center">![Logo by Dansup, many many thanks :D](https://raw.github.com/SashaCrofter/grove/development/res/logo.png)<br><br>
-<img src="http://i.imgur.com/z5Te9.png" /></p><br><br>
-<b>Grove is a git hosting application that allows developers to share their local repositories directly with other developers, without needing to push them to a central server.</b> This is all accomplished through a basic web interface, and invocations of the git-http-backend, which comes prepackaged in git distributions.
+![Logo by Dansup, many many thanks :D](https://raw.github.com/SashaCrofter/grove/development/res/logo.png)
+
+<img src="http://i.imgur.com/z5Te9.png"/>
+
+**Grove is a git hosting application that allows developers to share their local repositories directly with other developers, without needing to push them to a central server.** This is all accomplished through a basic web interface, and invocations of the git-http-backend, which comes prepackaged in git distributions.
 
 This use of the very efficient git http capabilities allows developers to utilize the true peer to peer abilities of git, and share cutting-edge changes long even before they've reached the main server.
 
@@ -25,7 +27,7 @@ If Go is already installed (or you've just installed and configured it,) the ins
 
 The install script will move the Grove executable to `/usr/bin`, its resources to `/usr/local/share`, and its startup script to `/etc/init.d/grove`. To use the startup script:
 
-```
+```bash
 # To start Grove
 service grove start
 
@@ -50,7 +52,7 @@ Additionally, Grove will *never* serve files from your working directory. In the
 
 It is important to note that by default, Grove will attempt to serve your `~/dev` directory. If this is not where your development directory is, you should edit the `/etc/init.d/grove` file to set `DEV` to your desired directory. For example:
 
-```
+```bash
 # ...
 
 if [ -z $DEV ]; then
