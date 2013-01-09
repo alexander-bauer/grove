@@ -58,7 +58,7 @@ It is important to note that by default, Grove will attempt to serve your `~/dev
 if [ -z $DEV ]; then
    DEV=~/mycode
 fi
-#...
+# ...
 ```
 
 Grove will, by default, write logs to `/tmp/grove.log`. This can be set in a similar manner to `DEV`.
