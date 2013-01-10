@@ -6,9 +6,9 @@
 	<body>
     
 		<div class="title">
-			<a href="http://{{.Host}}{{.Path}}/..">.. / </a>{{.BasePath}}{{.Location}}
+			<a href="http://{{.Host}}{{.Path}}/tree{{.Location}}../">.. / </a>{{.BasePath}}/tree{{.Location}}
 			<div class="cloneme">
-				{{.URL}}{{.GitDir}}
+				http://{{.Host}}{{.Path}}/{{.GitDir}}
 			</div>   
 		</div>
 		
@@ -19,7 +19,8 @@
 		<div class="view-dir">
 			<ul>
 				{{range $l := .List}}
-					<a href="{{$l.URL}}"><li class="li-long">{{$l.Name}}</li></a>
+                	
+					<a href="http://{{.Host}}{{.Path}}/{{.Type}}/{{.Location}}{{.URL}}"><li class="li-long">{{.Name}}</li></a>
 				{{end}}
 			</ul>
 		</div>

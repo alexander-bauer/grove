@@ -42,9 +42,13 @@ type gitLog struct {
 }
 
 type dirList struct {
-	URL   template.URL
-	Name  string
-	Class string
+	URL       template.URL
+	Name      string
+	Class     string
+	Type      string
+	Host      string
+	Path      string
+	Location  string
 }
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It makes no assumptions regarding the presence of a trailing slash.
@@ -221,15 +225,31 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 				List := make([]*dirList, 0)
 				files := g.GetDir(ref, file)
 				for _, f := range files {
+					if strings.HasSuffix(f, "/") {
 					List = append(List, &dirList{
-						URL:   template.URL("" + file + f),
+						//+file+f
+						URL:   template.URL(f),
+						Type: "tree",
+						Host: host,
+						Path: pathto[1],
 						Name:  f,
+						Location: file,
 						Class: "file",
 					})
+					} else {
+						List = append(List, &dirList{
+							URL:   template.URL(f),
+							Type: "blob",
+							Name:  f,
+							Host: host,
+							Path: pathto[1],
+							Location: file,
+							Class: "file",
+						})
+					}
 				}
-
 				pageinfo.List = List
-				t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.html")
+				t, _ = template.ParseFiles(*fRes + "/templates" + "/tree.html")
 			} else {
 				// DON'T FUCKING TOUCH ANYTHING IN THIS ELSE BLOCK
 				// YES, THAT MEANS YOU.
