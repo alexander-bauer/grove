@@ -30,6 +30,7 @@ type gitPage struct {
 	Logs      []*gitLog
 	Location  template.URL
 	Numbers   template.HTML
+	Version   string
 }
 
 type gitLog struct {
@@ -49,6 +50,7 @@ type dirList struct {
 	Host      string
 	Path      string
 	Location  string
+	Version   string
 }
 
 //ShowPath takes a fully rooted path as an argument, and generates an HTML webpage in order in order to allow the user to navigate or clone via http. It makes no assumptions regarding the presence of a trailing slash.
@@ -180,6 +182,7 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 		URL:       url,
 		GitDir:    gitDir,
 		Host:      host,
+		Version:   Version,
 		Path:      pathto[1],
 		Branch:    branch,
 		TagNum:    strconv.Itoa(tagNum),
@@ -234,6 +237,7 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 						Path: pathto[1],
 						Name:  f,
 						Location: file,
+						Version: Version,
 						Class: "file",
 					})
 					} else {
@@ -245,6 +249,7 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 							Path: pathto[1],
 							Location: file,
 							Class: "file",
+							Version: Version,
 						})
 					}
 				}
