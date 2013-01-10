@@ -370,8 +370,8 @@ code {
 }
 
 .version {
-	margin-right: 15px;
-	float: right;
+	position: absolute;
+	right: 15;
 }
 
 .logo {
