@@ -19,7 +19,6 @@
 		<div class="view-dir">
 			<ul>
 				{{range $l := .List}}
-                	
 					<a href="http://{{.Host}}{{.Path}}/{{.Type}}/{{.Location}}{{.URL}}"><li class="li-long">{{.Name}}</li></a>
 				{{end}}
 			</ul>
