@@ -9,7 +9,7 @@
 			{{.Path}}{{.Location}}
 		</div>
     	
-		<a href="/"><div class="logo"></div></a>
+		<div class="slogo"><a href="/"><div class="logo"></div></a></div>
 		<div class="view-dir">
 			<ul>
 				{{range $l := .List}}
@@ -18,7 +18,7 @@
 			</ul>
 		</div>
         <div class="version">
-        	{{.Version}}
+        	Version {{.Version}}
         </div>
 	</body>
 </html>

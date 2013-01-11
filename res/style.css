@@ -54,6 +54,9 @@ a {
 ul {
 	margin: 0px;
 	padding: 10px;
+	margin-left: auto;
+	margin-right: auto;
+	width: 80%;
 }
 
 .title {
@@ -374,8 +377,13 @@ code {
 }
 
 .version {
-	position: absolute;
-	right: 15;
+	text-align: center;
+}
+
+.slogo {
+	margin-left: auto;
+	margin-right: auto;
+	width: 358px;
 }
 
 .logo {
