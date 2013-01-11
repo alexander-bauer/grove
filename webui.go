@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"encoding/base64"
 	"os"
 	"path"
 	"strconv"
@@ -231,7 +232,6 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 				for _, f := range files {
 					if strings.HasSuffix(f, "/") {
 					List = append(List, &dirList{
-						//+file+f
 						URL:   template.URL(f),
 						Type: "tree",
 						Host: host,
@@ -269,10 +269,18 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 				temp := ""
 				temp_html := ""
 				temp_content := strings.SplitAfter(string(pageinfo.Content), "\n")
-
-				for j := 1; j <= lines+1; j++ {
-					temp_html += "<div id=\"L-" + strconv.Itoa(j) + "\">" + html.EscapeString(temp_content[j-1]) + "</div>"
-					temp += "<a href=\"#L-" + strconv.Itoa(j) + "\" class=\"line\">" + strconv.Itoa(j) + "</a><br/>"
+				
+				//Sasha: read the image into a []byte, then pass to a base64 encoder
+				if strings.HasSuffix(file, "png") {
+					var image []byte
+					image = []byte(pageinfo.Content)
+					img := base64.StdEncoding.EncodeToString(image)
+					temp_html = "<img src=\"data:image/png;base64," + img + "\"/>"
+				} else {
+					for j := 1; j <= lines+1; j++ {
+						temp_html += "<div id=\"L-" + strconv.Itoa(j) + "\">" + html.EscapeString(temp_content[j-1]) + "</div>"
+						temp += "<a href=\"#L-" + strconv.Itoa(j) + "\" class=\"line\">" + strconv.Itoa(j) + "</a><br/>"
+					}
 				}
 
 				pageinfo.Numbers = template.HTML(temp)
