@@ -270,12 +270,20 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 				temp_html := ""
 				temp_content := strings.SplitAfter(string(pageinfo.Content), "\n")
 				
-				//Sasha: read the image into a []byte, then pass to a base64 encoder
-				if strings.HasSuffix(file, "png") {
-					var image []byte
-					image = []byte(pageinfo.Content)
+				// Image support
+				if strings.HasSuffix(file, "png") || strings.HasSuffix(file, "jpg") || strings.HasSuffix(file, "jpeg") || strings.HasSuffix(file, "gif"){
+					imagetype := "png"
+					if strings.HasSuffix(file, "jpg") {
+						imagetype = "jpg"
+					} else if strings.HasSuffix(file, "jpeg") {
+						imagetype = "jpeg"
+					} else if strings.HasSuffix(file, "gif") {
+						imagetype = "gif"
+					}
+					
+					var image []byte = []byte(pageinfo.Content)
 					img := base64.StdEncoding.EncodeToString(image)
-					temp_html = "<img src=\"data:image/png;base64," + img + "\"/>"
+					temp_html = "<img src=\"data:image/"+imagetype+";base64," + img + "\"/>"
 				} else {
 					for j := 1; j <= lines+1; j++ {
 						temp_html += "<div id=\"L-" + strconv.Itoa(j) + "\">" + html.EscapeString(temp_content[j-1]) + "</div>"
