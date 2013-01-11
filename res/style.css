@@ -46,7 +46,7 @@ a {
 
 .li-long:hover {
 	background: #66cc33;
-	border: 1px solid #66cc3;;
+	border: 1px solid #66cc33;
 	box-shadow: none;
 	color: #FFF;
 }
@@ -306,7 +306,11 @@ h6 {
 }
 
 .loggy-owner:hover {
-	box-shadow: inset 0px 0px 8px #66cc33
+	box-shadow: inset 0px 0px 8px #66cc33;
+}
+
+.loggy:target, .loggy-owner:target {
+	background-color: #e0f4d6;
 }
 
 .holdem {

@@ -34,7 +34,7 @@
         
 		<div class="log">
 			{{range $l := .Logs}}
-			<div class="loggy{{$l.Classtype}}">
+			<a href="#{{$l.SHA}}"><div class="loggy{{$l.Classtype}}" id="{{$l.SHA}}">
 				{{$l.Author}} &mdash; 
 				<span class="SHA{{$l.Classtype}}">
 					{{$l.SHA}}
@@ -45,7 +45,7 @@
 				<br/><br/>
 				{{$l.Body}}
 			</div>
-        </div>
+        </div></a>
 		{{end}}
         
         <div class="version">
