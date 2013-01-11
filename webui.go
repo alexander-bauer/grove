@@ -219,6 +219,7 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 		pageinfo.Logs = Logs
 		//view readme
 		if len(file) == 0 {
+			pageinfo.Content = template.HTML(getREADME(g, ref, "README"))
 			pageinfo.Content = template.HTML(getREADME(g, ref, "README.md"))
 			t, _ = template.ParseFiles(*fRes + "/templates" + "/gitpage.html")
 		} else {
