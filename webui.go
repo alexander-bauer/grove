@@ -61,45 +61,29 @@ type dirList struct {
 // and a file. To view just a directory tree, leave file empty, and be
 // sure that the repository argument is a valid directory that does
 // not contain a .git directory.
-func ShowPath(url, repository, file string, isFile bool, queries, host string) (page string, status int) {
+func ShowPath(req *http.Request, repository, file string, isFile bool, queries, host string) (page string, status int) {
 	g := &git{
 		Path: repository,
 	}
+	url := "http://" + req.Host + req.URL.Path
 
-	ref := "HEAD"    // The commit or branch reference
-	maxCommits := 10 // The maximum number of commits to be shown by the log
-	jsoni := false   // Whether or not to use the JSON interface
-	// Parse out variables, such as in:
-	//    http://host/path/to/repo?r=deadbeef
-	// Keys are:
-	//    r: ref, such as SHA or branch name
-	//    c: number of commits to display
-	//    j: use the JSON interface if present
-	components := strings.Split(strings.TrimLeft(queries, "?"), "?")
-	for _, c := range components {
-		parts := strings.SplitN(c, "=", 2)
-		var name string
-		var val string
-		if len(parts) > 0 {
-			name = strings.ToLower(parts[0])
-		}
-		if len(parts) > 1 {
-			val = parts[1]
-		}
-		switch name {
-		case "r":
-			if g.RefExists(val) {
-				ref = val
-			}
-		case "c":
-			tmax, err := strconv.Atoi(val)
-			if err != nil {
-				continue
-			}
-			maxCommits = tmax
-		case "j":
-			jsoni = true
-		}
+	// Set variables based on the form values.
+
+	// ref is the git commit reference. If the form is not submitted,
+	// (or is invalid), it is set to "HEAD".
+	ref := req.FormValue("r")
+	// maxCommits is the maximum number of commits to be loaded via
+	// the log.
+	maxCommits, err := strconv.Atoi(req.FormValue("c"))
+	// jsoni is a boolean indicator of whether or not to use the json
+	// interface.
+	jsoni := strings.ToLower(req.FormValue("j")) == "true"
+
+	if len(ref) == 0 || !g.RefExists(ref) {
+		ref = "HEAD" // The commit or branch reference
+	}
+	if err != nil {
+		maxCommits = 10
 	}
 
 	// We do not need to check if we can serve the repository that
@@ -110,9 +94,9 @@ func ShowPath(url, repository, file string, isFile bool, queries, host string) (
 	// than a repository view.
 	var isGit bool
 	var gitDir string
-	_, err := os.Stat(repository + "/.git")
+	_, err = os.Stat(repository + "/.git")
 	if err == nil {
-		// Note that if err EQUALS nil
+		// Note that err EQUALS nil
 		isGit = true
 		gitDir = ".git"
 	}

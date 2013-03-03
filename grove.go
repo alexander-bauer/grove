@@ -124,10 +124,8 @@ func Serve(repodir string) {
 }
 
 func HandleWeb(w http.ResponseWriter, req *http.Request) {
-	// Determine the path from the URL
-	urlp := req.URL.String()
-	p := path.Join(handler.Dir, urlp)
-	urlp = "http://" + req.Host + urlp
+	// Determine the filesystem path from the URL.
+	p := path.Join(handler.Dir, req.URL.Path)
 
 	// Send the request to the git http backend if it is to a .git
 	// URL.
@@ -160,7 +158,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	repository, file, isFile, status := SplitRepository(handler.Dir, p)
 	if status == http.StatusOK {
 		var body string
-		body, status = ShowPath(urlp, repository, file, isFile, "", req.Host)
+		body, status = ShowPath(req, repository, file, isFile, "", req.Host)
 		if status == http.StatusOK {
 			w.Write([]byte(body))
 			return
