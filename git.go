@@ -1,5 +1,7 @@
 package main
 
+// Copyright ⓒ 2013 Alexander Bauer (see LICENSE.md)
+
 import (
 	"os/exec"
 	"strconv"

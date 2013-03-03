@@ -2,7 +2,11 @@
 
 ![Screenshot!](http://i.imgur.com/z5Te9.png)
 
-**Grove is a git hosting application that allows developers to share their local repositories directly with other developers, without needing to push them to a central server.** This is all accomplished through a basic web interface, and invocations of the git-http-backend, which comes prepackaged in git distributions.
+# Grove
+## Git self-hosting for developers
+Copyright ⓒ 2013 Alexander Bauer (GPLv3)
+
+Grove is a git hosting application that allows developers to share their local repositories directly with other developers, without needing to push them to a central server. This is all accomplished through a basic web interface, and invocations of the git-http-backend, which comes prepackaged in git distributions.
 
 This use of the very efficient git http capabilities allows developers to utilize the true peer to peer abilities of git, and share cutting-edge changes long even before they've reached the main server.
 
