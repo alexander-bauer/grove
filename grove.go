@@ -6,7 +6,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/cgi"
@@ -119,6 +118,7 @@ func Serve(repodir string) {
 
 	l.Println("Starting server on", *fBind+":"+*fPort)
 	http.HandleFunc("/", HandleWeb)
+	http.HandleFunc("/favicon.ico", HandleIcon)
 	err := http.ListenAndServe(*fBind+":"+*fPort, nil)
 	if err != nil {
 		l.Fatalln("Server crashed:", err)
@@ -146,13 +146,6 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 
 		handler.ServeHTTP(w, req)
 		return
-	} else if req.URL.String() == "/favicon.ico" {
-		b, err := ioutil.ReadFile(path.Join(*fRes, "favicon.png"))
-		if err != nil {
-			return
-		}
-		w.Write(b)
-		return
 	}
 	l.Println("View of", req.URL, "from", req.RemoteAddr)
 
@@ -172,6 +165,12 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	// write the error in the header.
 	l.Println("Sending", req.RemoteAddr, "status:", status)
 	http.Error(w, "Could not serve "+req.URL.String()+"\n"+strconv.Itoa(status), status)
+}
+
+// HandleIcon uses http.ServeFile() to serve the favicon quicly from
+// the filesystem.
+func HandleIcon(w http.ResponseWriter, req *http.Request) {
+	http.ServeFile(w, req, path.Join(*fRes, "favicon.png"))
 }
 
 // SplitRepository checks each directory in the path (p), traversing
