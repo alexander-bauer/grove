@@ -1,0 +1,84 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.TH GROVE 1 "2013-03-10"
+.SH NAME
+grove \- filesystem-based git repository viewing/cloning
+.SH SYNOPSIS
+.B grove
+is a stand-alone HTTP server which builds a web front end to git
+repositories. It allows a visitor to browse a specific portion of a
+developer's directory tree (and only subdirectories that are globally
+readable) and browse git repositories contained therein.
+.PP
+Repositories (which are globally readable) can be cloned, and files can be
+browsed via HTTP. grove invokes the git backend in order to facilitate all of
+this.
+
+.B grove
+[ \-\-bind \fI127.0.0.1\fR ] [ \-\-port \fI8860\fR ] [ \-\-res \fI/usr/share/grove\fR ] \fIdirectory\fR
+.SH DESCRIPTION
+This manual page documents briefly the
+.B grove
+command.
+.PP
+.SH OPTIONS
+These programs follow the usual GNU command line syntax, with long
+options starting with either one or two dashes (`-').  A summary of
+options is included below.
+
+.TP
+.B \-h, \-\-help
+Show summary of options.
+
+.TP
+.B \-\-version
+Show the short-form version of the program.
+
+.TP
+.B \-\-version-full
+Show the full-form version of the program and exit. This is generally
+not used.
+
+.TP
+.B \-\-bind
+Bind on a particular network interface, such as
+.BR 0.0.0.0 ,
+for all interfaces, or
+.B 127.0.0.1
+to only bind on localhost. This defaults to listening on all interfaces.
+
+.TP
+.B \-\-port
+Listen on a particular port. The default is
+.B 8860
+.
+
+.TP
+.B \-\-res
+Use a particular directory for retrieving static resources, such as
+stylesheets and images. This defaults to
+.B /usr/share/grove
+.
+
+.TP
+.B \-\-show-bind
+Print the default interface to bind to and exit. This is intended for
+primarily programmatic use.
+
+.TP
+.B \-\-show-port
+Print the default port to listen on and exit. This is intended for
+primarily programmatic use.
+
+.TP
+.B \-\-show-res
+Print the default location from which to retrieve static resources and
+exit. This is intended primarily for programmatic use.
+
+.SH SEE ALSO
+.BR git-http-backend (1)
+
+.SH AUTHOR
+grove was written by Alexander Bauer.
+.PP
+This manual page was written by Alexander Bauer <sasha@crofter.org>,
+for the Debian project (and may be used by others).
