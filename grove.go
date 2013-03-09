@@ -161,25 +161,25 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	// If ShowPath gives the status as anything other than 200 OK,
-	// write the error in the header.
+	// If ShowPath gives the status as anything other than 200 OK, write
+	// the error in the header.
 	l.Println("Sending", req.RemoteAddr, "status:", status)
 	http.Error(w, "Could not serve "+req.URL.String()+"\n"+strconv.Itoa(status), status)
 }
 
-// HandleIcon uses http.ServeFile() to serve the favicon quicly from
+// HandleIcon uses http.ServeFile() to serve the favicon quickly from
 // the filesystem.
 func HandleIcon(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, path.Join(*fRes, "favicon.png"))
 }
 
 // SplitRepository checks each directory in the path (p), traversing
-// upward, until it finds a .git folder. If the parent directory of
-// this .git directory is not permissable to serve (globally readable
-// and listable, by default), or a .git directory could not be found,
-// or the path is invalid, this function will return an appropriate
-// exit code.  This function will only recurse upward until it reaches
-// the path indicated by toplevel.
+// upward, until it finds a .git folder. If the parent directory of this
+// .git directory is not permissable to serve (globally readable and
+// listable, by default), or a .git directory could not be found, or the
+// path is invalid, this function will return an appropriate exit code.
+// This function will only recurse upward until it reaches the path
+// indicated by toplevel.
 func SplitRepository(toplevel, p string) (repository, file string, isFile bool, status int) {
 	path.Clean(toplevel)
 	// Set the repository to the path for the moment, to simplify the
@@ -215,8 +215,8 @@ func SplitRepository(toplevel, p string) (repository, file string, isFile bool, 
 		// check if we are allowed to serve the parent directory.
 		fi, err := os.Stat(repository)
 		if err != nil {
-			// An error at this point would imply that the server is
-			// in error.
+			// An error at this point would imply that the server is in
+			// error.
 			status = http.StatusInternalServerError
 			return
 		}
@@ -273,11 +273,13 @@ func CheckPermBits(info os.FileInfo) (canServe bool) {
 	}
 
 	// For example, consider the following:
+	// 
 	//       rwl rwl rwl       r-l
 	//    0b 111 101 101 & (0b 101 << 3)  > 0
 	//    0b 111 101 101 & 0b 000 101 000 > 0
 	//    0b 000 101 000                  > 0
 	//    TRUE
+	// 
 	// Thus, the file is readable and listable by the group, and
 	// therefore okay to serve.
 	return (info.Mode().Perm()&os.FileMode((permBits<<(Perms*3))) > 0)

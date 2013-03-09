@@ -67,7 +67,7 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 	g := &git{
 		Path: repository,
 	}
-	url := "http://" + req.Host + req.URL.Path
+	url := "http://" + req.Host + strings.TrimRight(req.URL.Path, "/")
 
 	// Set variables based on the form values.
 
@@ -96,11 +96,11 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 	// than a repository view.
 	var isGit bool
 	var gitDir string
-	_, err = os.Stat(repository + "/.git")
+	_, err = os.Stat(path.Join(repository, ".git"))
 	if err == nil {
 		// Note that err EQUALS nil
 		isGit = true
-		gitDir = ".git"
+		gitDir = "/.git"
 	}
 
 	// If the request is specified as using the JSON interface, then
