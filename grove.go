@@ -174,12 +174,12 @@ func HandleIcon(w http.ResponseWriter, req *http.Request) {
 }
 
 // SplitRepository checks each directory in the path (p), traversing
-// upward, until it finds a .git folder. If the parent directory of this
-// .git directory is not permissable to serve (globally readable and
-// listable, by default), or a .git directory could not be found, or the
-// path is invalid, this function will return an appropriate exit code.
-// This function will only recurse upward until it reaches the path
-// indicated by toplevel.
+// upward, until it finds a .git folder. If the parent directory of
+// this .git directory is not permissable to serve (globally readable
+// and listable, by default), or a .git directory could not be found,
+// or the path is invalid, this function will return an appropriate
+// exit code.  This function will only recurse upward until it reaches
+// the path indicated by toplevel.
 func SplitRepository(toplevel, p string) (repository, file string, isFile bool, status int) {
 	path.Clean(toplevel)
 	// Set the repository to the path for the moment, to simplify the

@@ -57,12 +57,12 @@ type dirList struct {
 }
 
 // ShowPath takes a fully rooted path as an argument, and generates an
-// HTML webpage in order in order to allow the user to navigate or
-// clone via http. It makes no assumptions regarding the presence of a
-// trailing slash.  To view a git repository, pass both a repository
-// and a file. To view just a directory tree, leave file empty, and be
-// sure that the repository argument is a valid directory that does
-// not contain a .git directory.
+// HTML webpage in order in order to allow the user to navigate or clone
+// via http. It makes no assumptions regarding the presence of a
+// trailing slash.  To view a git repository, pass both a repository and
+// a file. To view just a directory tree, leave file empty, and be sure
+// that the repository argument is a valid directory that does not
+// contain a .git directory.
 func ShowPath(req *http.Request, repository, file string, isFile bool, queries, host string) (page string, status int) {
 	g := &git{
 		Path: repository,
@@ -74,8 +74,8 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 	// ref is the git commit reference. If the form is not submitted,
 	// (or is invalid), it is set to "HEAD".
 	ref := req.FormValue("r")
-	// maxCommits is the maximum number of commits to be loaded via
-	// the log.
+	// maxCommits is the maximum number of commits to be loaded via the
+	// log.
 	maxCommits, err := strconv.Atoi(req.FormValue("c"))
 	// jsoni is a boolean indicator of whether or not to use the json
 	// interface.
@@ -88,12 +88,12 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 		maxCommits = 10
 	}
 
-	// We do not need to check if we can serve the repository that
-	// we've been passed. That's already been done.
+	// We do not need to check if we can serve the repository that we've
+	// been passed. That's already been done.
 
 	// Check for a .git directory in the repository argument. If one
-	// does not exist, we will generate a directory listing, rather
-	// than a repository view.
+	// does not exist, we will generate a directory listing, rather than
+	// a repository view.
 	var isGit bool
 	var gitDir string
 	_, err = os.Stat(path.Join(repository, ".git"))
@@ -103,15 +103,15 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 		gitDir = "/.git"
 	}
 
-	// If the request is specified as using the JSON interface, then
-	// we switch to that. This usually isn't done, but it is better to
-	// do it here than to wait until the dirinfos are retrieved.
+	// If the request is specified as using the JSON interface, then we
+	// switch to that. This usually isn't done, but it is better to do
+	// it here than to wait until the dirinfos are retrieved.
 	if jsoni && isGit {
 		return g.ShowJSON(ref, maxCommits)
 	}
 
-	// Is we're doing a directory listing, then we need to retrieve
-	// the directory list.
+	// Is we're doing a directory listing, then we need to retrieve the
+	// directory list.
 	var dirinfos []os.FileInfo
 	if !isGit {
 		// Open the file so that it can be read.
@@ -180,8 +180,8 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 		Logs := make([]*gitLog, 0)
 		for i, c := range commits {
 			if len(c.SHA) == 0 {
-				// If, for some reason, the commit doesn't have
-				// content, skip it.
+				// If, for some reason, the commit doesn't have content,
+				// skip it.
 				continue
 			}
 			var classtype string
@@ -242,8 +242,8 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 				pageinfo.List = List
 				t, _ = template.ParseFiles(*fRes + "/templates" + "/tree.html")
 			} else {
-				// DON'T FUCKING TOUCH ANYTHING IN THIS ELSE BLOCK
-				// YES, THAT MEANS YOU.
+				// DON'T FUCKING TOUCH ANYTHING IN THIS ELSE BLOCK YES,
+				// THAT MEANS YOU.
 
 				// First we need to get the content
 				pageinfo.Content = template.HTML(string(g.GetFile(ref, file)))
@@ -259,19 +259,14 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 				temp_content := strings.SplitAfter(string(pageinfo.Content), "\n")
 
 				// Image support
-				if strings.HasSuffix(file, "png") || strings.HasSuffix(file, "jpg") || strings.HasSuffix(file, "jpeg") || strings.HasSuffix(file, "gif") {
-					imagetype := "png"
-					if strings.HasSuffix(file, "jpg") {
-						imagetype = "jpg"
-					} else if strings.HasSuffix(file, "jpeg") {
-						imagetype = "jpeg"
-					} else if strings.HasSuffix(file, "gif") {
-						imagetype = "gif"
-					}
+				if extention := path.Ext(file); extention == ".png" ||
+					extention == ".jpg" ||
+					extention == ".jpeg" ||
+					extention == ".gif" {
 
 					var image []byte = []byte(pageinfo.Content)
 					img := base64.StdEncoding.EncodeToString(image)
-					temp_html = "<img src=\"data:image/" + imagetype + ";base64," + img + "\"/>"
+					temp_html = "<img src=\"data:image/" + strings.TrimLeft(extention, ".") + ";base64," + img + "\"/>"
 				} else {
 					for j := 1; j <= lines+1; j++ {
 						temp_html += "<div id=\"L-" + strconv.Itoa(j) + "\">" + html.EscapeString(temp_content[j-1]) + "</div>"
@@ -333,8 +328,8 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 
 // getREADME is a utility function which retrieves the given file from
 // the repository at a particular ref, HTML escapes it, converts any
-// markdown to HTML, and returns it as a string. It is intended for
-// use with READMEs, but could potentially be used for other files.
+// markdown to HTML, and returns it as a string. It is intended for use
+// with READMEs, but could potentially be used for other files.
 func getREADME(g *git, ref, file string) string {
 	readme := g.GetFile(ref, file)
 	readme = []byte(html.EscapeString(string(readme)))
@@ -342,16 +337,10 @@ func getREADME(g *git, ref, file string) string {
 }
 
 func MakePage(template string, args string) (page string, status int) {
-	status = http.StatusOK
-	if template == "dir" {
-
-	} else if template == "file" {
-
-	} else if template == "gitpage" {
-
-	} else {
-		status = http.StatusInternalServerError
+	if template == "dir" ||
+		template == "file" ||
+		template == "gitpage" {
+		return "", http.StatusOK
 	}
-
-	return
+	return "", http.StatusInternalServerError
 }
