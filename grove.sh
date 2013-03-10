@@ -1,14 +1,20 @@
 #!/bin/bash
-### Startup Script for Grove ###
-# To enable: (on debian)
-#   ln -s /etc/init.d/grove /path/to/this/script/grove.sh
+### BEGIN INIT INFO
+# Provides:          grove
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     
+# Default-Stop:      0 1 2 3 4 5 6
+# Short-Description: Service script for the Grove daemon.
+# Description:       Start, stop, or restart the Grove webserver/daemon.
+### END INIT INFO
 #
 # To use:
 # sudo service grove {start|stop|restart|status|check}
 #
 
 if [ -z $GROVE ]; then
-	GROVE=grove
+	GROVE=$(which grove)
 fi
 
 if [ -z $LOG ]; then
@@ -19,18 +25,22 @@ if [ -z $DEV ]; then
 	DEV=~/dev
 fi
 
-PID=$(pgrep $GROVE | tr "\n" " ")
+PID=$(pgrep -u "$(whoami)" -f -d " " $GROVE)
 
 start()
 {
-	if [ ! -z "$(which $GROVE)" ]; then
-		$GROVE $DEV >> $LOG &
-		echo "Started $GROVE"
-		return 0
+	if [ ! -z "$PID" ]; then
+		echo "Grove is already running."
+		return 1
+	fi
+	if [ -z "$GROVE" ]; then
+		echo "Grove not found."
+		return 1
 	fi
 
-	echo "$GROVE not found."
-	return 1
+	$GROVE $DEV >> $LOG &
+	echo "Started $GROVE"
+	return 0
 }
 
 stop()
@@ -44,7 +54,7 @@ stop()
 restart()
 {
 	stop
-	start
+	PID="" start
 }
 
 status()
@@ -78,6 +88,9 @@ case "$1" in
 		stop
 		;;
 	"restart" )
+		restart
+		;;
+	"force-reload" )
 		restart
 		;;
 	"status" )
