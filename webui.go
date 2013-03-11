@@ -140,7 +140,7 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 	}
 
 	// Otherwise, load the CSS.
-	css, err := ioutil.ReadFile(*fRes + "/style.css")
+	css, err := ioutil.ReadFile(path.Join(*fRes, "style.css"))
 	if err != nil {
 		return page, http.StatusInternalServerError
 	}
@@ -207,7 +207,7 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 			// Load the README
 			pageinfo.Content = template.HTML(getREADME(g, ref, "README"))
 			pageinfo.Content = template.HTML(getREADME(g, ref, "README.md"))
-			t, _ = template.ParseFiles(*fRes + "/templates" + "/gitpage.html")
+			t, _ = template.ParseFiles(path.Join(*fRes, "templates/gitpage.html"))
 		} else {
 			// or display the directory.
 			pageinfo.Location = template.URL("/" + file)
@@ -240,7 +240,7 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 					}
 				}
 				pageinfo.List = List
-				t, _ = template.ParseFiles(*fRes + "/templates" + "/tree.html")
+				t, _ = template.ParseFiles(path.Join(*fRes, "/templates/tree.html"))
 			} else {
 				// DON'T FUCKING TOUCH ANYTHING IN THIS ELSE BLOCK YES,
 				// THAT MEANS YOU.
@@ -278,7 +278,7 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 				pageinfo.Content = template.HTML(temp_html)
 
 				// Finally, parse it.
-				t, _ = template.ParseFiles(*fRes + "/templates" + "/file.html")
+				t, _ = template.ParseFiles(path.Join(*fRes, "/templates/file.html"))
 			}
 		}
 
@@ -314,7 +314,7 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 
 		}
 		pageinfo.List = List
-		t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.html")
+		t, _ = template.ParseFiles(path.Join(*fRes, "/templates/dir.html"))
 		err = t.Execute(&doc, pageinfo)
 		if err != nil {
 			l.Println(err)
