@@ -1,5 +1,23 @@
 @charset "UTF-8";
 
+@-webkit-keyframes fade {
+	from { opacity: 0; }
+	50% { opacity: .5; }
+	to { opacity: 1; }
+}
+
+@-moz-keyframes fade {
+	from { opacity: 0; }
+	50% { opacity: .5; }
+	to { opacity: 1; }
+}
+
+@keyframes fade {
+	from { opacity: 0; }
+	50% { opacity: .5; }
+	to { opacity: 1; }
+}
+
 body {
 	width: 100%;
 	margin: 0;
@@ -28,7 +46,7 @@ a {
 
 .li-long:hover {
 	background: #66cc33;
-	border: 1px solid #66cc3;;
+	border: 1px solid #66cc33;
 	box-shadow: none;
 	color: #FFF;
 }
@@ -36,6 +54,9 @@ a {
 ul {
 	margin: 0px;
 	padding: 10px;
+	margin-left: auto;
+	margin-right: auto;
+	width: 80%;
 }
 
 .title {
@@ -142,6 +163,29 @@ a.button:hover, .button:hover {
 	font-size: 12px;
 	margin-top: 10px;
 	margin-bottom: 10px;
+	display: none;
+	opacity: 0;
+}
+
+.readmebitch {
+	text-align: center;
+	padding: 20px;
+}
+
+a.hideornot {
+	padding: 10px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	background: rgb(255,255,255);
+	background: -moz-linear-gradient(top,  rgba(255,255,255,1) 0%, rgba(229,229,229,1) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,1)), color-stop(100%,rgba(229,229,229,1)));
+	background: -webkit-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
+	background: -o-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
+	background: -ms-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
+	background: linear-gradient(to bottom,  rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e5e5e5',GradientType=0 );
+	border: 1px solid #CCC;
 }
 
 .md a {
@@ -154,6 +198,15 @@ a.button:hover, .button:hover {
 
 .md li a {
 	color: #000;
+}
+
+.md:target {
+	background-color: #FFF;
+	-webkit-animation: fade .2s linear;
+	-moz-animation: fade .2s linear;
+	animation: fade 1s linear;
+	display: block;
+	opacity: 1;
 }
 
 .view-file {
@@ -200,12 +253,12 @@ a.line:hover {
 }
 
 :target {
-	background-color: #DDD;
+	background-color: #e0f4d6;
 	-webkit-transition: all 1s ease-in-out;
-  -moz-transition: all 1s ease-in-out;
-  -ms-transition: all 1s ease-in-out;
-  -o-transition: all 1s ease-in-out;
-  transition: all 1s ease-in-out;
+	-moz-transition: all 1s ease-in-out;
+	-ms-transition: all 1s ease-in-out;
+	-o-transition: all 1s ease-in-out;
+	transition: all 1s ease-in-out;
 }
 
 .content {
@@ -251,12 +304,16 @@ h6 {
 	font-size: 13px;
 }
 
-.md:hover, .loggy:hover {
+.md:hover, .loggy:hover, a.hideornot:hover {
 	box-shadow: inset 0px 0px 5px #66cc33;
 }
 
 .loggy-owner:hover {
-	box-shadow: inset 0px 0px 8px #66cc33
+	box-shadow: inset 0px 0px 8px #66cc33;
+}
+
+.loggy:target, .loggy-owner:target {
+	background-color: #e0f4d6;
 }
 
 .holdem {
@@ -320,8 +377,13 @@ code {
 }
 
 .version {
-	padding: 5px;
-	float: right;
+	text-align: center;
+}
+
+.slogo {
+	margin-left: auto;
+	margin-right: auto;
+	width: 358px;
 }
 
 .logo {

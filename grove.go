@@ -1,9 +1,11 @@
+// Grove - Git self-hosting for developers
+//
+// Copyright ⓒ 2013 Alexander Bauer (GPLv3)
 package main
 
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/cgi"
@@ -14,19 +16,19 @@ import (
 )
 
 var (
-	Version    = "0.5"
+	Version    = "0.5.4"
 	minversion string
 
-	Bind      = "0.0.0.0"          //Interface to bind to
-	Port      = "8860"             //Port to bind to
-	Resources = "/usr/share/grove" //Directory to store resources in
+	Bind      = "0.0.0.0"          // Interface to bind to
+	Port      = "8860"             // Port to bind to
+	Resources = "/usr/share/grove" // Directory to store resources in
 )
 
 var (
-	Perms = uint(0) //Used to specify which files can be served:
-	//0: readable globally
-	//1: readable by group
-	//2: readable
+	Perms = uint(0) // Used to specify which files can be served:
+	// 0: readable globally
+	// 1: readable by group
+	// 2: readable
 )
 
 const (
@@ -77,13 +79,14 @@ func main() {
 
 	var repodir string
 	if flag.NArg() > 0 {
-		repodir = flag.Arg(0)
+		repodir = path.Clean(flag.Arg(0))
+
 		if !path.IsAbs(repodir) {
 			wd, err := os.Getwd()
 			if err != nil {
 				l.Fatalln("Error getting working directory:", err)
 			}
-			path.Join(wd, repodir)
+			repodir = path.Join(wd, repodir)
 		}
 	} else {
 		wd, err := os.Getwd()
@@ -115,6 +118,7 @@ func Serve(repodir string) {
 
 	l.Println("Starting server on", *fBind+":"+*fPort)
 	http.HandleFunc("/", HandleWeb)
+	http.HandleFunc("/favicon.ico", HandleIcon)
 	err := http.ListenAndServe(*fBind+":"+*fPort, nil)
 	if err != nil {
 		l.Fatalln("Server crashed:", err)
@@ -123,19 +127,17 @@ func Serve(repodir string) {
 }
 
 func HandleWeb(w http.ResponseWriter, req *http.Request) {
-	//Determine the path from the URL
-	urlp := req.URL.String()
-	p := path.Join(handler.Dir, urlp)
-	urlp = "http://" + req.Host + urlp
+	// Determine the filesystem path from the URL.
+	p := path.Join(handler.Dir, req.URL.Path)
 
-	//Send the request to the git http backend
-	//if it is to a .git URL.
+	// Send the request to the git http backend if it is to a .git
+	// URL.
 	if strings.Contains(req.URL.String(), ".git/") {
 		gitPath := strings.SplitAfter(p, ".git/")[0]
 		l.Println("Git request to", req.URL, "from", req.RemoteAddr)
 
-		//Check to make sure that the repository
-		//is globally readable.
+		// Check to make sure that the repository is globally
+		// readable.
 		fi, err := os.Stat(gitPath)
 		if err != nil || !CheckPermBits(fi) {
 			l.Println("Git request from", req.RemoteAddr, "denied")
@@ -144,54 +146,56 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 
 		handler.ServeHTTP(w, req)
 		return
-	} else if req.URL.String() == "/favicon.ico" {
-		b, err := ioutil.ReadFile(path.Join(*fRes, "favicon.png"))
-		if err != nil {
-			return
-		}
-		w.Write(b)
-		return
 	}
 	l.Println("View of", req.URL, "from", req.RemoteAddr)
 
-	//Figure out which directory is being requested,
-	//and check whether we're allowed to serve it.
+	// Figure out which directory is being requested, and check
+	// whether we're allowed to serve it.
 	repository, file, isFile, status := SplitRepository(handler.Dir, p)
 	if status == http.StatusOK {
 		var body string
-		body, status = ShowPath(urlp, repository, file, isFile, "", req.Host)
+		body, status = ShowPath(req, repository, file, isFile, "", req.Host)
 		if status == http.StatusOK {
 			w.Write([]byte(body))
 			return
 		}
 	}
 
-	//If ShowPath gives the status as anything
-	//other than 200 OK, write the error in the
-	//header.
+	// If ShowPath gives the status as anything other than 200 OK, write
+	// the error in the header.
 	l.Println("Sending", req.RemoteAddr, "status:", status)
 	http.Error(w, "Could not serve "+req.URL.String()+"\n"+strconv.Itoa(status), status)
 }
 
-//SplitRepository checks each directory in the path (p), traversing upward, until it finds a .git folder. If the parent directory of this .git directory is not permissable to serve (globally readable and listable, by default), or a .git directory could not be found, or the path is invalid, this function will return an appropriate exit code.
-//This function will only recurse upward until it reaches the path indicated by toplevel.
+// HandleIcon uses http.ServeFile() to serve the favicon quickly from
+// the filesystem.
+func HandleIcon(w http.ResponseWriter, req *http.Request) {
+	http.ServeFile(w, req, path.Join(*fRes, "favicon.png"))
+}
+
+// SplitRepository checks each directory in the path (p), traversing
+// upward, until it finds a .git folder. If the parent directory of
+// this .git directory is not permissable to serve (globally readable
+// and listable, by default), or a .git directory could not be found,
+// or the path is invalid, this function will return an appropriate
+// exit code.  This function will only recurse upward until it reaches
+// the path indicated by toplevel.
 func SplitRepository(toplevel, p string) (repository, file string, isFile bool, status int) {
 	path.Clean(toplevel)
-	//Set the repository to the path for
-	//the moment, to simplify the loop
+	// Set the repository to the path for the moment, to simplify the
+	// loop
 	repository = p
 	i := 0
 	for {
-		//We behave differently on the first
-		//run through, so only do this step
-		//if i is not 0.
+		// We behave differently on the first run through, so only do
+		// this step if i is not 0.
 		if i != 0 {
-			//Traverse upward.
+			// Traverse upward.
 			file = path.Join(path.Base(repository), file)
 			repository = path.Dir(repository)
 		}
 
-		//Check if we shouldn't continue.
+		// Check if we shouldn't continue.
 		if repository == toplevel {
 			repository = path.Join(repository, file)
 			file = ""
@@ -199,51 +203,45 @@ func SplitRepository(toplevel, p string) (repository, file string, isFile bool, 
 			return
 		}
 
-		//Check if the path has a .git folder.
+		// Check if the path has a .git folder.
 		_, err := os.Stat(repository + "/.git")
 		if err != nil {
-			//If not, traverse up and start again.
+			// If not, traverse up and start again.
 			i++
 			continue
 		}
 
-		//If the .git directory was discovered,
-		//then we now have to check if we are
-		//allowed to serve the parent directory.
+		// If the .git directory was discovered, then we now have to
+		// check if we are allowed to serve the parent directory.
 		fi, err := os.Stat(repository)
 		if err != nil {
-			//An error at this point would
-			//imply that the server is in error.
+			// An error at this point would imply that the server is in
+			// error.
 			status = http.StatusInternalServerError
 			return
 		}
 
-		//If all is well, check if it's servable.
+		// If all is well, check if it's servable.
 		if !CheckPerms(fi) {
-			//If not, 403 Forbidden.
+			// If not, 403 Forbidden.
 			status = http.StatusForbidden
 			return
 		}
 
-		//If the file is prefixed with /blob/,
-		//then treat it as a file. If it has
-		// /tree/, then treat it as a
-		//directory. In either case, chop off
-		//the prefix.
-		//If it has neither, 404.
+		// If the file is prefixed with /blob/, then treat it as a
+		// file. If it has /tree/, then treat it as a directory. In
+		// either case, chop off the prefix.  If it has neither, 404.
 		if len(file) != 0 {
-			//The trailing slash trickery involves
-			//avoiding runtime errors and splitting
-			//the strings sanely.
+			// The trailing slash trickery involves avoiding runtime
+			// errors and splitting the strings sanely.
 			file += "/"
 			if strings.HasPrefix(file, "blob/") {
 				file = strings.SplitAfterN(file, "/", 2)[1]
 				isFile = true
 				file = strings.TrimRight(file, "/")
 			} else if strings.HasPrefix(file, "tree/") {
-				//Remove the /tree/, but be sure
-				//that, if the file is blank,
-				//to make it "/" instead.
+				// Remove the /tree/, but be sure that, if the file is
+				// blank, to make it "/" instead.
 				file = strings.SplitAfterN(file, "/", 2)[1]
 				if len(file) == 0 {
 					file = "./"
@@ -256,7 +254,7 @@ func SplitRepository(toplevel, p string) (repository, file string, isFile bool, 
 		status = http.StatusOK
 		return
 	}
-	//We should never get here.
+	// We should never get here.
 	status = http.StatusInternalServerError
 	return
 }
@@ -274,13 +272,15 @@ func CheckPermBits(info os.FileInfo) (canServe bool) {
 		permBits = 0005
 	}
 
-	//For example, consider the following:
+	// For example, consider the following:
+	// 
 	//       rwl rwl rwl       r-l
 	//    0b 111 101 101 & (0b 101 << 3)  > 0
 	//    0b 111 101 101 & 0b 000 101 000 > 0
 	//    0b 000 101 000                  > 0
 	//    TRUE
-	//Thus, the file is readable and listable by
-	//the group, and therefore okay to serve.
+	// 
+	// Thus, the file is readable and listable by the group, and
+	// therefore okay to serve.
 	return (info.Mode().Perm()&os.FileMode((permBits<<(Perms*3))) > 0)
 }

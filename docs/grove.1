@@ -1,0 +1,108 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.TH GROVE 1 "2013-03-10"
+.SH NAME
+grove \- filesystem-based git repository viewing/cloning
+.SH SYNOPSIS
+.B grove
+is a stand-alone HTTP server which builds a web front end to git
+repositories. It allows a visitor to browse a specific portion of a
+developer's directory tree (and
+.I only
+subdirectories and repositories that are globally readable) and browse
+git repositories contained therein.
+.PP
+Repositories can be cloned, and files can be browsed. grove invokes
+the git backend (see
+.BR git-http-backend (1))
+in order to facilitate this. The premise of this is that developers on a
+project will be able to share code directly and in a distributed way
+without absolutely needing to push to a central server, such as
+GitHub.
+.PP
+For example, suppose developers A and B are collaborating on a
+project. Developer A starts working on an important new feature, and
+makes a few commits, but doesn't think it's ready to be put in the main
+branch. Then she leaves for the day, forgetting to push the new
+branch. Developer B knows of this feature, because they've discussed it,
+but can't access it because developer A didn't push it to the
+server. With grove, developer B could view the changes and pull the new
+branch directly from developer A's computer, without developer A even
+needing to have activated
+.BR git-instaweb .
+Now developer B can finish working on the feature, merge it to main, and
+push it to the server. The upstream will have developer A's changes,
+even though developer A didn't need to push them.
+.PP
+grove isn't limited to a single project, though. It can be, if the user
+so desires, but it's meant to give access to all (or a select subset) of
+a developer's projects. Other developers can then add the grove instance
+as remotes, and pull from them exactly as they would a remote server.
+
+.B grove
+[ \-\-bind \fI127.0.0.1\fR ] [ \-\-port \fI8860\fR ] [ \-\-res \fI/usr/share/grove\fR ] \fIdirectory\fR
+.SH DESCRIPTION
+This manual page documents the
+.B grove
+command. The home page of this project can be found at
+.IR https://github.com/SashaCrofter/grove .
+.PP
+.SH OPTIONS
+These programs follow the usual GNU command line syntax, with long
+options starting with either one or two dashes ('\-'). A summary of
+options is included below.
+
+.TP
+.B \-h, \-\-help
+Show summary of options.
+
+.TP
+.B \-\-version
+Show the short-form version of the program.
+
+.TP
+.B \-\-version-full
+Show the full-form version of the program and exit. This is generally
+not used.
+
+.TP
+.B \-\-bind
+Bind on a particular network interface, such as
+.BR 0.0.0.0 ,
+for all interfaces, or
+.B 127.0.0.1
+to only bind on localhost. This defaults to listening on all interfaces.
+
+.TP
+.B \-\-port
+Listen on a particular port. The default is
+.BR 8860 .
+
+.TP
+.B \-\-res
+Use a particular directory for retrieving static resources, such as
+stylesheets and images. This defaults to
+.BR /usr/share/grove .
+
+.TP
+.B \-\-show-bind
+Print the default interface to bind to and exit. This is intended for
+primarily programmatic use.
+
+.TP
+.B \-\-show-port
+Print the default port to listen on and exit. This is intended for
+primarily programmatic use.
+
+.TP
+.B \-\-show-res
+Print the default location from which to retrieve static resources and
+exit. This is intended primarily for programmatic use.
+
+.SH SEE ALSO
+.BR git-http-backend (1)
+
+.SH AUTHOR
+grove was written by Alexander Bauer.
+.PP
+This manual page was written by Alexander Bauer <sasha@crofter.org>,
+for the Debian project (and may be used by others).
