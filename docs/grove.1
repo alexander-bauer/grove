@@ -6,23 +6,49 @@ grove \- filesystem-based git repository viewing/cloning
 .B grove
 is a stand-alone HTTP server which builds a web front end to git
 repositories. It allows a visitor to browse a specific portion of a
-developer's directory tree (and only subdirectories that are globally
-readable) and browse git repositories contained therein.
+developer's directory tree (and
+.I only
+subdirectories and repositories that are globally readable) and browse
+git repositories contained therein.
 .PP
-Repositories (which are globally readable) can be cloned, and files can be
-browsed via HTTP. grove invokes the git backend in order to facilitate all of
-this.
+Repositories can be cloned, and files can be browsed. grove invokes
+the git backend (see
+.BR git-http-backend (1))
+in order to facilitate this. The premise of this is that developers on a
+project will be able to share code directly and in a distributed way
+without absolutely needing to push to a central server, such as
+GitHub.
+.PP
+For example, suppose developers A and B are collaborating on a
+project. Developer A starts working on an important new feature, and
+makes a few commits, but doesn't think it's ready to be put in the main
+branch. Then she leaves for the day, forgetting to push the new
+branch. Developer B knows of this feature, because they've discussed it,
+but can't access it because developer A didn't push it to the
+server. With grove, developer B could view the changes and pull the new
+branch directly from developer A's computer, without developer A even
+needing to have activated
+.BR git-instaweb .
+Now developer B can finish working on the feature, merge it to main, and
+push it to the server. The upstream will have developer A's changes,
+even though developer A didn't need to push them.
+.PP
+grove isn't limited to a single project, though. It can be, if the user
+so desires, but it's meant to give access to all (or a select subset) of
+a developer's projects. Other developers can then add the grove instance
+as remotes, and pull from them exactly as they would a remote server.
 
 .B grove
 [ \-\-bind \fI127.0.0.1\fR ] [ \-\-port \fI8860\fR ] [ \-\-res \fI/usr/share/grove\fR ] \fIdirectory\fR
 .SH DESCRIPTION
-This manual page documents briefly the
+This manual page documents the
 .B grove
-command.
+command. The home page of this project can be found at
+.IR https://github.com/SashaCrofter/grove .
 .PP
 .SH OPTIONS
 These programs follow the usual GNU command line syntax, with long
-options starting with either one or two dashes (`-').  A summary of
+options starting with either one or two dashes ('\-'). A summary of
 options is included below.
 
 .TP
@@ -49,15 +75,13 @@ to only bind on localhost. This defaults to listening on all interfaces.
 .TP
 .B \-\-port
 Listen on a particular port. The default is
-.B 8860
-.
+.BR 8860 .
 
 .TP
 .B \-\-res
 Use a particular directory for retrieving static resources, such as
 stylesheets and images. This defaults to
-.B /usr/share/grove
-.
+.BR /usr/share/grove .
 
 .TP
 .B \-\-show-bind
