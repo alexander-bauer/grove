@@ -8,7 +8,6 @@ import (
 	"github.com/russross/blackfriday"
 	"html"
 	"html/template"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -18,7 +17,6 @@ import (
 
 type gitPage struct {
 	Owner     string
-	CSS       template.CSS
 	BasePath  string
 	URL       string
 	GitDir    string
@@ -139,11 +137,6 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 		}
 	}
 
-	// Otherwise, load the CSS.
-	css, err := ioutil.ReadFile(*fRes + "/style.css")
-	if err != nil {
-		return page, http.StatusInternalServerError
-	}
 	owner := gitVarUser()
 	var commits []*Commit
 	if len(file) != 0 {
@@ -163,7 +156,6 @@ func ShowPath(req *http.Request, repository, file string, isFile bool, queries, 
 
 	pageinfo := &gitPage{
 		Owner:     owner,
-		CSS:       template.CSS(css),
 		BasePath:  path.Base(repository),
 		URL:       url,
 		GitDir:    gitDir,
