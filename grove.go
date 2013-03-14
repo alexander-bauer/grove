@@ -118,12 +118,19 @@ func Serve(repodir string) {
 
 	l.Println("Starting server on", *fBind+":"+*fPort)
 	http.HandleFunc("/", HandleWeb)
+	http.HandleFunc("/res/style.css", HandleCSS)
 	http.HandleFunc("/favicon.ico", HandleIcon)
 	err := http.ListenAndServe(*fBind+":"+*fPort, nil)
 	if err != nil {
 		l.Fatalln("Server crashed:", err)
 	}
 	return
+}
+
+// Handle resources so we don't have to load CSS every time
+// Also images, but you know, same thing.
+func HandleCSS(w http.ResponseWriter, req *http.Request) {
+	http.ServeFile(w, req, path.Join(*fRes, "style.css"))
 }
 
 func HandleWeb(w http.ResponseWriter, req *http.Request) {
