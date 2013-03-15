@@ -1,5 +1,7 @@
 package main
 
+// Copyright ⓒ 2013 Alexander Bauer (see LICENSE.md)
+
 import (
 	"net/http"
 	"net/http/cgi"
@@ -94,7 +96,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	repository, file, isFile, status := SplitRepository(handler.Dir, p)
 	if status == http.StatusOK {
 		var body string
-		body, status = ShowPath(req, repository, file, isFile, "", req.Host)
+		body, status = MakePage(req, repository, file, isFile)
 		if status == http.StatusOK {
 			w.Write([]byte(body))
 			return
