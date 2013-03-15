@@ -11,7 +11,6 @@ import (
 	"net/http/cgi"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 )
 
@@ -134,20 +133,29 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	// URL.
 	if strings.Contains(req.URL.String(), ".git/") {
 		gitPath := strings.SplitAfter(p, ".git/")[0]
-		l.Println("Git request to", req.URL, "from", req.RemoteAddr)
+		l.Printf("Git request to %s from %s\n", req.URL, req.RemoteAddr)
 
 		// Check to make sure that the repository is globally
 		// readable.
 		fi, err := os.Stat(gitPath)
-		if err != nil || !CheckPermBits(fi) {
-			l.Println("Git request from", req.RemoteAddr, "denied")
+		if err != nil {
+			l.Printf("Git request of %q from %s produced error: %s\n",
+				req.URL.Path, req.RemoteAddr, err)
+			http.NotFound(w, req)
+			return
+		}
+		if !CheckPermBits(fi) {
+			l.Printf("Git request from %q denied: %s\n",
+				req.RemoteAddr, req.URL.Path)
+			http.Error(w, http.StatusText(http.StatusForbidden),
+				http.StatusForbidden)
 			return
 		}
 
 		handler.ServeHTTP(w, req)
 		return
 	}
-	l.Println("View of", req.URL, "from", req.RemoteAddr)
+	l.Printf("View of %q from %s\n", req.URL.Path, req.RemoteAddr)
 
 	// Figure out which directory is being requested, and check
 	// whether we're allowed to serve it.
@@ -164,7 +172,8 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	// If ShowPath gives the status as anything other than 200 OK, write
 	// the error in the header.
 	l.Println("Sending", req.RemoteAddr, "status:", status)
-	http.Error(w, "Could not serve "+req.URL.String()+"\n"+strconv.Itoa(status), status)
+	http.Error(w, "Could not serve "+req.URL.Path+"\n"+http.StatusText(status),
+		status)
 }
 
 // HandleIcon uses http.ServeFile() to serve the favicon quickly from
