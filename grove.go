@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	Version    = "0.5.4"
+	Version    = "0.5.5"
 	minversion string
 
 	Bind      = "0.0.0.0"          // Interface to bind to
