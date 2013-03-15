@@ -41,6 +41,7 @@ func Serve(repodir string) {
 	l.Println("Starting server on", *fBind+":"+*fPort)
 	http.HandleFunc("/", HandleWeb)
 	http.HandleFunc("/res/style.css", HandleCSS)
+	http.HandleFunc("/res/highlight.js", HandleJS)
 	http.HandleFunc("/favicon.ico", HandleIcon)
 	err := http.ListenAndServe(*fBind+":"+*fPort, nil)
 	if err != nil {
@@ -53,6 +54,12 @@ func Serve(repodir string) {
 // the file system.
 func HandleCSS(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, path.Join(*fRes, "style.css"))
+}
+
+// HandleCSS uses http.ServeFile() to serve `highlight.js` directly
+// from the file system.
+func HandleJS(w http.ResponseWriter, req *http.Request) {
+	http.ServeFile(w, req, path.Join(*fRes, "highlight.js"))
 }
 
 // HandleIcon uses http.ServeFile() to serve the favicon directly from

@@ -2,9 +2,11 @@
 	<head>
 		<title>{{.Owner}} [Grove]</title>
 		<link rel="stylesheet" href="/res/style.css"/>
+        <script type="text/javascript" src="/res/highlight.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
 	<body>
     
-		<div class="title">
+		<div class="bigtitle">
 			<a href="..">.. / </a>{{.BasePath}}{{.Location}}
 			<div class="cloneme">
 				{{.URL}}{{.GitDir}}
@@ -17,8 +19,8 @@
         
 		<div class="view-file">
         	<div class="container">
-            	<div class="numbers heman">{{.Numbers}}</div>
-                <div class="content heman">{{.Content}}</div>
+            	<div class="numbers">{{.Numbers}}</div>
+                <div class="content"><pre><code>{{.Content}}</code></pre></div>
             </div>
 		</div>
         
