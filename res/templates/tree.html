@@ -18,7 +18,7 @@
         
 		<div class="view-dir">
 			<ul>
-            	<a href="../"><li class="li-long">..</li></a>
+            	<a href="{{.URL}}/../"><li class="li-long">..</li></a>
 				{{range $l := .List}}
 					<a href="http://{{.Host}}{{.Path}}/{{.Type}}/{{.Location}}{{.URL}}"><li class="li-long">{{.Name}}</li></a>
 				{{end}}

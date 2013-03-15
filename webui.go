@@ -217,7 +217,7 @@ func MakeDirPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req 
 	List := make([]*dirList, 0)
 	if url != ("http://" + req.Host + "/") {
 		List = append(List, &dirList{
-			URL:   template.URL(url + ".."),
+			URL:   template.URL(url + "/../"),
 			Name:  "..",
 			Class: "dir",
 		})
