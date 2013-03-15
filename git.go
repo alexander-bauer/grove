@@ -1,6 +1,6 @@
 package main
 
-// Copyright ⓒ 2013 Alexander Bauer (see LICENSE.md)
+// Copyright ⓒ 2013 Alexander Bauer and Luke Evers (see LICENSE.md)
 
 import (
 	"os/exec"
@@ -149,8 +149,7 @@ func gitParseCommit(log []string) (commit *Commit) {
 
 	for _, l := range log {
 		if len(sha) == 0 {
-			// If l is empty, then this will
-			// be run again.
+			// If l is empty, then this will be run again.
 			sha = l
 			continue
 		}
