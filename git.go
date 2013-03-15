@@ -149,8 +149,7 @@ func gitParseCommit(log []string) (commit *Commit) {
 
 	for _, l := range log {
 		if len(sha) == 0 {
-			// If l is empty, then this will
-			// be run again.
+			// If l is empty, then this will be run again.
 			sha = l
 			continue
 		}

@@ -56,17 +56,17 @@ type dirList struct {
 
 // getREADME is a utility function which retrieves the given file from
 // the repository at a particular ref, HTML escapes it, converts any
-// markdown to HTML, and returns it as a string. It is intended for use
-// with READMEs, but could potentially be used for other files.
+// markdown to HTML, and returns it as a string. It is intended for
+// use with READMEs, but could potentially be used for other files.
 func getREADME(g *git, ref, file string) string {
 	readme := g.GetFile(ref, file)
 	readme = []byte(html.EscapeString(string(readme)))
 	return string(blackfriday.MarkdownCommon(readme))
 }
 
-// Check for a .git directory in the repository argument. If one
-// does not exist, we will generate a directory listing, rather than
-// a repository view.
+// Check for a .git directory in the repository argument. If one does
+// not exist, we will generate a directory listing, rather than a
+// repository view.
 func isGit(repository string) (git bool, gitDir string) {
 	_, err := os.Stat(path.Join(repository, ".git"))
 	if err == nil {
@@ -77,9 +77,9 @@ func isGit(repository string) (git bool, gitDir string) {
 	return
 }
 
-// Retrieval of file info is done in two steps so that we can
-// use os.Stat(), rather than os.Lstat(), the former of which
-// follows symlinks.
+// Retrieval of file info is done in two steps so that we can use
+// os.Stat(), rather than os.Lstat(), the former of which follows
+// symlinks.
 func MakeDirInfos(repository string, dirnames []string) (dirinfos []os.FileInfo) {
 	dirinfos = make([]os.FileInfo, 0, len(dirnames))
 	for _, n := range dirnames {
@@ -104,28 +104,28 @@ func MakePage(req *http.Request, repository string, file string, isFile bool) (p
 	if len(ref) == 0 || !g.RefExists(ref) {
 		ref = "HEAD" // The commit or branch reference
 	}
-	
-	// maxCommits is the maximum number of commits to be loaded via the
-	// log.
+
+	// maxCommits is the maximum number of commits to be loaded via
+	// the log.
 	maxCommits, err := strconv.Atoi(req.FormValue("c"))
 	if err != nil {
 		maxCommits = 10
 	}
-		
+
 	// jsoni is a boolean indicator of whether or not to use the json
 	// interface.
 	jsoni := strings.ToLower(req.FormValue("j")) == "true"
 
-	// If the request is specified as using the JSON interface, then we
-	// switch to that. This usually isn't done, but it is better to do
-	// it here than to wait until the dirinfos are retrieved.
+	// If the request is specified as using the JSON interface, then
+	// we switch to that. This usually isn't done, but it is better to
+	// do it here than to wait until the dirinfos are retrieved.
 	git, gitDir := isGit(repository)
 	if jsoni && git {
 		return g.ShowJSON(ref, maxCommits)
 	}
-	
-	// If we're doing a directory listing, then we need to retrieve the
-	// directory list.
+
+	// If we're doing a directory listing, then we need to retrieve
+	// the directory list.
 	var dirinfos []os.FileInfo
 	if !git {
 		// Open the file so that it can be read.
@@ -141,27 +141,27 @@ func MakePage(req *http.Request, repository string, file string, isFile bool) (p
 			return page, http.StatusInternalServerError
 		}
 		dirinfos = MakeDirInfos(repository, dirnames)
-	} // close is not git
-	
+	}
+
 	// Get the user.name from the git config
 	owner := gitVarUser()
-	
+
 	var commits []*Commit
 	if len(file) != 0 {
 		commits = g.CommitsByFile(ref, file, maxCommits)
 	} else {
 		commits = g.Commits(ref, maxCommits)
 	}
-	
+
 	commitNum := len(commits)
 	tagNum := len(g.Tags())
 	branch := g.Branch("HEAD")
 	sha := g.SHA(ref)
-		
+
 	var doc bytes.Buffer
 	t := template.New("Grove!")
-	
-	// Set some stuff for the git pages and all that good stuff.
+
+	// Set up the gitPage template.
 	pathto := strings.SplitAfter(string(repository), handler.Dir)
 	pageinfo := &gitPage{
 		Owner:     owner,
@@ -209,9 +209,10 @@ func MakePage(req *http.Request, repository string, file string, isFile bool) (p
 	return
 }
 
-// MakeDirPage makes the directory listings 
-// That are not apart of the git projects
-func MakeDirPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file string, url string, dirinfos []os.FileInfo) (string) {
+// MakeDirPage makes filesystem directory listings, which are not
+// contained within git projects. It returns an entire webpage as a
+// string.
+func MakeDirPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file string, url string, dirinfos []os.FileInfo) string {
 	pageinfo.Location = template.URL("/" + file)
 	List := make([]*dirList, 0)
 	if url != ("http://" + req.Host + "/") {
@@ -221,9 +222,9 @@ func MakeDirPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req 
 			Class: "dir",
 		})
 	}
-	
-	// If is directory, and does not start with '.', and is
-	// globally readable
+
+	// If is directory, and does not start with '.', and is globally
+	// readable
 	for _, info := range dirinfos {
 		if info.IsDir() && CheckPerms(info) {
 			List = append(List, &dirList{
@@ -233,17 +234,19 @@ func MakeDirPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req 
 			})
 		}
 	}
-	
+
 	pageinfo.List = List
 	t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.html")
-	
+
 	return Execute(t, doc, pageinfo)
 }
 
-func MakeFilePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, g *git, ref string, file string) (page string){
-	// First we need to get the content
+// MakeFilePage shows the contents of a file within a git project. It
+// returns an entire webpage as a string.
+func MakeFilePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, g *git, ref string, file string) (page string) {
+	// First we need to get the content,
 	pageinfo.Content = template.HTML(string(g.GetFile(ref, file)))
-	// Then we need to figure out how many lines there are.
+	// then we need to figure out how many lines there are.
 	lines := strings.Count(string(pageinfo.Content), "\n")
 	// For each of the lines, we want to prepend
 	//    <div id=\"L-"+j+"\">
@@ -278,9 +281,9 @@ func MakeFilePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, g *
 	return Execute(t, doc, pageinfo)
 }
 
-// MakeGitPage makes the gitpage for the git project.
-// I know it kind of explains itself, but I felt like
-// I should explain it.
+// MakeGitPage shows the "front page" that is the main directory of a
+// git reposiory, including the README and a directory listing. It
+// returns an entire webpage as a string.
 func MakeGitPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, ref string, g *git, commits []*Commit, owner string, maxCommits int, file string) (page string) {
 	Logs := make([]*gitLog, 0)
 	for i, c := range commits {
@@ -317,10 +320,8 @@ func MakeGitPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, ref 
 	return Execute(t, doc, pageinfo)
 }
 
-
-// MakeTreePage makes the tree within the git page.
-// I know it kind of explains itself, but I felt as
-// If it needed an explanation.
+// MakeTreePage makes directory listings from within git repositories.
+// It returns an entire webpage as a string.
 func MakeTreePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file string, url string, g *git, ref string, pathto []string) (page string) {
 	pageinfo.Location = template.URL("/" + file)
 	if strings.HasSuffix(file, "/") {

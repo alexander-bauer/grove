@@ -50,24 +50,20 @@ func Serve(repodir string) {
 	return
 }
 
-// HandleCSS makes sure that we don't have to use the
-// Import io/ioutil each time. Now we can just get it
-// From /res/style.css each time.
+// HandleCSS uses http.ServeFile() to serve `style.css` directly from
+// the file system.
 func HandleCSS(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, path.Join(*fRes, "style.css"))
 }
 
-// HandleIcon uses http.ServeFile() to serve the favicon 
-// Wuickly from the filesystem. Besides, if we don't add
-// This then in the log it will tell us that the request
-// Is trying to get / and also the /favicon.ico file.
+// HandleIcon uses http.ServeFile() to serve the favicon directly from
+// the filesystem.
 func HandleIcon(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, path.Join(*fRes, "favicon.png"))
 }
 
-// HandleWeb is pretty much the handler that handles
-// Everything else. If you didn't figure that out by
-// Now. 
+// HandleWeb handles general requests, such as for the web interface
+// or git-over-http requests.
 func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	// Determine the filesystem path from the URL.
 	p := path.Join(handler.Dir, req.URL.Path)
@@ -103,12 +99,11 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	// If ShowPath gives the status as anything other than 200 OK, write
-	// the error in the header.
+	// If ShowPath gives the status as anything other than 200 OK,
+	// write the error in the header.
 	l.Println("Sending", req.RemoteAddr, "status:", status)
 	http.Error(w, "Could not serve "+req.URL.String()+"\n"+strconv.Itoa(status), status)
 }
-
 
 // SplitRepository checks each directory in the path (p), traversing
 // upward, until it finds a .git folder. If the parent directory of
@@ -152,8 +147,8 @@ func SplitRepository(toplevel, p string) (repository, file string, isFile bool, 
 		// check if we are allowed to serve the parent directory.
 		fi, err := os.Stat(repository)
 		if err != nil {
-			// An error at this point would imply that the server is in
-			// error.
+			// An error at this point would imply that the server is
+			// in error.
 			status = http.StatusInternalServerError
 			return
 		}
@@ -191,9 +186,7 @@ func SplitRepository(toplevel, p string) (repository, file string, isFile bool, 
 		status = http.StatusOK
 		return
 	}
-	// We should never get here, but 
-	// If we do, may all the kittens
-	// In the world help us...
+	// Something is very wrong if we get here.
 	status = http.StatusInternalServerError
 	return
 }
