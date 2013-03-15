@@ -79,10 +79,9 @@ func (g *git) Tags() (tags []string) {
 	return strings.Split(strings.TrimRight(t, "\n"), "\n")
 }
 
-func (g *git) TotalCommits() (commits string) {
+func (g *git) TotalCommits() (commits int) {
 	c, _ := g.execute("rev-list", "--all")
-	commit := strings.Split(strings.TrimRight(c, "\n"), "\n")
-	return strconv.Itoa(len(commit))
+	return len(strings.Split(strings.TrimRight(c, "\n"), "\n"))
 }
 
 func (g *git) RefExists(ref string) (exists bool) {

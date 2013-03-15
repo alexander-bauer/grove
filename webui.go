@@ -153,7 +153,7 @@ func MakePage(req *http.Request, repository string, file string, isFile bool) (p
 		commits = g.Commits(ref, maxCommits)
 	}
 
-	commitNum := len(commits)
+	commitNum := g.TotalCommits()
 	tagNum := len(g.Tags())
 	branch := g.Branch("HEAD")
 	sha := g.SHA(ref)
