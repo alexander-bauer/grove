@@ -94,7 +94,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	l.Printf("View of %q from %s\n", req.URL.Path, req.RemoteAddr)
-
+	
 	// Figure out which directory is being requested, and check
 	// whether we're allowed to serve it.
 	repository, file, isFile, status := SplitRepository(handler.Dir, p)
@@ -187,6 +187,10 @@ func SplitRepository(toplevel, p string) (repository, file string, isFile bool, 
 				if len(file) == 0 {
 					file = "./"
 				}
+			} else if strings.HasPrefix(file, "raw/") {
+				file = strings.SplitAfterN(file, "/", 2)[1]
+				isFile = true
+				file = strings.TrimRight(file, "/")
 			} else {
 				status = http.StatusNotFound
 				return

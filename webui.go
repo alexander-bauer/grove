@@ -177,7 +177,7 @@ func MakePage(req *http.Request, repository string, file string, isFile bool) (p
 		SHA:       sha,
 		Location:  template.URL(""),
 	}
-
+		
 	// TODO: all of the below case blocks may misbehave if the URL
 	// contains a keyword.
 	switch {
@@ -195,6 +195,10 @@ func MakePage(req *http.Request, repository string, file string, isFile bool) (p
 		// This will catch cases needing to serve files.
 		return MakeFilePage(t, doc, pageinfo, g, ref, file),
 			http.StatusOK
+	case strings.Contains(req.URL.Path, "raw"):
+		// This will catch cases needing to serve files directly.
+		return MakeRawPage(file, ref, g),
+			http.StatusOK
 	case git:
 		// This will catch cases serving the main page of a repository
 		// directory. This needs to be last because the above cases
@@ -209,10 +213,15 @@ func MakePage(req *http.Request, repository string, file string, isFile bool) (p
 	return
 }
 
+func MakeRawPage(file string, ref string, g *git) string {
+	return string(g.GetFile(ref, file))
+}
+
 // MakeDirPage makes filesystem directory listings, which are not
 // contained within git projects. It returns an entire webpage as a
 // string.
-func MakeDirPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file string, url string, dirinfos []os.FileInfo) string {
+func MakeDirPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, 
+req *http.Request, file string, url string, dirinfos []os.FileInfo) string {
 	pageinfo.Location = template.URL("/" + file)
 	List := make([]*dirList, 0)
 	if url != ("http://" + req.Host + "/") {
@@ -242,7 +251,8 @@ func MakeDirPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req 
 
 // MakeFilePage shows the contents of a file within a git project. It
 // returns an entire webpage as a string.
-func MakeFilePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, g *git, ref string, file string) (page string) {
+func MakeFilePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, 
+g *git, ref string, file string) (page string) {
 	// First we need to get the content,
 	pageinfo.Content = template.HTML(string(g.GetFile(ref, file)))
 	// then we need to figure out how many lines there are.
@@ -283,7 +293,8 @@ func MakeFilePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, g *
 // MakeGitPage shows the "front page" that is the main directory of a
 // git reposiory, including the README and a directory listing. It
 // returns an entire webpage as a string.
-func MakeGitPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, ref string, g *git, commits []*Commit, owner string, maxCommits int, file string) (page string) {
+func MakeGitPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, ref string, 
+g *git, commits []*Commit, owner string, maxCommits int, file string) (page string) {
 	Logs := make([]*gitLog, 0)
 	for i, c := range commits {
 		if len(c.SHA) == 0 {
@@ -321,7 +332,8 @@ func MakeGitPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, ref 
 
 // MakeTreePage makes directory listings from within git repositories.
 // It returns an entire webpage as a string.
-func MakeTreePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file string, url string, g *git, ref string, pathto []string) (page string) {
+func MakeTreePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req *http.Request, 
+file string, url string, g *git, ref string, pathto []string) (page string) {
 	pageinfo.Location = template.URL("/" + file)
 	if strings.HasSuffix(file, "/") {
 		List := make([]*dirList, 0)
