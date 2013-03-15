@@ -1,6 +1,6 @@
 package main
 
-// Copyright ⓒ 2013 Alexander Bauer (see LICENSE.md)
+// Copyright ⓒ 2013 Alexander Bauer and Luke Evers (see LICENSE.md)
 
 import (
 	"os/exec"

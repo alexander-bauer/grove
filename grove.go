@@ -1,6 +1,6 @@
 // Grove - Git self-hosting for developers
 //
-// Copyright ⓒ 2013 Alexander Bauer (GPLv3)
+// Copyright ⓒ 2013 Alexander Bauer and Luke Evers (GPLv3)
 package main
 
 import (
