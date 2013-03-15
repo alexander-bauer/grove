@@ -52,123 +52,7 @@ type dirList struct {
 	Location string
 	Version  string
 }
-
-// ShowPath takes a fully rooted path as an argument, and generates an
-// HTML webpage in order in order to allow the user to navigate or clone
-// via http. It makes no assumptions regarding the presence of a
-// trailing slash.  To view a git repository, pass both a repository and
-// a file. To view just a directory tree, leave file empty, and be sure
-// that the repository argument is a valid directory that does not
-// contain a .git directory.
-//func ShowPath(req *http.Request, repository, file string, isFile bool, queries, host string) (page string, status int) {
-	/*
-	g := &git{
-		Path: repository,
-	}
-	url := "http://" + req.Host + strings.TrimRight(req.URL.Path, "/")
-
-	// Set variables based on the form values.
-
-	// ref is the git commit reference. If the form is not submitted,
-	// (or is invalid), it is set to "HEAD".
-	ref := req.FormValue("r")
-	// maxCommits is the maximum number of commits to be loaded via the
-	// log.
-	maxCommits, err := strconv.Atoi(req.FormValue("c"))
-	// jsoni is a boolean indicator of whether or not to use the json
-	// interface.
-	jsoni := strings.ToLower(req.FormValue("j")) == "true"
-
-	if len(ref) == 0 || !g.RefExists(ref) {
-		ref = "HEAD" // The commit or branch reference
-	}
-	if err != nil {
-		maxCommits = 10
-	}
-	
-	// Check for a .git directory in the repository argument. If one
-	// does not exist, we will generate a directory listing, rather than
-	// a repository view.
-	var isGit bool
-	var gitDir string
-	_, err = os.Stat(path.Join(repository, ".git"))
-	if err == nil {
-		// Note that err EQUALS nil
-		isGit = true
-		gitDir = "/.git"
-	}
-	
-	// If the request is specified as using the JSON interface, then we
-	// switch to that. This usually isn't done, but it is better to do
-	// it here than to wait until the dirinfos are retrieved.
-	if jsoni && isGit {
-		return g.ShowJSON(ref, maxCommits)
-	}
-	
-
-	// Is we're doing a directory listing, then we need to retrieve the
-	// directory list.
-	var dirinfos []os.FileInfo
-	if !isGit {
-		// Open the file so that it can be read.
-		f, err := os.Open(repository)
-		if err != nil || f == nil {
-			// If there is an error opening the file, return 500.
-			return page, http.StatusInternalServerError
-		}
-
-		// Retrieval of file info is done in two steps so that we can
-		// use os.Stat(), rather than os.Lstat(), the former of which
-		// follows symlinks.
-		dirnames, err := f.Readdirnames(0)
-		f.Close()
-		if err != nil {
-			// If the directory could not be opened, return 500.
-			return page, http.StatusInternalServerError
-		}
-		dirinfos = make([]os.FileInfo, 0, len(dirnames))
-		for _, n := range dirnames {
-			info, err := os.Stat(repository + "/" + n)
-			if err == nil && CheckPerms(info) {
-				dirinfos = append(dirinfos, info)
-			}
-		}
-	}
-	
-
-	owner := gitVarUser()
-	var commits []*Commit
-	if len(file) != 0 {
-		commits = g.CommitsByFile(ref, file, maxCommits)
-	} else {
-		commits = g.Commits(ref, maxCommits)
-	}
-	commitNum := len(commits)
-	tagNum := len(g.Tags())
-	branch := g.Branch("HEAD")
-	sha := g.SHA(ref)
-
-	var doc bytes.Buffer
-	t := template.New("Grove!")
-
-	pathto := strings.SplitAfter(string(repository), handler.Dir)
-
-	pageinfo := &gitPage{
-		Owner:     owner,
-		BasePath:  path.Base(repository),
-		URL:       url,
-		GitDir:    gitDir,
-		Host:      host,
-		Version:   Version,
-		Path:      pathto[1],
-		Branch:    branch,
-		TagNum:    strconv.Itoa(tagNum),
-		CommitNum: strconv.Itoa(commitNum),
-		SHA:       sha,
-		Location:  template.URL(""),
-	}
-	
-	if isGit {
+/*	if isGit {
 		Logs := make([]*gitLog, 0)
 		for i, c := range commits {
 			if len(c.SHA) == 0 {
@@ -282,44 +166,8 @@ type dirList struct {
 
 		return doc.String(), http.StatusOK
 	} 
-	/*
-	else {
-		var doc bytes.Buffer
-
-		pageinfo.Location = template.URL("/" + file)
-		List := make([]*dirList, 0)
-		if url != ("http://" + host + "/") {
-			List = append(List, &dirList{
-				URL:   template.URL(url + ".."),
-				Name:  "..",
-				Class: "dir",
-			})
-		}
-		for _, info := range dirinfos {
-			// If is directory, and does not start with '.', and is
-			// globally readable
-			if info.IsDir() && CheckPerms(info) {
-				List = append(List, &dirList{
-					URL:   template.URL(info.Name() + "/"),
-					Name:  info.Name(),
-					Class: "dir",
-				})
-			}
-
-		}
-		pageinfo.List = List
-		t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.html")
-		err = t.Execute(&doc, pageinfo)
-		if err != nil {
-			l.Println(err)
-			return page, http.StatusInternalServerError
-		}
-
-		return doc.String(), http.StatusOK
-	}
-	return page, http.StatusInternalServerError
+	
 	*/
-//}
 
 // getREADME is a utility function which retrieves the given file from
 // the repository at a particular ref, HTML escapes it, converts any
@@ -468,11 +316,11 @@ func MakePage(req *http.Request, repository string, file string, isFile bool) (p
 		case "gitpage":
 			return MakeGitPage(), http.StatusOK
 		case "tree":
-			return MakeTreePage(), http.StatusOK
+			return MakeTreePage(doc, pageinfo, req, file, url, t, g, ref, pathto), http.StatusOK
 		default:
 			return "", http.StatusInternalServerError
 	}
-	return
+	return 
 }
 
 func MakeDirPage(doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file string, url string, dirinfos []os.FileInfo, t *template.Template) (string) {
@@ -500,13 +348,8 @@ func MakeDirPage(doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file st
 	
 	pageinfo.List = List
 	t, _ = template.ParseFiles(*fRes + "/templates" + "/dir.html")
-	err := t.Execute(&doc, pageinfo)
-	if err != nil {
-		l.Println(err)
-		return string(http.StatusInternalServerError)
-	}
 	
-	return doc.String()
+	return Execute(t, doc, pageinfo)
 }
 
 func MakeFilePage() (page string){
@@ -519,7 +362,50 @@ func MakeGitPage() (page string) {
 	return
 }
 
-func MakeTreePage() (page string){
-	
-	return
+func MakeTreePage(doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file string, url string, t *template.Template, g *git, ref string, pathto []string) (page string){
+	// or display the directory.
+	pageinfo.Location = template.URL("/" + file)
+	if strings.HasSuffix(file, "/") {
+		List := make([]*dirList, 0)
+		files := g.GetDir(ref, file)
+		for _, f := range files {
+			if strings.HasSuffix(f, "/") {
+				List = append(List, &dirList{
+					URL:      template.URL(f),
+					Type:     "tree",
+					Host:     req.Host,
+					Path:     pathto[1],
+					Name:     f,
+					Location: file,
+					Version:  Version,
+					Class:    "file",
+				})
+			} else {
+				List = append(List, &dirList{
+					URL:      template.URL(f),
+					Type:     "blob",
+					Name:     f,
+					Host:     req.Host,
+					Path:     pathto[1],
+					Location: file,
+					Class:    "file",
+					Version:  Version,
+				})
+			}
+		}
+		pageinfo.List = List
+		t, _ = template.ParseFiles(*fRes + "/templates" + "/tree.html")
+	} 
+	println("tree yeah tree")
+	return Execute(t, doc, pageinfo)
+}
+
+func Execute(t *template.Template, doc bytes.Buffer, pageinfo *gitPage) string {
+	err := t.Execute(&doc, pageinfo)
+	if err != nil {
+		l.Println(err)
+		return string(http.StatusInternalServerError)
+	}
+	println(doc.String())
+	return doc.String()
 }
