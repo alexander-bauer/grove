@@ -7,6 +7,7 @@ import (
 	"github.com/russross/blackfriday"
 	"html"
 	"html/template"
+	"encoding/base64"
 	"net/http"
 	"os"
 	"path"
@@ -52,122 +53,6 @@ type dirList struct {
 	Location string
 	Version  string
 }
-/*	if isGit {
-		Logs := make([]*gitLog, 0)
-		for i, c := range commits {
-			if len(c.SHA) == 0 {
-				// If, for some reason, the commit doesn't have content,
-				// skip it.
-				continue
-			}
-			var classtype string
-			if c.Author == owner {
-				classtype = "-owner"
-			}
-
-			Logs = append(Logs, &gitLog{
-				Author:    c.Author,
-				Classtype: classtype,
-				SHA:       c.SHA,
-				Time:      c.Time,
-				Subject:   template.HTML(html.EscapeString(c.Subject)),
-				Body:      template.HTML(strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1)),
-			})
-			if i == maxCommits-1 {
-				// but only display certain log messages
-				break
-			}
-		}
-		pageinfo.Logs = Logs
-		if len(file) == 0 {
-			// Load the README
-			pageinfo.Content = template.HTML(getREADME(g, ref, "README"))
-			pageinfo.Content = template.HTML(getREADME(g, ref, "README.md"))
-			t, _ = template.ParseFiles(*fRes + "/templates" + "/gitpage.html")
-		} else {
-			// or display the directory.
-			pageinfo.Location = template.URL("/" + file)
-			if strings.HasSuffix(file, "/") {
-				List := make([]*dirList, 0)
-				files := g.GetDir(ref, file)
-				for _, f := range files {
-					if strings.HasSuffix(f, "/") {
-						List = append(List, &dirList{
-							URL:      template.URL(f),
-							Type:     "tree",
-							Host:     host,
-							Path:     pathto[1],
-							Name:     f,
-							Location: file,
-							Version:  Version,
-							Class:    "file",
-						})
-					} else {
-						List = append(List, &dirList{
-							URL:      template.URL(f),
-							Type:     "blob",
-							Name:     f,
-							Host:     host,
-							Path:     pathto[1],
-							Location: file,
-							Class:    "file",
-							Version:  Version,
-						})
-					}
-				}
-				pageinfo.List = List
-				t, _ = template.ParseFiles(*fRes + "/templates" + "/tree.html")
-			} else {
-				// DON'T FUCKING TOUCH ANYTHING IN THIS ELSE BLOCK YES,
-				// THAT MEANS YOU.
-
-				// First we need to get the content
-				pageinfo.Content = template.HTML(string(g.GetFile(ref, file)))
-				// Then we need to figure out how many lines there are.
-				lines := strings.Count(string(pageinfo.Content), "\n")
-				// For each of the lines, we want to prepend
-				//    <div id=\"L-"+j+"\">
-				// and append
-				//    </div>
-				// Also, we want to add line numbers.
-				temp := ""
-				temp_html := ""
-				temp_content := strings.SplitAfter(string(pageinfo.Content), "\n")
-
-				// Image support
-				if extention := path.Ext(file); extention == ".png" ||
-					extention == ".jpg" ||
-					extention == ".jpeg" ||
-					extention == ".gif" {
-
-					var image []byte = []byte(pageinfo.Content)
-					img := base64.StdEncoding.EncodeToString(image)
-					temp_html = "<img src=\"data:image/" + strings.TrimLeft(extention, ".") + ";base64," + img + "\"/>"
-				} else {
-					for j := 1; j <= lines+1; j++ {
-						temp_html += "<div id=\"L-" + strconv.Itoa(j) + "\">" + html.EscapeString(temp_content[j-1]) + "</div>"
-						temp += "<a href=\"#L-" + strconv.Itoa(j) + "\" class=\"line\">" + strconv.Itoa(j) + "</a><br/>"
-					}
-				}
-
-				pageinfo.Numbers = template.HTML(temp)
-				pageinfo.Content = template.HTML(temp_html)
-
-				// Finally, parse it.
-				t, _ = template.ParseFiles(*fRes + "/templates" + "/file.html")
-			}
-		}
-
-		err := t.Execute(&doc, pageinfo)
-		if err != nil {
-			l.Println(err)
-			return page, http.StatusInternalServerError
-		}
-
-		return doc.String(), http.StatusOK
-	} 
-	
-	*/
 
 // getREADME is a utility function which retrieves the given file from
 // the repository at a particular ref, HTML escapes it, converts any
@@ -310,20 +195,22 @@ func MakePage(req *http.Request, repository string, file string, isFile bool) (p
 
 	switch(which) {
 		case "dir":
-			return MakeDirPage(doc, pageinfo, req, file, url, dirinfos, t), http.StatusOK
+			return MakeDirPage(t, doc, pageinfo, req, file, url, dirinfos), http.StatusOK
 		case "file":
-			return MakeFilePage(), http.StatusOK
+			return MakeFilePage(t, doc, pageinfo, g, ref, file), http.StatusOK
 		case "gitpage":
-			return MakeGitPage(), http.StatusOK
+			return MakeGitPage(t, doc, pageinfo, ref, g, commits, owner, maxCommits, file), http.StatusOK
 		case "tree":
-			return MakeTreePage(doc, pageinfo, req, file, url, t, g, ref, pathto), http.StatusOK
+			return MakeTreePage(t, doc, pageinfo, req, file, url, g, ref, pathto), http.StatusOK
 		default:
 			return "", http.StatusInternalServerError
 	}
 	return 
 }
 
-func MakeDirPage(doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file string, url string, dirinfos []os.FileInfo, t *template.Template) (string) {
+// MakeDirPage makes the directory listings 
+// That are not apart of the git projects
+func MakeDirPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file string, url string, dirinfos []os.FileInfo) (string) {
 	pageinfo.Location = template.URL("/" + file)
 	List := make([]*dirList, 0)
 	if url != ("http://" + req.Host + "/") {
@@ -352,18 +239,88 @@ func MakeDirPage(doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file st
 	return Execute(t, doc, pageinfo)
 }
 
-func MakeFilePage() (page string){
-	
-	return
+func MakeFilePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, g *git, ref string, file string) (page string){
+	// First we need to get the content
+	pageinfo.Content = template.HTML(string(g.GetFile(ref, file)))
+	// Then we need to figure out how many lines there are.
+	lines := strings.Count(string(pageinfo.Content), "\n")
+	// For each of the lines, we want to prepend
+	//    <div id=\"L-"+j+"\">
+	// and append
+	//    </div>
+	// Also, we want to add line numbers.
+	temp := ""
+	temp_html := ""
+	temp_content := strings.SplitAfter(string(pageinfo.Content), "\n")
+
+	// Image support
+	if extention := path.Ext(file); extention == ".png" ||
+		extention == ".jpg" ||
+		extention == ".jpeg" ||
+		extention == ".gif" {
+			
+		var image []byte = []byte(pageinfo.Content)
+		img := base64.StdEncoding.EncodeToString(image)
+		temp_html = "<img src=\"data:image/" + strings.TrimLeft(extention, ".") + ";base64," + img + "\"/>"
+	} else {
+		for j := 1; j <= lines+1; j++ {
+			temp_html += "<div id=\"L-" + strconv.Itoa(j) + "\">" + html.EscapeString(temp_content[j-1]) + "</div>"
+			temp += "<a href=\"#L-" + strconv.Itoa(j) + "\" class=\"line\">" + strconv.Itoa(j) + "</a><br/>"
+		}
+	}
+
+	pageinfo.Numbers = template.HTML(temp)
+	pageinfo.Content = template.HTML(temp_html)
+
+	// Finally, parse it.
+	t, _ = template.ParseFiles(*fRes + "/templates" + "/file.html")
+	return Execute(t, doc, pageinfo)
 }
 
-func MakeGitPage() (page string) {
-	
-	return
+// MakeGitPage makes the gitpage for the git project.
+// I know it kind of explains itself, but I felt like
+// I should explain it.
+func MakeGitPage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, ref string, g *git, commits []*Commit, owner string, maxCommits int, file string) (page string) {
+	Logs := make([]*gitLog, 0)
+	for i, c := range commits {
+		if len(c.SHA) == 0 {
+			// If, for some reason, the commit doesn't have content,
+			// skip it.
+			continue
+		}
+		var classtype string
+		if c.Author == owner {
+			classtype = "-owner"
+		}
+
+		Logs = append(Logs, &gitLog{
+			Author:    c.Author,
+			Classtype: classtype,
+			SHA:       c.SHA,
+			Time:      c.Time,
+			Subject:   template.HTML(html.EscapeString(c.Subject)),
+			Body:      template.HTML(strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1)),
+		})
+		if i == maxCommits-1 {
+			// but only display certain log messages
+			break
+		}
+	}
+	pageinfo.Logs = Logs
+	if len(file) == 0 {
+		// Load the README
+		pageinfo.Content = template.HTML(getREADME(g, ref, "README"))
+		pageinfo.Content = template.HTML(getREADME(g, ref, "README.md"))
+		t, _ = template.ParseFiles(*fRes + "/templates" + "/gitpage.html")
+	}
+	return Execute(t, doc, pageinfo)
 }
 
-func MakeTreePage(doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file string, url string, t *template.Template, g *git, ref string, pathto []string) (page string){
-	// or display the directory.
+
+// MakeTreePage makes the tree within the git page.
+// I know it kind of explains itself, but I felt as
+// If it needed an explanation.
+func MakeTreePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file string, url string, g *git, ref string, pathto []string) (page string) {
 	pageinfo.Location = template.URL("/" + file)
 	if strings.HasSuffix(file, "/") {
 		List := make([]*dirList, 0)
@@ -396,16 +353,19 @@ func MakeTreePage(doc bytes.Buffer, pageinfo *gitPage, req *http.Request, file s
 		pageinfo.List = List
 		t, _ = template.ParseFiles(*fRes + "/templates" + "/tree.html")
 	} 
-	println("tree yeah tree")
 	return Execute(t, doc, pageinfo)
 }
 
+// Execute takes the template and executes it
+// Yeah, I don't think you would have figured
+// That one out by yourself. Anyways, this is
+// Needed unless we want to write it multiple
+// Times.
 func Execute(t *template.Template, doc bytes.Buffer, pageinfo *gitPage) string {
 	err := t.Execute(&doc, pageinfo)
 	if err != nil {
 		l.Println(err)
 		return string(http.StatusInternalServerError)
 	}
-	println(doc.String())
 	return doc.String()
 }
