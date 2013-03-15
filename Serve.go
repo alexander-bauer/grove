@@ -5,29 +5,29 @@ package main
 import (
 	"net/http"
 	"net/http/cgi"
+	"os"
 	"path"
 	"strconv"
 	"strings"
-	"os"
 )
 
 var (
-	Perms = uint(0) 
+	Perms = uint(0)
 	// Used to specify which files can be served:
 	// 0: readable globally
 	// 1: readable by group
 	// 2: readable
 )
 
-// Serve is pretty self-explanatory. It
-// Serves everything and takes the reqs
-// And sends them to the proper handler
+// Serve creates an HTTP server using net/http and initializes it
+// appropriately.
 func Serve(repodir string) {
 	handler = &cgi.Handler{
-		Path:   gitVarExecPath() + "/" + gitHttpBackend,
-		Root:   "/",
-		Dir:    repodir,
-		Env:    []string{"GIT_PROJECT_ROOT=" + repodir, "GIT_HTTP_EXPORT_ALL=TRUE"},
+		Path: gitVarExecPath() + "/" + gitHttpBackend,
+		Root: "/",
+		Dir:  repodir,
+		Env: []string{"GIT_PROJECT_ROOT=" + repodir,
+			"GIT_HTTP_EXPORT_ALL=TRUE"},
 		Logger: l,
 	}
 

@@ -7,9 +7,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http/cgi"
 	"os"
 	"path"
-	"net/http/cgi"
 )
 
 var (
@@ -29,7 +29,6 @@ var (
 const (
 	usage = "usage: %s [repositorydir]\n"
 )
-
 
 var (
 	fBind = flag.String("bind", Bind, "interface to bind to")

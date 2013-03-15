@@ -4,10 +4,10 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"github.com/russross/blackfriday"
 	"html"
 	"html/template"
-	"encoding/base64"
 	"net/http"
 	"os"
 	"path"
@@ -95,7 +95,7 @@ func MakePage(req *http.Request, repository string, file string, isFile bool) (p
 	g := &git{
 		Path: repository,
 	}
-	
+
 	url := "http://" + req.Host + strings.TrimRight(req.URL.Path, "/")
 
 	// ref is the git commit reference. If the form is not submitted,
@@ -177,35 +177,36 @@ func MakePage(req *http.Request, repository string, file string, isFile bool) (p
 		SHA:       sha,
 		Location:  template.URL(""),
 	}
-	
-	// The variable "which" determines which
-	// Template to use.
-	var which string
-	if git {
-		if strings.Contains(url, "tree") {
-			which = "tree"
-		} else if strings.Contains(url, "blob") {
-			which = "file"
-		} else {
-			which = "gitpage"
-		}
-	} else {
-		which = "dir"
-	}
 
-	switch(which) {
-		case "dir":
-			return MakeDirPage(t, doc, pageinfo, req, file, url, dirinfos), http.StatusOK
-		case "file":
-			return MakeFilePage(t, doc, pageinfo, g, ref, file), http.StatusOK
-		case "gitpage":
-			return MakeGitPage(t, doc, pageinfo, ref, g, commits, owner, maxCommits, file), http.StatusOK
-		case "tree":
-			return MakeTreePage(t, doc, pageinfo, req, file, url, g, ref, pathto), http.StatusOK
-		default:
-			return "", http.StatusInternalServerError
+	// TODO: all of the below case blocks may misbehave if the URL
+	// contains a keyword.
+	switch {
+	case !git:
+		// This will catch all non-git cases, eliminating the need for
+		// them below.
+		return MakeDirPage(t, doc, pageinfo, req, file, url, dirinfos),
+			http.StatusOK
+	case strings.Contains(req.URL.Path, "tree"):
+		// This will catch cases needing to serve directories within
+		// git repositories.
+		return MakeTreePage(t, doc, pageinfo, req, file, url,
+			g, ref, pathto), http.StatusOK
+	case strings.Contains(req.URL.Path, "blob"):
+		// This will catch cases needing to serve files.
+		return MakeFilePage(t, doc, pageinfo, g, ref, file),
+			http.StatusOK
+	case git:
+		// This will catch cases serving the main page of a repository
+		// directory. This needs to be last because the above cases
+		// for "tree" and "blob" will also have `git` as true.
+		return MakeGitPage(t, doc, pageinfo, ref, g, commits,
+				owner, maxCommits, file),
+			http.StatusOK
+	default:
+		// Finally, if this case is reached, something is very wrong.
+		return "", http.StatusInternalServerError
 	}
-	return 
+	return
 }
 
 // MakeDirPage makes the directory listings 
@@ -258,7 +259,7 @@ func MakeFilePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, g *
 		extention == ".jpg" ||
 		extention == ".jpeg" ||
 		extention == ".gif" {
-			
+
 		var image []byte = []byte(pageinfo.Content)
 		img := base64.StdEncoding.EncodeToString(image)
 		temp_html = "<img src=\"data:image/" + strings.TrimLeft(extention, ".") + ";base64," + img + "\"/>"
@@ -352,20 +353,17 @@ func MakeTreePage(t *template.Template, doc bytes.Buffer, pageinfo *gitPage, req
 		}
 		pageinfo.List = List
 		t, _ = template.ParseFiles(*fRes + "/templates" + "/tree.html")
-	} 
+	}
 	return Execute(t, doc, pageinfo)
 }
 
-// Execute takes the template and executes it
-// Yeah, I don't think you would have figured
-// That one out by yourself. Anyways, this is
-// Needed unless we want to write it multiple
-// Times.
+// Execute executes a template (using html/template) and returns the
+// result as a string.
 func Execute(t *template.Template, doc bytes.Buffer, pageinfo *gitPage) string {
 	err := t.Execute(&doc, pageinfo)
 	if err != nil {
 		l.Println(err)
-		return string(http.StatusInternalServerError)
+		return http.StatusText(http.StatusInternalServerError)
 	}
 	return doc.String()
 }
