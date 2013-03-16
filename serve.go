@@ -23,7 +23,7 @@ var (
 type gzipResponseWriter struct {
 	io.Writer
 	http.ResponseWriter
-  detectDone bool
+	detectDone bool
 }
 
 // Serve creates an HTTP server using net/http and initializes it
