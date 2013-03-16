@@ -23,6 +23,7 @@ var (
 type gzipResponseWriter struct {
 	io.Writer
 	http.ResponseWriter
+  detectDone bool
 }
 
 // Serve creates an HTTP server using net/http and initializes it
@@ -136,7 +137,7 @@ func gzipHandler(fn http.HandlerFunc) http.HandlerFunc {
 			fn(w, r)
 			return
 		}
-		w.Header().Set("content-encoding", "gzip")
+		w.Header().Set("Content-Encoding", "gzip")
 		gz := gzip.NewWriter(w)
 		defer gz.Close()
 		fn(gzipResponseWriter{Writer: gz, ResponseWriter: w}, r)
@@ -144,7 +145,12 @@ func gzipHandler(fn http.HandlerFunc) http.HandlerFunc {
 }
 
 func (w gzipResponseWriter) Write(b []byte) (int, error) {
-	w.Header().Set("content-type", http.DetectContentType(b))
+	if !w.detectDone {
+		if w.Header().Get("Content-Type") == "" {
+			w.Header().Set("Content-Type", http.DetectContentType(b))
+		}
+		w.detectDone = true
+	}
 	return w.Writer.Write(b)
 }
 
