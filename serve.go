@@ -34,10 +34,10 @@ func Serve(repodir string) {
 		Dir:  repodir,
 		Env: []string{"GIT_PROJECT_ROOT=" + repodir,
 			"GIT_HTTP_EXPORT_ALL=TRUE"},
-		Logger: l,
+		Logger: &l.Logger,
 	}
 
-	l.Println("Created CGI handler:",
+	l.Debug("Created CGI handler:",
 		"\n\tPath:\t", handler.Path,
 		"\n\tRoot:\t", handler.Root,
 		"\n\tDir:\t", handler.Dir,
@@ -45,7 +45,7 @@ func Serve(repodir string) {
 		"\n\t\t", handler.Env[0],
 		"\n\t\t", handler.Env[1])
 
-	l.Println("Starting server on", *fBind+":"+*fPort)
+	l.Info("Starting server on", *fBind+":"+*fPort)
 	http.HandleFunc("/", gzipHandler(HandleWeb))
 	http.HandleFunc("/res/style.css", gzipHandler(HandleCSS))
 	http.HandleFunc("/res/highlight.js", gzipHandler(HandleJS))
@@ -85,19 +85,19 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	// URL.
 	if strings.Contains(req.URL.String(), ".git/") {
 		gitPath := strings.SplitAfter(p, ".git/")[0]
-		l.Printf("Git request to %s from %s\n", req.URL, req.RemoteAddr)
+		l.Info("Git request to %s from %s\n", req.URL, req.RemoteAddr)
 
 		// Check to make sure that the repository is globally
 		// readable.
 		fi, err := os.Stat(gitPath)
 		if err != nil {
-			l.Printf("Git request of %q from %s produced error: %s\n",
+			l.Err("Git request of %q from %s produced error: %s\n",
 				req.URL.Path, req.RemoteAddr, err)
 			http.NotFound(w, req)
 			return
 		}
 		if !CheckPermBits(fi) {
-			l.Printf("Git request from %q denied: %s\n",
+			l.Notice("Git request from %q denied: %s\n",
 				req.RemoteAddr, req.URL.Path)
 			http.Error(w, http.StatusText(http.StatusForbidden),
 				http.StatusForbidden)
@@ -107,7 +107,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		handler.ServeHTTP(w, req)
 		return
 	}
-	l.Printf("View of %q from %s\n", req.URL.Path, req.RemoteAddr)
+	l.Info("View of %q from %s\n", req.URL.Path, req.RemoteAddr)
 
 	// Figure out which directory is being requested, and check
 	// whether we're allowed to serve it.
@@ -123,7 +123,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 
 	// If MakePage gives the status as anything other than 200 OK,
 	// write the error in the header.
-	l.Println("Sending", req.RemoteAddr, "status:", status)
+	l.Info("Sending", req.RemoteAddr, "status:", status)
 	http.Error(w, "Could not serve "+req.URL.Path+"\n"+http.StatusText(status),
 		status)
 }
