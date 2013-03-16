@@ -114,19 +114,13 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	// whether we're allowed to serve it.
 	repository, file, isFile, status := SplitRepository(handler.Dir, p)
 	if status == http.StatusOK {
-		var body string
-		body, status = MakePage(req, repository, file, isFile)
-		if status == http.StatusOK {
-			w.Write([]byte(body))
-			return
+		err := MakePage(w, req, repository, file, isFile)
+		if err != nil {
+			// TODO: Improve client error reporting.
+			l.Printf("View of %q from %s caused error: %s",
+				req.URL.Path, req.RemoteAddr, err)
 		}
 	}
-
-	// If MakePage gives the status as anything other than 200 OK,
-	// write the error in the header.
-	l.Println("Sending", req.RemoteAddr, "status:", status)
-	http.Error(w, "Could not serve "+req.URL.Path+"\n"+http.StatusText(status),
-		status)
 }
 
 // If the client accepts gzipped responses, that's what we'll send,
