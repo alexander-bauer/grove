@@ -85,11 +85,9 @@ func (g *git) TotalCommits() (commits int) {
 }
 
 func (g *git) RefExists(ref string) (exists bool) {
-	// If the exit status of 'git rev-list HEAD..<ref>' is nonzero,
-	// the ref does not exist in the repository. Cmd.Output(), which
-	// is used by execute(), uses Cmd.Run(), which returns an error if
-	// an exit status other than 0 is returned.
-	_, err := g.execute("rev-list", "HEAD.."+ref)
+	// If the exit status of 'git rev-list -n 1 <ref>' is nonzero, the
+	// ref does not exist in the current repository.
+	_, err := g.execute("rev-list", "-n 1", ref)
 	return err == nil
 }
 
