@@ -6,7 +6,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+	"github.com/inhies/go-utils/log"
+	_ "log"
 	"net/http/cgi"
 	"os"
 	"path"
@@ -16,9 +17,10 @@ var (
 	Version    = "0.5.7"
 	minversion string
 
-	Bind      = "0.0.0.0"          // Interface to bind to
-	Port      = "8860"             // Port to bind to
-	Resources = "/usr/share/grove" // Directory to store resources in
+	Bind                   = "0.0.0.0"          // Interface to bind to
+	Port                   = "8860"             // Port to bind to
+	Resources              = "/usr/share/grove" // Directory to store resources in
+	LogLevel  log.LogLevel = log.DEBUG          // Default log level
 )
 
 var (
@@ -43,7 +45,13 @@ var (
 )
 
 func main() {
-	l = log.New(os.Stdout, "", log.Ltime)
+	// Open a new logger with the level specified in LogLevel
+	var err error
+	l, err = log.NewLevel(LogLevel, true, os.Stdout, "", log.Ltime)
+	if err != nil {
+		fmt.Println("Fatal error:", err)
+		return
+	}
 
 	flag.Parse()
 
@@ -65,7 +73,7 @@ func main() {
 		return
 	}
 
-	l.Println("Verision:", Version+minversion)
+	l.Debugln("Version:", Version+minversion)
 
 	var repodir string
 	if flag.NArg() > 0 {
