@@ -60,16 +60,6 @@ var (
 		http.StatusText(http.StatusInternalServerError))
 )
 
-// getREADME is a utility function which retrieves the given file from
-// the repository at a particular ref, HTML escapes it, converts any
-// markdown to HTML, and returns it as a string. It is intended for
-// use with READMEs, but could potentially be used for other files.
-func getREADME(g *git, ref, file string) string {
-	readme := g.GetFile(ref, file)
-	readme = []byte(html.EscapeString(string(readme)))
-	return string(blackfriday.MarkdownCommon(readme))
-}
-
 // Check for a .git directory in the repository argument. If one does
 // not exist, we will generate a directory listing, rather than a
 // repository view.
@@ -327,9 +317,17 @@ func MakeGitPage(w io.Writer, t *template.Template, pageinfo *gitPage,
 	}
 	pageinfo.Logs = Logs
 	if len(file) == 0 {
-		// Load the README
-		pageinfo.Content = template.HTML(getREADME(g, ref, "README"))
-		pageinfo.Content = template.HTML(getREADME(g, ref, "README.md"))
+		// Load the README if it can be located. To locate, go through
+		// a list of possible names and break the loop at the first
+		// one.
+		for _, fn := range []string{"README", "README.txt", "README.md"} {
+			readme := g.GetFile(ref, fn)
+			if len(readme) != 0 {
+				pageinfo.Content = template.HTML(
+					blackfriday.MarkdownCommon(readme))
+				break
+			}
+		}
 		t, _ = template.ParseFiles(path.Join(*fRes, "templates/gitpage.html"))
 	}
 	return t.Execute(w, pageinfo)
