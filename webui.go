@@ -55,6 +55,11 @@ type dirList struct {
 	Version  string
 }
 
+const (
+	defaultRef     = "HEAD" // Default git reference
+	defaultCommits = 10     // Default number of commits to show
+)
+
 var (
 	internalServerError = errors.New(
 		http.StatusText(http.StatusInternalServerError))
@@ -108,17 +113,23 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		maxCommits = 10
 	}
 
-	// jsoni is a boolean indicator of whether or not to use the json
-	// interface.
-	jsoni := strings.ToLower(req.FormValue("j")) == "true"
+	// useAPI is a boolean indicator of whether or not to use the API
+	useAPI := len(req.FormValue("api")) != 0
 
 	// If the request is specified as using the JSON interface, then
 	// we switch to that. This usually isn't done, but it is better to
 	// do it here than to wait until the dirinfos are retrieved.
 	git, gitDir := isGit(repository)
-	if jsoni && git {
-		// TODO: Implement JSON interface
-		return internalServerError
+	if useAPI && git {
+		err = ServeAPI(w, req, g, ref, maxCommits)
+		if err != nil {
+			l.Errf("API request %q from %s failed: %s",
+				req.URL, req.RemoteAddr, err)
+		} else {
+			l.Infof("API request %q from %s",
+				req.URL, req.RemoteAddr)
+		}
+		return
 	}
 
 	// If we're doing a directory listing, then we need to retrieve
