@@ -94,39 +94,38 @@ func (g *git) RefExists(ref string) (exists bool) {
 // Commits parses the log and returns an array of Commit types, up to
 // the given max.
 func (g *git) Commits(ref string, max int) (commits []*Commit) {
-	var log string
-	if max > 0 {
-		log, _ = g.execute("--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref, "-n "+strconv.Itoa(max))
-	} else {
-		log, _ = g.execute("--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref)
-	}
-	commitLogs := strings.Split(log, gitLogSep)
-	commits = make([]*Commit, 0, len(commitLogs))
-	for _, l := range commitLogs {
-		commit := gitParseCommit(strings.Split(l, "\n"))
-		if commit != nil {
-			commits = append(commits, commit)
-		}
-	}
-	return
+	return g.parseLog(ref, max)
 }
 
 // CommitsByFile retrieves a list of commits which modify or otherwise
 // affect a file, up to the given maximum number of commits.
 func (g *git) CommitsByFile(ref, file string, max int) (commits []*Commit) {
-	var log string
+	return g.parseLog(ref, max, "--follow", "--", file)
+}
+
+// parseLog is a low-level utility for calling `git log` and producing
+// a []*Commit with no phantom commits. It invokes gitParseCommit to
+// parse individual commits.
+func (g *git) parseLog(ref string, max int, arguments ...string) (commits []*Commit) {
+	// First, we have to go through the arduous process of creating
+	// the command.
+	command := []string{"--no-pager", "log", ref,
+		"--format=format:" + gitLogFmt + gitLogSep}
 	if max > 0 {
-		log, _ = g.execute("--no-pager", "log", ref, "--follow", "--format=format:"+gitLogFmt+gitLogSep, "-n "+strconv.Itoa(max), "--", file)
-	} else {
-		log, _ = g.execute("--no-pager", "log", ref, "--follow", "--format=format:"+gitLogFmt+gitLogSep, "--", file)
+		command = append(command, "-n "+strconv.Itoa(max))
 	}
+	command = append(command, arguments...)
+
+	log, _ := g.execute(command...)
+	// Now we must parse the output of that command.
 	commitLogs := strings.Split(log, gitLogSep)
-	commits = make([]*Commit, 0, len(commitLogs))
-	for _, l := range commitLogs {
-		commit := gitParseCommit(strings.Split(l, "\n"))
-		if commit != nil {
-			commits = append(commits, commit)
-		}
+	// We will have a phantom commit here, though, so we must remove
+	// it.
+	commitLogs = commitLogs[:len(commitLogs)-1]
+
+	commits = make([]*Commit, len(commitLogs))
+	for n, l := range commitLogs {
+		commits[n] = gitParseCommit(strings.Split(l, "\n"))
 	}
 	return
 }
@@ -138,42 +137,31 @@ func (g *git) CommitsByFile(ref, file string, max int) (commits []*Commit) {
 //    <author name>
 //    <nonwrapped commit message>
 func gitParseCommit(log []string) (commit *Commit) {
-	var sha string
-	var time string
-	var author string
-	var subject string
-	var body string
-
+	commit = new(Commit)
 	for _, l := range log {
-		if len(sha) == 0 {
+		if len(commit.SHA) == 0 {
 			// If l is empty, then this will be run again.
-			sha = l
+			commit.SHA = l
 			continue
 		}
-		if len(time) == 0 {
-			time = l
+		if len(commit.Time) == 0 {
+			commit.Time = l
 			continue
 		}
-		if len(author) == 0 {
-			author = l
+		if len(commit.Author) == 0 {
+			commit.Author = l
 			continue
 		}
-		if len(subject) == 0 {
-			subject = l
+		if len(commit.Subject) == 0 {
+			commit.Subject = l
 			continue
 		}
 
-		body += l + "\n"
+		commit.Body += l + "\n"
 	}
 
-	commit = &Commit{
-		SHA:     sha,
-		Time:    time,
-		Author:  author,
-		Subject: subject,
-		Body:    strings.TrimRight(body, "\n"),
-	}
-
+	// Now, remove the trailing "\n" characters.
+	commit.Body = strings.TrimRight(commit.Body, "\n")
 	return
 }
 

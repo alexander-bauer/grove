@@ -113,8 +113,11 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		maxCommits = 10
 	}
 
-	// useAPI is a boolean indicator of whether or not to use the API
-	useAPI := len(req.FormValue("api")) != 0
+	// useAPI is a boolean indicator of whether or not to use the
+	// API. It must be retrieved by direct access to req.Form because
+	// the form can be empty. (In this case, we would fall back to
+	// checking the Accept field in the header.)
+	_, useAPI := req.Form["api"]
 
 	// If the request is specified as using the JSON interface, then
 	// we switch to that. This usually isn't done, but it is better to
