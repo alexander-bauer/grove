@@ -171,7 +171,7 @@ func gitParseCommit(log []string) (commit *Commit) {
 		Time:    time,
 		Author:  author,
 		Subject: subject,
-		Body:    body,
+		Body:    strings.TrimRight(body, "\n"),
 	}
 
 	return
