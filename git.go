@@ -48,6 +48,11 @@ func (g *git) Branch(ref string) (branch string) {
 	return strings.TrimRight(branch, "\n")
 }
 
+func (g *git) GetBranchDescription(branch string) (description string) {
+	output, _ := g.execute("config", "branch."+branch+".description")
+	return strings.TrimRight(output, "\n")
+}
+
 // GetFile retrives the contents of a file from the repository. The
 // commit is either a SHA or pointer (such as HEAD, or HEAD^).
 func (g *git) GetFile(commit, file string) (contents []byte) {

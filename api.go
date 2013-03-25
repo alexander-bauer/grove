@@ -17,10 +17,11 @@ type encoder interface {
 }
 
 type APIResponse struct {
-	GroveOwner string    // Owner of the grove instance
-	Ref        string    // Current git ref or branch name
-	Commits    []*Commit // Commits in which the most recent is first
-	Error      string    `json:",omitempty"` // Error string if present
+	GroveOwner  string    // Owner of the grove instance
+	HEAD        string    // The current ref of HEAD
+	Description string    // Current branch description if available
+	Commits     []*Commit // Commits in which the most recent is first
+	Error       string    `json:",omitempty"` // Error string if present
 }
 
 var (
@@ -70,11 +71,23 @@ func ServeAPI(w http.ResponseWriter, req *http.Request, g *git, ref string, maxC
 	if e == nil {
 		return InvalidEncodingError
 	}
+
+	// Retrieve the branch description if possible. Because of
+	// `<oldRef>..<newRef>` form refs, we must try to get the branch
+	// name from the new ref. otherwise, we can just do so normally.
+	var description string
+	if idx := strings.LastIndex(ref, ".."); idx > -1 {
+		description = g.GetBranchDescription(ref[idx+2:])
+	} else {
+		description = g.GetBranchDescription(ref)
+	}
+
 	// If an encoding was provided, prepare a response.
 	r := &APIResponse{
-		GroveOwner: gitVarUser(),
-		Ref:        g.SHA("HEAD"),
-		Commits:    g.Commits(ref, maxCommits),
+		GroveOwner:  gitVarUser(),
+		HEAD:        g.SHA("HEAD"),
+		Description: description,
+		Commits:     g.Commits(ref, maxCommits),
 	}
 	// Set the Content-Type appropriately in the header.
 	w.Header().Set("Content-Type", c)
