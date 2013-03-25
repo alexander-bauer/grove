@@ -72,21 +72,11 @@ func ServeAPI(w http.ResponseWriter, req *http.Request, g *git, ref string, maxC
 		return InvalidEncodingError
 	}
 
-	// Retrieve the branch description if possible. Because of
-	// `<oldRef>..<newRef>` form refs, we must try to get the branch
-	// name from the new ref. otherwise, we can just do so normally.
-	var description string
-	if idx := strings.LastIndex(ref, ".."); idx > -1 {
-		description = g.GetBranchDescription(ref[idx+2:])
-	} else {
-		description = g.GetBranchDescription(ref)
-	}
-
 	// If an encoding was provided, prepare a response.
 	r := &APIResponse{
 		GroveOwner:  gitVarUser(),
 		HEAD:        g.SHA("HEAD"),
-		Description: description,
+		Description: g.GetBranchDescription(ref),
 		Commits:     g.Commits(ref, maxCommits),
 	}
 	// Set the Content-Type appropriately in the header.

@@ -48,7 +48,16 @@ func (g *git) Branch(ref string) (branch string) {
 	return strings.TrimRight(branch, "\n")
 }
 
+// GetBranchDescription uses git config to retrieve the branch
+// description from the repository configuration file, if it's set. It
+// will attempt to parse branch names from refs like
+// `<oldRef>..<newRef>`.
 func (g *git) GetBranchDescription(branch string) (description string) {
+	// Attempt to parse the branch name if it looks like it's in the
+	// form of a comparison.
+	if idx := strings.LastIndex(branch, ".."); idx > -1 {
+		branch = branch[idx+2:] // Add 2 to ignore the ".."
+	} // Otherwise, just continue.
 	output, _ := g.execute("config", "branch."+branch+".description")
 	return strings.TrimRight(output, "\n")
 }
