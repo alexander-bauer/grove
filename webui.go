@@ -101,9 +101,16 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 
 	// ref is the git commit reference. If the form is not submitted,
 	// (or is invalid), it is set to "HEAD".
-	ref := req.FormValue("r")
+	ref := req.FormValue("ref")
 	if len(ref) == 0 || !g.RefExists(ref) {
 		ref = "HEAD" // The commit or branch reference
+	}
+
+	// The form value since is just a shortcut for
+	// "?ref=<ref>..<since>", so we check it here. Note that the
+	// results will include <ref> and exclude <since>.
+	if since := req.FormValue("since"); g.RefExists(since) {
+		ref = since + ".." + ref
 	}
 
 	// maxCommits is the maximum number of commits to be loaded via
