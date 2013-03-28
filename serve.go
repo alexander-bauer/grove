@@ -27,7 +27,8 @@ type gzipResponseWriter struct {
 }
 
 // Serve creates an HTTP server using net/http and initializes it
-// appropriately.
+// appropriately. If the fWeb flagg is true, it will serve directory
+// trees and git repositories to incoming requests.
 func Serve(repodir string) {
 	handler = &cgi.Handler{
 		Path: gitVarExecPath() + "/" + gitHttpBackend,
@@ -47,10 +48,16 @@ func Serve(repodir string) {
 		"\n\t\t", handler.Env[1])
 
 	l.Infoln("Starting server on", *fBind+":"+*fPort)
+	l.Infoln("Web access enabled:", *fWeb)
 	http.HandleFunc("/", gzipHandler(HandleWeb))
-	http.HandleFunc("/res/style.css", gzipHandler(HandleCSS))
-	http.HandleFunc("/res/highlight.js", gzipHandler(HandleJS))
-	http.HandleFunc("/favicon.ico", gzipHandler(HandleIcon))
+
+	// If we support web browsing, then add these handlers.
+	if *fWeb {
+		http.HandleFunc("/res/style.css", gzipHandler(HandleCSS))
+		http.HandleFunc("/res/highlight.js", gzipHandler(HandleJS))
+		http.HandleFunc("/favicon.ico", gzipHandler(HandleIcon))
+	}
+
 	err := http.ListenAndServe(*fBind+":"+*fPort, nil)
 	if err != nil {
 		l.Fatalln("Server crashed:", err)
@@ -108,6 +115,16 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		handler.ServeHTTP(w, req)
 		return
 	}
+	// If web browsing is disabled, refuse to serve any more.
+	// TODO: add an informative "about" page to redirect to.
+	if !*fWeb {
+		l.Debugf("Web access denied to %q\n", req.RemoteAddr)
+		http.Error(w, http.StatusText(http.StatusForbidden),
+			http.StatusForbidden)
+		return
+	}
+
+	// If web browsing is enabled:
 	l.Infof("View of %q from %s\n", req.URL.Path, req.RemoteAddr)
 
 	// Figure out which directory is being requested, and check
