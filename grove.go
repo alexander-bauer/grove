@@ -14,8 +14,7 @@ import (
 )
 
 var (
-	Version    = "0.5.8"
-	minversion string
+	Version = "0.5.8"
 
 	Bind                   = "0.0.0.0"          // Interface to bind to
 	Port                   = "8860"             // Port to bind to
@@ -60,7 +59,7 @@ func main() {
 		fmt.Fprintln(os.Stdout, Version)
 		return
 	case *fShowFVersion:
-		fmt.Fprintln(os.Stdout, Version+minversion)
+		fmt.Fprintln(os.Stdout, Version)
 		return
 	case *fShowBind:
 		fmt.Fprintln(os.Stdout, Bind)
@@ -73,7 +72,7 @@ func main() {
 		return
 	}
 
-	l.Debugln("Version:", Version+minversion)
+	l.Debugln("Version:", Version)
 
 	var repodir string
 	if flag.NArg() > 0 {

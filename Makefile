@@ -1,6 +1,6 @@
 program_NAME := grove
 GOCOMPILER := go build
-GOFLAGS	+=
+GOFLAGS	+= -ldflags "-X main.Version $(shell git describe)"
 
 
 .PHONY: all install clean disclean
