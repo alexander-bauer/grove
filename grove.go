@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	Version = "0.5.8"
+	Version = "0.5.9"
 
 	Bind                   = "0.0.0.0"          // Interface to bind to
 	Port                   = "8860"             // Port to bind to
