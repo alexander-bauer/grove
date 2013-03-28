@@ -173,6 +173,9 @@ func gitParseCommit(log []string) (commit *Commit) {
 
 		commit.Body += l + "\n"
 	}
+
+	// Now, remove the trailing "\n" characters.
+	commit.Body = strings.TrimRight(commit.Body, "\n")
 	return
 }
 
