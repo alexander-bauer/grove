@@ -48,6 +48,7 @@ func Serve(repodir string) {
 	// If we support web browsing, then add these handlers.
 	if *fWeb {
 		http.HandleFunc("/res/style.css", gzipHandler(HandleCSS))
+		http.HandleFunc("/res/highlight.js", gzipHandler(HandleJS))
 		http.HandleFunc("/favicon.ico", gzipHandler(HandleIcon))
 	}
 
@@ -56,6 +57,12 @@ func Serve(repodir string) {
 		l.Fatalf("Server crashed: %s", err)
 	}
 	return
+}
+
+// HandleCSS uses http.ServeFile() to serve `highlight.js` directly
+// from the file system.
+func HandleJS(w http.ResponseWriter, req *http.Request) {
+	http.ServeFile(w, req, path.Join(*fRes, "highlight.js"))
 }
 
 // HandleCSS uses http.ServeFile() to serve `style.css` directly from

@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>{{.Owner}} [Grove]</title>
@@ -6,14 +7,24 @@
 	<body>
     
 		<div class="bigtitle">
-			<a href="http://{{.Host}}{{.Path}}/tree{{.Location}}../">.. / </a>{{.BasePath}}/tree{{.Location}}
-			<div class="cloneme">
-				http://{{.Host}}{{.Path}}{{.GitDir}}
-			</div>   
+			<h5><a href="http://{{.Host}}{{.Path}}/tree{{.Location}}../">.. / </a>{{.BasePath}}/tree{{.Location}}</h5>
 		</div>
 		
 		<div class="wrapper">
-			<div class="button"><div class="buttontitle">Developer's Branch</div><br/><div class="buttontext">{{.Branch}}</div></div><div class="button"><div class="buttontitle">Tags</div><br/><div class="buttontext">{{.TagNum}}</div></div><div class="button"><div class="buttontitle">Commits</div><br/><div class="buttontext">{{.CommitNum}}</div></div><div class="button"><div class="buttontitle">Grove View</div><br/><div class="buttontext">{{.SHA}}</div></div>
+        <table>
+        	<th>Branch</th>
+            <th>Tags</th>
+            <th>Commits</th>
+            <th>SHA</th>
+            <tr>
+            	<td>{{.Branch}}</td>
+                <td>{{.TagNum}}</td>
+                <td>{{.CommitNum}}</td>
+                <td>{{.SHA}}</td>
+            </tr>
+        </table>
+        
+		<input type="text" value="http://{{.Host}}{{.Path}}{{.GitDir}}" class="bar" onClick="select();"/>
         </div>
         
 		<div class="view-dir">
@@ -25,11 +36,11 @@
 			</ul>
 		</div>
         
-        <div class="version">
-          <a href="https://github.com/SashaCrofter/grove">
-        	Version {{.Version}}
-          </a>
-        </div>
+		<div class="version">
+			<a href="https://github.com/SashaCrofter/grove">
+				Version {{.Version}}
+			</a>
+		</div>
 	</body>
 </html>
 

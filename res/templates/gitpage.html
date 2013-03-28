@@ -3,6 +3,11 @@
 	<head>
 		<title>{{.Owner}} [Grove]</title>
 		<link rel="stylesheet" href="/res/style.css"/>
+        <script type="text/javascript" src="/res/highlight.js"></script>
+		<script type="text/javascript">
+		hljs.tabReplace = '    ';
+		hljs.initHighlightingOnLoad();
+        </script>
 	</head>
 	<body>
     
@@ -23,8 +28,7 @@
                 <td>{{.SHA}}</td>
             </tr>
         </table>
-        
-        
+
 		<input type="text" value="{{.URL}}{{.GitDir}}" class="bar" onClick="select();"/>
         
         <div class="buttons">
