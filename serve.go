@@ -48,7 +48,6 @@ func Serve(repodir string) {
 	// If we support web browsing, then add these handlers.
 	if *fWeb {
 		http.HandleFunc("/res/style.css", gzipHandler(HandleCSS))
-		http.HandleFunc("/res/highlight.js", gzipHandler(HandleJS))
 		http.HandleFunc("/favicon.ico", gzipHandler(HandleIcon))
 	}
 
@@ -63,12 +62,6 @@ func Serve(repodir string) {
 // the file system.
 func HandleCSS(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, path.Join(*fRes, "style.css"))
-}
-
-// HandleCSS uses http.ServeFile() to serve `highlight.js` directly
-// from the file system.
-func HandleJS(w http.ResponseWriter, req *http.Request) {
-	http.ServeFile(w, req, path.Join(*fRes, "highlight.js"))
 }
 
 // HandleIcon uses http.ServeFile() to serve the favicon directly from
