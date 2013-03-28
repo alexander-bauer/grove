@@ -335,10 +335,6 @@ h6 {
 	color: #000;
 }
 
-.md li a {
-	color: #000;
-}
-
 .md:target {
 	background-color: #FFF;
 	-webkit-animation: fade .2s linear;
