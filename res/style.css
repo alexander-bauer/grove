@@ -1,5 +1,25 @@
 @charset "UTF-8";
 
+body {
+	width: 100%;
+	margin: 0;
+	background-color: #FFF;
+	font-size: 12px;
+	font-family: "Helvetica Neue", Helvetica;
+	color: #333;
+}
+
+a {
+	text-decoration: none;
+	color: #333;
+}
+
+/*
+==============================
+         KEYFRAMES
+==============================
+*/
+
 @-webkit-keyframes fade {
 	from { opacity: 0; }
 	50% { opacity: .5; }
@@ -18,63 +38,107 @@
 	to { opacity: 1; }
 }
 
-body {
-	width: 100%;
-	margin: 0;
-	background-color: #FFF;
-	font-size: 12px;
-	font-family: Helvetica;
-}
-
-html {
-	width: 100%;
-}
-
-a {
-	text-decoration: none;
-	color: #000;
-}
+/*
+==============================
+           LISTS
+==============================
+*/
 
 .li-long, a.li-long {
+	margin-bottom: 5px;
 	list-style: none;
-	padding: 5px;
+	padding: 10px;
 	border: 1px solid #CCC;
-	background-color: #EEE;
-	margin: 5px;
-	box-shadow: inset 0px 1px 1px #FFF;
+	background-color: #FFF;
+	-webkit-transition: background-color .2s linear;
+	-moz-transition: background-color .2s linear;
+	-ms-transition: background-color .2s linear;
+	-o-transition: background-color .2s linear;
+	transition: background-color .2s linear;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
 }
 
 .li-long:hover {
-	background: #66cc33;
-	border: 1px solid #66cc33;
+	background-color: #F6F6F6;
 	box-shadow: none;
-	color: #FFF;
+}
+
+.li-long:active {
+	background-color: #EEE;
 }
 
 ul {
-	margin: 0px;
+	margin: 0;
 	padding: 10px;
 	margin-left: auto;
 	margin-right: auto;
-	width: 80%;
 }
+
+/*
+==============================
+           TITLE
+==============================
+*/
 
 .bigtitle {
 	padding: 10px;
-	font-size: 18px;
-	font-weight: 900;
-	height: 25px;
 	border-bottom: 1px solid #CCC;
-	background: rgb(255,255,255);
-	background: -moz-linear-gradient(top,  rgba(255,255,255,1) 0%, rgba(229,229,229,1) 100%);
-	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,1)), color-stop(100%,rgba(229,229,229,1)));
-	background: -webkit-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
-	background: -o-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
-	background: -ms-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
-	background: linear-gradient(to bottom,  rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%);
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e5e5e5',GradientType=0 );
-	box-shadow: 0px 0px 5px #EEE;
 }
+
+/*
+==============================
+          VERSION
+==============================
+*/
+
+.version {
+	text-align: center;
+	margin-bottom: 10px;
+}
+
+/*
+==============================
+          HEADERS
+==============================
+*/
+
+h1, h2, h3, h4, h5, h6 {
+	color: #333;
+	margin: 0;
+	font-weight: 900;
+}
+
+h1 {
+	font-size: 48px;
+}
+
+h2 {
+	font-size: 40px;
+}
+
+h3 {
+	font-size: 30px;
+}
+
+h4 {
+	font-size: 24px;
+}
+
+h5 {
+	font-size: 20px;
+}
+
+h6 {
+	font-size: 16px;
+}
+
+/*
+==============================
+           shit
+==============================
+*/
 
 .wrapper {
 	text-align: center;
@@ -279,30 +343,6 @@ a.line:hover {
 	margin-bottom: 20px;
 }
 
-h1 {
-	font-size: 30px;
-}
-
-h2 {
-	font-size: 20px;
-}
-
-h3 {
-	font-size: 18px;
-}
-
-h4 {
-	font-size: 16px;
-}
-
-h5 {
-	font-size: 14px;
-}
-
-h6 {
-	font-size: 13px;
-}
-
 .md:hover, .loggy:hover, a.hideornot:hover {
 	box-shadow: inset 0px 0px 5px #66cc33;
 }
@@ -487,10 +527,6 @@ pre .addition {
 
 pre .deletion {
 	background-color: #FFC8BD;
-}
-
-.version {
-	text-align: center;
 }
 
 .slogo {

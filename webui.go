@@ -237,7 +237,12 @@ func MakeDirPage(w io.Writer, t *template.Template, pageinfo *gitPage,
 	dirinfos []os.FileInfo) (err error) {
 	pageinfo.Location = template.URL("/" + file)
 	List := make([]*dirList, 0)
-	if url != ("http://" + req.Host + "/") {
+	if url != ("http://" + req.Host + "") {
+		List = append(List, &dirList{
+			URL:   template.URL("/"),
+			Name:  "/",
+			Class: "dir",
+		})
 		List = append(List, &dirList{
 			URL:   template.URL(url + "/../"),
 			Name:  "..",
