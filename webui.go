@@ -133,10 +133,10 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	if useAPI && git {
 		err = ServeAPI(w, req, g, ref, maxCommits)
 		if err != nil {
-			l.Errf("API request %q from %s failed: %s",
+			l.Errf("API request %q from %q failed: %s",
 				req.URL, req.RemoteAddr, err)
 		} else {
-			l.Infof("API request %q from %s",
+			l.Debugf("API request %q from %q",
 				req.URL, req.RemoteAddr)
 		}
 		return

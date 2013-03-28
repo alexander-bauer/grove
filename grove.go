@@ -5,7 +5,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/inhies/go-utils/log"
 	_ "log"
 	"net/http/cgi"
@@ -19,7 +18,7 @@ var (
 	Bind                   = "0.0.0.0"          // Interface to bind to
 	Port                   = "8860"             // Port to bind to
 	Resources              = "/usr/share/grove" // Directory to store resources in
-	LogLevel  log.LogLevel = log.DEBUG          // Default log level
+	LogLevel  log.LogLevel = log.INFO           // Default log level
 )
 
 var (
@@ -32,6 +31,10 @@ const (
 )
 
 var (
+	fQuiet = flag.Bool("q", false, "disable logging output")
+	//	fVerbose = flag.Bool("v", false, "enable verbose output")
+	fDebug = flag.Bool("debug", false, "enable debugging output")
+
 	fBind = flag.String("bind", Bind, "interface to bind to")
 	fPort = flag.String("port", Port, "port to listen on")
 	fRes  = flag.String("res", Resources, "resources directory")
@@ -45,35 +48,39 @@ var (
 )
 
 func main() {
-	// Open a new logger with the level specified in LogLevel
-	var err error
-	l, err = log.NewLevel(LogLevel, true, os.Stdout, "", log.Ltime)
-	if err != nil {
-		fmt.Println("Fatal error:", err)
-		return
-	}
-
 	flag.Parse()
 
+	// Open a new logger with an appropriate log level.
+	if *fQuiet {
+		LogLevel = -1 // Disable ALL output
+		//	} else if *fVerbose {
+		//		LogLevel = log.INFO
+	} else if *fDebug {
+		LogLevel = log.DEBUG
+	}
+	l, _ = log.NewLevel(LogLevel, true, os.Stdout, "", log.Ltime)
+
+	// If any of the 'show' flags are set, print the relevant variable
+	// and exit.
 	switch {
 	case *fShowVersion:
-		fmt.Fprintln(os.Stdout, Version)
+		l.Println(Version)
 		return
 	case *fShowFVersion:
-		fmt.Fprintln(os.Stdout, Version)
+		l.Println(Version)
 		return
 	case *fShowBind:
-		fmt.Fprintln(os.Stdout, Bind)
+		l.Println(Bind)
 		return
 	case *fShowPort:
-		fmt.Fprintln(os.Stdout, Port)
+		l.Println(Port)
 		return
 	case *fShowRes:
-		fmt.Fprintln(os.Stdout, Resources)
+		l.Println(Resources)
 		return
 	}
 
-	l.Debugln("Version:", Version)
+	l.Infof("Starting Grove version %s\n", Version)
 
 	var repodir string
 	if flag.NArg() > 0 {
@@ -82,14 +89,14 @@ func main() {
 		if !path.IsAbs(repodir) {
 			wd, err := os.Getwd()
 			if err != nil {
-				l.Fatalln("Error getting working directory:", err)
+				l.Fatalf("Error getting working directory: %s\n", err)
 			}
 			repodir = path.Join(wd, repodir)
 		}
 	} else {
 		wd, err := os.Getwd()
 		if err != nil {
-			l.Fatalln("Error getting working directory:", err)
+			l.Fatalf("Error getting working directory: %s\n", err)
 		}
 		repodir = wd
 	}

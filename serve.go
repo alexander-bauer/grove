@@ -39,16 +39,10 @@ func Serve(repodir string) {
 		Logger: &l.Logger,
 	}
 
-	l.Debugln("Created CGI handler:",
-		"\n\tPath:\t", handler.Path,
-		"\n\tRoot:\t", handler.Root,
-		"\n\tDir:\t", handler.Dir,
-		"\n\tEnv:\t",
-		"\n\t\t", handler.Env[0],
-		"\n\t\t", handler.Env[1])
+	l.Infof("Starting server on %s:%s\n", *fBind, *fPort)
+	l.Infof("Serving %q\n", repodir)
+	l.Infof("Web access: %t\n", *fWeb)
 
-	l.Infoln("Starting server on", *fBind+":"+*fPort)
-	l.Infoln("Web access enabled:", *fWeb)
 	http.HandleFunc("/", gzipHandler(HandleWeb))
 
 	// If we support web browsing, then add these handlers.
@@ -60,7 +54,7 @@ func Serve(repodir string) {
 
 	err := http.ListenAndServe(*fBind+":"+*fPort, nil)
 	if err != nil {
-		l.Fatalln("Server crashed:", err)
+		l.Fatalf("Server crashed: %s", err)
 	}
 	return
 }
@@ -93,20 +87,21 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	// URL.
 	if strings.Contains(req.URL.String(), ".git/") {
 		gitPath := strings.SplitAfter(p, ".git/")[0]
-		l.Infof("Git request to %s from %s\n", req.URL, req.RemoteAddr)
+		l.Debugf("Git request to %q from %q\n",
+			req.URL, req.RemoteAddr)
 
 		// Check to make sure that the repository is globally
 		// readable.
 		fi, err := os.Stat(gitPath)
 		if err != nil {
-			l.Errf("Git request of %q from %s produced error: %s\n",
+			l.Errf("Git request of %q from %q produced error: %s\n",
 				req.URL.Path, req.RemoteAddr, err)
 			http.NotFound(w, req)
 			return
 		}
 		if !CheckPermBits(fi) {
-			l.Noticef("Git request from %q denied: %s\n",
-				req.RemoteAddr, req.URL.Path)
+			l.Noticef("Git request to %q from %q denied\n",
+				req.URL.Path, req.RemoteAddr)
 			http.Error(w, http.StatusText(http.StatusForbidden),
 				http.StatusForbidden)
 			return
@@ -118,14 +113,15 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	// If web browsing is disabled, refuse to serve any more.
 	// TODO: add an informative "about" page to redirect to.
 	if !*fWeb {
-		l.Debugf("Web access denied to %q\n", req.RemoteAddr)
+		l.Noticef("Web access denied to %q\n", req.RemoteAddr)
 		http.Error(w, http.StatusText(http.StatusForbidden),
 			http.StatusForbidden)
 		return
 	}
 
 	// If web browsing is enabled:
-	l.Infof("View of %q from %s\n", req.URL.Path, req.RemoteAddr)
+	l.Debugf("View of %q from %q\n",
+		req.URL.Path, req.RemoteAddr)
 
 	// Figure out which directory is being requested, and check
 	// whether we're allowed to serve it.
@@ -134,7 +130,7 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		err := MakePage(w, req, repository, file, isFile)
 		if err != nil {
 			// TODO: Improve client error reporting.
-			l.Errf("View of %q from %s caused error: %s",
+			l.Errf("View of %q from %q caused error: %s",
 				req.URL.Path, req.RemoteAddr, err)
 		}
 	}
