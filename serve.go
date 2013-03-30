@@ -132,6 +132,17 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 			// TODO: Improve client error reporting.
 			l.Errf("View of %q from %q caused error: %s",
 				req.URL.Path, req.RemoteAddr, err)
+
+			// Detect the type of error.
+			// TODO: Report the error numerically, to avoid this step.
+			var status int
+			switch err {
+			case forbidden:
+				status = http.StatusForbidden
+			default:
+				status = http.StatusInternalServerError
+			}
+			http.Error(w, err.Error(), status)
 		}
 	}
 }
