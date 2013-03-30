@@ -63,6 +63,8 @@ const (
 var (
 	internalServerError = errors.New(
 		http.StatusText(http.StatusInternalServerError))
+	forbidden = errors.New(
+		http.StatusText(http.StatusForbidden))
 )
 
 // Check for a .git directory in the repository argument. If one does
@@ -201,7 +203,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	case !git:
 		// This will catch all non-git cases, eliminating the need for
 		// them below.
-		return MakeDirPage(w, t, pageinfo, req, file, url, dirinfos)
+		return MakeDirPage(w, t, pageinfo, req, repository, url, dirinfos)
 	case strings.Contains(req.URL.Path, "tree"):
 		// This will catch cases needing to serve directories within
 		// git repositories.
@@ -233,9 +235,19 @@ func MakeRawPage(w io.Writer, file, ref string, g *git) (err error) {
 // contained within git projects. It writes the webpage to the
 // provided io.Writer.
 func MakeDirPage(w io.Writer, t *template.Template, pageinfo *gitPage,
-	req *http.Request, file string, url string,
+	req *http.Request, directory, url string,
 	dirinfos []os.FileInfo) (err error) {
-	pageinfo.Location = template.URL("/" + file)
+
+	// First, check the permissions of the file to be displayed.
+	fi, err := os.Stat(directory)
+	if err != nil {
+		return err
+	}
+	if !CheckPerms(fi) {
+		return forbidden
+	}
+
+	pageinfo.Location = template.URL(directory)
 	List := make([]*dirList, 0)
 	if url != ("http://" + req.Host + "") {
 		List = append(List, &dirList{
