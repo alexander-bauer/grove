@@ -101,86 +101,46 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		Path: repository,
 	}
 
-	url := "http://" + req.Host + strings.TrimRight(req.URL.Path, "/")
-
-	// ref is the git commit reference. If the form is not submitted,
-	// (or is invalid), it is set to "HEAD".
-	ref := req.FormValue("ref")
-	if len(ref) == 0 || !g.RefExists(ref) {
-		ref = "HEAD" // The commit or branch reference
-	}
-
-	// The form value since is just a shortcut for
-	// "?ref=<ref>..<since>", so we check it here. Note that the
-	// results will include <ref> and exclude <since>.
-	if since := req.FormValue("since"); g.RefExists(since) {
-		ref = since + ".." + ref
-	}
-
-	// maxCommits is the maximum number of commits to be loaded via
-	// the log.
-	maxCommits, err := strconv.Atoi(req.FormValue("c"))
-	if err != nil {
-		maxCommits = 10
-	}
-
-	// useAPI is a boolean indicator of whether or not to use the
-	// API. It must be retrieved by direct access to req.Form because
-	// the form can be empty. (In this case, we would fall back to
-	// checking the Accept field in the header.)
-	_, useAPI := req.Form["api"]
-
-	// If the request is specified as using the JSON interface, then
-	// we switch to that. This usually isn't done, but it is better to
-	// do it here than to wait until the dirinfos are retrieved.
+	// Now, check if the given directory is a git repository, and if
+	// so, parse some of the possible http forms.
+	var ref string
 	git, gitDir := isGit(repository)
-	if useAPI && git {
-		err = ServeAPI(w, req, g, ref, maxCommits)
-		if err != nil {
-			l.Errf("API request %q from %q failed: %s",
-				req.URL, req.RemoteAddr, err)
-		} else {
-			l.Debugf("API request %q from %q\n",
-				req.URL, req.RemoteAddr)
+	if git {
+		// ref is the git commit reference. If the form is not submitted,
+		// (or is invalid), it is set to "HEAD".
+		ref = req.FormValue("ref")
+		if len(ref) == 0 || !g.RefExists(ref) {
+			ref = "HEAD" // The commit or branch reference
+		}
+
+		// The form value since is just a shortcut for
+		// "?ref=<ref>..<since>", so we check it here. Note that the
+		// results will include <ref> and exclude <since>.
+		if since := req.FormValue("since"); g.RefExists(since) {
+			ref = since + ".." + ref
 		}
 	}
 
-	// Get the user.name from the git config
-	owner := gitVarUser()
-
-	var commits []*Commit
-	if len(file) != 0 {
-		commits = g.CommitsByFile(ref, file, maxCommits)
-	} else {
-		commits = g.Commits(ref, maxCommits)
-	}
-
-	commitNum := g.TotalCommits()
-	tagNum := len(g.Tags())
-	branch := g.Branch("HEAD")
-	sha := g.SHA(ref)
+	url := "http://" + req.Host + strings.TrimRight(req.URL.Path, "/")
 
 	t := template.New("Grove!")
 
 	// Set up the gitPage template.
 	pathto := strings.SplitAfter(string(repository), handler.Dir)
 	pageinfo := &gitPage{
-		Owner:     owner,
-		BasePath:  path.Base(repository),
-		URL:       url,
-		GitDir:    gitDir,
-		Host:      req.Host,
-		Version:   Version,
-		Path:      pathto[1],
-		Branch:    branch,
-		TagNum:    strconv.Itoa(tagNum),
-		CommitNum: strconv.Itoa(commitNum),
-		SHA:       sha,
-		Location:  template.URL(""),
+		Owner:    gitVarUser(),
+		BasePath: path.Base(repository),
+		URL:      url,
+		GitDir:   gitDir,
+		Host:     req.Host,
+		Version:  Version,
+		Path:     pathto[1],
+		Location: template.URL(""),
 	}
 
 	// TODO: all of the below case blocks may misbehave if the URL
 	// contains a keyword.
+	var err error
 	var status int
 	switch {
 	case !git:
@@ -202,8 +162,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		// This will catch cases serving the main page of a repository
 		// directory. This needs to be last because the above cases
 		// for "tree" and "blob" will also have `git` as true.
-		err, status = MakeGitPage(w, t, pageinfo, ref, g, commits,
-			owner, maxCommits, file)
+		err, status = MakeGitPage(w, req, t, pageinfo, g, ref, file)
 	}
 
 	// If an error was encountered, ensure that an error page is
@@ -365,10 +324,41 @@ func MakeFilePage(w io.Writer, t *template.Template, pageinfo *gitPage,
 // MakeGitPage shows the "front page" that is the main directory of a
 // git reposiory, including the README and a directory listing. It
 // writes the webpage to the provided io.Writer.
-func MakeGitPage(w io.Writer, t *template.Template, pageinfo *gitPage,
-	ref string, g *git, commits []*Commit, owner string, maxCommits int,
-	file string) (err error, status int) {
-	Logs := make([]*gitLog, 0)
+func MakeGitPage(w http.ResponseWriter, req *http.Request, t *template.Template, pageinfo *gitPage, g *git, ref, file string) (err error, status int) {
+
+	// To begin with, parse the remaining portions of the http form.
+
+	// maxCommits is the maximum number of commits to be loaded via
+	// the log.
+	maxCommits, err := strconv.Atoi(req.FormValue("c"))
+	if err != nil {
+		maxCommits = 10
+	}
+
+	// useAPI is a boolean indicator of whether or not to use the
+	// API. It must be retrieved by direct access to req.Form because
+	// the form can be empty. (In this case, we would fall back to
+	// checking the Accept field in the header.)
+	if _, useAPI := req.Form["api"]; useAPI {
+		err = ServeAPI(w, req, g, ref, maxCommits)
+		if err != nil {
+			l.Errf("API request %q from %q failed: %s",
+				req.URL, req.RemoteAddr, err)
+		} else {
+			l.Debugf("API request %q from %q\n",
+				req.URL, req.RemoteAddr)
+		}
+	}
+
+	// Parse the log to retrieve the commits.
+	commits := g.Commits(ref, maxCommits)
+
+	pageinfo.Branch = g.Branch("HEAD")
+	pageinfo.TagNum = strconv.Itoa(len(g.Tags()))
+	pageinfo.CommitNum = strconv.Itoa(g.TotalCommits())
+	pageinfo.SHA = g.SHA(ref)
+
+	pageinfo.Logs = make([]*gitLog, len(commits))
 	for i, c := range commits {
 		if len(c.SHA) == 0 {
 			// If, for some reason, the commit doesn't have content,
@@ -376,24 +366,20 @@ func MakeGitPage(w io.Writer, t *template.Template, pageinfo *gitPage,
 			continue
 		}
 		var classtype string
-		if c.Author == owner {
+		if c.Author == pageinfo.Owner {
 			classtype = "-owner"
 		}
 
-		Logs = append(Logs, &gitLog{
+		pageinfo.Logs[i] = &gitLog{
 			Author:    c.Author,
 			Classtype: classtype,
 			SHA:       c.SHA,
 			Time:      c.Time,
 			Subject:   template.HTML(html.EscapeString(c.Subject)),
 			Body:      template.HTML(strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1)),
-		})
-		if i == maxCommits-1 {
-			// but only display certain log messages
-			break
 		}
 	}
-	pageinfo.Logs = Logs
+
 	if len(file) == 0 {
 		// Load the README if it can be located. To locate, go through
 		// a list of possible names and break the loop at the first
