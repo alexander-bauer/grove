@@ -145,31 +145,6 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		}
 	}
 
-	// If we're doing a directory listing, then we need to retrieve
-	// the directory list.
-	var dirinfos []os.FileInfo
-	if !git {
-		// Open the file so that it can be read.
-		f, err := os.Open(repository)
-		if err != nil || f == nil {
-			// If there is an error opening the file, return 500.
-			l.Errf("View of %q from %q caused error: %s",
-				req.URL.Path, req.RemoteAddr, err)
-			Error(w, http.StatusNotFound)
-			return
-		}
-		dirnames, err := f.Readdirnames(0)
-		f.Close()
-		if err != nil {
-			// If the directory could not be opened, return 500.
-			l.Errf("View of %q from %q caused error: %s",
-				req.URL.Path, req.RemoteAddr, err)
-			Error(w, http.StatusInternalServerError)
-			return
-		}
-		dirinfos = MakeDirInfos(repository, dirnames)
-	}
-
 	// Get the user.name from the git config
 	owner := gitVarUser()
 
@@ -211,8 +186,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	case !git:
 		// This will catch all non-git cases, eliminating the need for
 		// them below.
-		err, status = MakeDirPage(w, t, pageinfo, req, repository,
-			url, dirinfos)
+		err, status = MakeDirPage(w, t, pageinfo, req, repository)
 	case strings.Contains(req.URL.Path, "tree"):
 		// This will catch cases needing to serve directories within
 		// git repositories.
@@ -259,47 +233,81 @@ func MakeRawPage(w io.Writer, file, ref string, g *git) (err error, status int) 
 
 // MakeDirPage makes filesystem directory listings, which are not
 // contained within git projects. It writes the webpage to the
-// provided io.Writer.
-func MakeDirPage(w io.Writer, t *template.Template, pageinfo *gitPage,
-	req *http.Request, directory, url string,
-	dirinfos []os.FileInfo) (err error, status int) {
+// provided http.ResponseWriter.
+func MakeDirPage(w http.ResponseWriter, t *template.Template, pageinfo *gitPage,
+	req *http.Request, directory string) (err error, status int) {
 
 	// First, check the permissions of the file to be displayed.
 	fi, err := os.Stat(directory)
 	if err != nil {
-		return err, http.StatusInternalServerError
+		return err, http.StatusNotFound
 	}
 	if !CheckPerms(fi) {
 		return forbidden, http.StatusForbidden
 	}
+	// We only get beyond this point if we are allowed to serve the
+	// directory.
+
+	// We begin the template here so that we can fill it out.
 
 	pageinfo.Location = template.URL(directory)
-	List := make([]*dirList, 0)
-	if url != ("http://" + req.Host + "") {
-		List = append(List, &dirList{
-			URL:   template.URL("/"),
-			Name:  "/",
-			Class: "dir",
-		})
-		List = append(List, &dirList{
-			URL:   template.URL(url + "/../"),
-			Name:  "..",
-			Class: "dir",
-		})
+	pageinfo.List = make([]*dirList, 0, 2)
+	if req.URL.Path != "/" {
+		// If we're not on the root directory, we need two links for
+		// navigation: "/" and ".."
+		pageinfo.List = append(pageinfo.List,
+			&dirList{ // append "/"
+				URL:   template.URL("/"),
+				Name:  "/",
+				Class: "dir",
+			}, &dirList{ // and append ".."
+				URL:   template.URL(pageinfo.URL + "/../"),
+				Name:  "..",
+				Class: "dir",
+			})
 	}
 
-	// If is directory, and does not start with '.', and is globally
-	// readable
-	for _, info := range dirinfos {
-		if info.IsDir() && CheckPerms(info) {
-			List = append(List, &dirList{
-				URL:   template.URL(info.Name() + "/"),
+	// Open the file so that it can be read.
+	f, err := os.Open(directory)
+	if err != nil || f == nil {
+		// If there is an error opening the file, return 500.
+		l.Errf("View of %q from %q caused error: %s",
+			req.URL.Path, req.RemoteAddr, err)
+		Error(w, http.StatusNotFound)
+		return
+	}
+
+	// To list the directory properly, we have to do it in two
+	// steps. First, retrieve the names, then perform os.Stat() on the
+	// result. This is so that simlinks are followed. We will also
+	// check file permissions.
+	dirnames, err := f.Readdirnames(0)
+	f.Close()
+	if err != nil {
+		// If the directory could not be opened, return 500.
+		l.Errf("View of %q from %q caused error: %s",
+			req.URL.Path, req.RemoteAddr, err)
+		Error(w, http.StatusInternalServerError)
+		return
+	}
+	// We have the directory names; go on to calling os.Stat() and
+	// checking their permissions. If they should be listed, add
+	// them to a buffer, then append that to the dirlist at the
+	// end.
+	dirbuf := make([]*dirList, 0, len(dirnames))
+	for _, n := range dirnames {
+		info, err := os.Stat(directory + "/" + n)
+		if err == nil && CheckPerms(info) {
+			dirbuf = append(dirbuf, &dirList{
+				URL:   template.URL(pageinfo.URL + "/" + info.Name() + "/"),
 				Name:  info.Name(),
 				Class: "dir",
 			})
+
 		}
 	}
-	pageinfo.List = List
+	pageinfo.List = append(pageinfo.List, dirbuf...)
+
 	t, _ = template.ParseFiles(path.Join(*fRes, "templates/dir.html"))
 
 	// We return 500 here because the error will only be reported
