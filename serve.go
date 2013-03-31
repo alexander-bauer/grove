@@ -114,36 +114,17 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	// TODO: add an informative "about" page to redirect to.
 	if !*fWeb {
 		l.Noticef("Web access denied to %q\n", req.RemoteAddr)
-		http.Error(w, http.StatusText(http.StatusForbidden),
-			http.StatusForbidden)
+		Error(w, http.StatusForbidden)
 		return
 	}
 
 	// If web browsing is enabled:
-	l.Debugf("View of %q from %q\n",
-		req.URL.Path, req.RemoteAddr)
 
 	// Figure out which directory is being requested, and check
 	// whether we're allowed to serve it.
 	repository, file, isFile, status := SplitRepository(handler.Dir, p)
 	if status == http.StatusOK {
-		err := MakePage(w, req, repository, file, isFile)
-		if err != nil {
-			// TODO: Improve client error reporting.
-			l.Errf("View of %q from %q caused error: %s",
-				req.URL.Path, req.RemoteAddr, err)
-
-			// Detect the type of error.
-			// TODO: Report the error numerically, to avoid this step.
-			var status int
-			switch err {
-			case forbidden:
-				status = http.StatusForbidden
-			default:
-				status = http.StatusInternalServerError
-			}
-			http.Error(w, err.Error(), status)
-		}
+		MakePage(w, req, repository, file, isFile)
 	}
 }
 

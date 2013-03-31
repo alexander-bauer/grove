@@ -94,7 +94,9 @@ func MakeDirInfos(repository string, dirnames []string) (dirinfos []os.FileInfo)
 	return
 }
 
-func MakePage(w http.ResponseWriter, req *http.Request, repository string, file string, isFile bool) (err error) {
+// MakePage acts as a multiplexer for the various complex http
+// functions. It handles logging and web error reporting.
+func MakePage(w http.ResponseWriter, req *http.Request, repository string, file string, isFile bool) {
 	g := &git{
 		Path: repository,
 	}
@@ -138,10 +140,9 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 			l.Errf("API request %q from %q failed: %s",
 				req.URL, req.RemoteAddr, err)
 		} else {
-			l.Debugf("API request %q from %q",
+			l.Debugf("API request %q from %q\n",
 				req.URL, req.RemoteAddr)
 		}
-		return
 	}
 
 	// If we're doing a directory listing, then we need to retrieve
@@ -152,13 +153,19 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		f, err := os.Open(repository)
 		if err != nil || f == nil {
 			// If there is an error opening the file, return 500.
-			return internalServerError
+			l.Errf("View of %q from %q caused error: %s",
+				req.URL.Path, req.RemoteAddr, err)
+			Error(w, http.StatusNotFound)
+			return
 		}
 		dirnames, err := f.Readdirnames(0)
 		f.Close()
 		if err != nil {
 			// If the directory could not be opened, return 500.
-			return internalServerError
+			l.Errf("View of %q from %q caused error: %s",
+				req.URL.Path, req.RemoteAddr, err)
+			Error(w, http.StatusInternalServerError)
+			return
 		}
 		dirinfos = MakeDirInfos(repository, dirnames)
 	}
@@ -199,36 +206,55 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 
 	// TODO: all of the below case blocks may misbehave if the URL
 	// contains a keyword.
+	var status int
 	switch {
 	case !git:
 		// This will catch all non-git cases, eliminating the need for
 		// them below.
-		return MakeDirPage(w, t, pageinfo, req, repository, url, dirinfos)
+		err, status = MakeDirPage(w, t, pageinfo, req, repository,
+			url, dirinfos)
 	case strings.Contains(req.URL.Path, "tree"):
 		// This will catch cases needing to serve directories within
 		// git repositories.
-		return MakeTreePage(w, t, pageinfo, req, file, url,
+		err, status = MakeTreePage(w, t, pageinfo, req, file, url,
 			g, ref, pathto)
 	case strings.Contains(req.URL.Path, "blob"):
 		// This will catch cases needing to serve files.
-		return MakeFilePage(w, t, pageinfo, g, ref, file)
+		err, status = MakeFilePage(w, t, pageinfo, g, ref, file)
 	case strings.Contains(req.URL.Path, "raw"):
 		// This will catch cases needing to serve files directly.
-		return MakeRawPage(w, file, ref, g)
+		err, status = MakeRawPage(w, file, ref, g)
 	case git:
 		// This will catch cases serving the main page of a repository
 		// directory. This needs to be last because the above cases
 		// for "tree" and "blob" will also have `git` as true.
-		return MakeGitPage(w, t, pageinfo, ref, g, commits,
+		err, status = MakeGitPage(w, t, pageinfo, ref, g, commits,
 			owner, maxCommits, file)
 	}
-	// Finally, if this case is reached, something is very wrong.
-	return errors.New(http.StatusText(http.StatusInternalServerError))
+
+	// If an error was encountered, ensure that an error page is
+	// displayed, then close the connection and return.
+	if err != nil {
+		l.Errf("View of %q from %q caused error: %s",
+			req.URL.Path, req.RemoteAddr, err)
+		Error(w, status)
+	} else {
+		l.Debugf("View of %q from %q\n",
+			req.URL.Path, req.RemoteAddr)
+	}
 }
 
-func MakeRawPage(w io.Writer, file, ref string, g *git) (err error) {
+// Error reports an error of the given status to the given http
+// connection using http.StatusText().
+func Error(w http.ResponseWriter, status int) {
+	// TODO: use templates to give informative error pages.
+	http.Error(w, strconv.Itoa(status)+" - "+http.StatusText(status),
+		status)
+}
+
+func MakeRawPage(w io.Writer, file, ref string, g *git) (err error, status int) {
 	_, err = w.Write(g.GetFile(ref, file))
-	return
+	return err, http.StatusOK
 }
 
 // MakeDirPage makes filesystem directory listings, which are not
@@ -236,15 +262,15 @@ func MakeRawPage(w io.Writer, file, ref string, g *git) (err error) {
 // provided io.Writer.
 func MakeDirPage(w io.Writer, t *template.Template, pageinfo *gitPage,
 	req *http.Request, directory, url string,
-	dirinfos []os.FileInfo) (err error) {
+	dirinfos []os.FileInfo) (err error, status int) {
 
 	// First, check the permissions of the file to be displayed.
 	fi, err := os.Stat(directory)
 	if err != nil {
-		return err
+		return err, http.StatusInternalServerError
 	}
 	if !CheckPerms(fi) {
-		return forbidden
+		return forbidden, http.StatusForbidden
 	}
 
 	pageinfo.Location = template.URL(directory)
@@ -276,13 +302,15 @@ func MakeDirPage(w io.Writer, t *template.Template, pageinfo *gitPage,
 	pageinfo.List = List
 	t, _ = template.ParseFiles(path.Join(*fRes, "templates/dir.html"))
 
-	return t.Execute(w, pageinfo)
+	// We return 500 here because the error will only be reported
+	// if t.Execute() results in an error.
+	return t.Execute(w, pageinfo), http.StatusInternalServerError
 }
 
 // MakeFilePage shows the contents of a file within a git project. It
 // writes the webpage to the provided io.Writer.
 func MakeFilePage(w io.Writer, t *template.Template, pageinfo *gitPage,
-	g *git, ref string, file string) (err error) {
+	g *git, ref string, file string) (err error, status int) {
 	// First we need to get the content,
 	pageinfo.Content = template.HTML(string(g.GetFile(ref, file)))
 	// then we need to figure out how many lines there are.
@@ -319,7 +347,11 @@ func MakeFilePage(w io.Writer, t *template.Template, pageinfo *gitPage,
 
 	// Finally, parse it.
 	t, _ = template.ParseFiles(path.Join(*fRes, "templates/file.html"))
-	return t.Execute(w, pageinfo)
+
+	// We return 500 here because the error will only be reported
+	// if t.Execute() results in an error.
+	return t.Execute(w, pageinfo), http.StatusInternalServerError
+
 }
 
 // MakeGitPage shows the "front page" that is the main directory of a
@@ -327,7 +359,7 @@ func MakeFilePage(w io.Writer, t *template.Template, pageinfo *gitPage,
 // writes the webpage to the provided io.Writer.
 func MakeGitPage(w io.Writer, t *template.Template, pageinfo *gitPage,
 	ref string, g *git, commits []*Commit, owner string, maxCommits int,
-	file string) (err error) {
+	file string) (err error, status int) {
 	Logs := make([]*gitLog, 0)
 	for i, c := range commits {
 		if len(c.SHA) == 0 {
@@ -368,14 +400,17 @@ func MakeGitPage(w io.Writer, t *template.Template, pageinfo *gitPage,
 		}
 		t, _ = template.ParseFiles(path.Join(*fRes, "templates/gitpage.html"))
 	}
-	return t.Execute(w, pageinfo)
+
+	// We return 500 here because the error will only be reported
+	// if t.Execute() results in an error.
+	return t.Execute(w, pageinfo), http.StatusInternalServerError
 }
 
 // MakeTreePage makes directory listings from within git repositories.
 // It writes the webpage to the provided io.Writer.
 func MakeTreePage(w io.Writer, t *template.Template, pageinfo *gitPage,
 	req *http.Request, file string, url string, g *git, ref string,
-	pathto []string) (err error) {
+	pathto []string) (err error, status int) {
 	pageinfo.Location = template.URL("/" + file)
 	if strings.HasSuffix(file, "/") {
 		List := make([]*dirList, 0)
@@ -408,5 +443,7 @@ func MakeTreePage(w io.Writer, t *template.Template, pageinfo *gitPage,
 		pageinfo.List = List
 		t, _ = template.ParseFiles(path.Join(*fRes, "templates/tree.html"))
 	}
-	return t.Execute(w, pageinfo)
+	// We return 500 here because the error will only be reported
+	// if t.Execute() results in an error.
+	return t.Execute(w, pageinfo), http.StatusInternalServerError
 }
