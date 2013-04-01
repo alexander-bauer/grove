@@ -17,22 +17,22 @@ import (
 )
 
 type gitPage struct {
-	Owner     string
-	BasePath  string
-	URL       string
-	GitDir    string
-	Branch    string
-	Host      string
-	TagNum    string
-	Path      string
-	CommitNum string
-	SHA       string
-	Content   template.HTML
-	List      []*dirList
-	Logs      []*gitLog
-	Location  template.URL
-	Numbers   template.HTML
-	Version   string
+	Owner      string
+	InRepoPath string
+	URL        string
+	GitDir     string
+	Branch     string
+	Host       string
+	TagNum     string
+	Path       string
+	CommitNum  string
+	SHA        string
+	Content    template.HTML
+	List       []*dirList
+	Logs       []*gitLog
+	Location   template.URL
+	Numbers    template.HTML
+	Version    string
 }
 
 type gitLog struct {
@@ -45,14 +45,11 @@ type gitLog struct {
 }
 
 type dirList struct {
-	URL      template.URL
-	Name     string
-	Class    string
-	Type     string
-	Host     string
-	Path     string
-	Location string
-	Version  string
+	URL   template.URL
+	Name  string
+	Class string
+	Type  string
+	Link  string
 }
 
 const (
@@ -101,6 +98,18 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		Path: repository,
 	}
 
+	// First, establish the template and fill out some of the gitPage.
+	t := template.New("Grove!")
+	pageinfo := &gitPage{
+		Owner:      gitVarUser(),
+		InRepoPath: path.Join(path.Base(repository), file),
+		URL:        "http://" + req.Host + strings.TrimRight(req.URL.Path, "/"),
+		Host:       req.Host,
+		Version:    Version,
+		Location:   template.URL(file),
+		Path:       repository[len(handler.Dir):], // URL of repository
+	}
+
 	// Now, check if the given directory is a git repository, and if
 	// so, parse some of the possible http forms.
 	var ref string
@@ -119,23 +128,12 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		if since := req.FormValue("since"); g.RefExists(since) {
 			ref = since + ".." + ref
 		}
-	}
 
-	url := "http://" + req.Host + strings.TrimRight(req.URL.Path, "/")
-
-	t := template.New("Grove!")
-
-	// Set up the gitPage template.
-	pathto := strings.SplitAfter(string(repository), handler.Dir)
-	pageinfo := &gitPage{
-		Owner:    gitVarUser(),
-		BasePath: path.Base(repository),
-		URL:      url,
-		GitDir:   gitDir,
-		Host:     req.Host,
-		Version:  Version,
-		Path:     pathto[1],
-		Location: template.URL(""),
+		pageinfo.Branch = g.Branch("HEAD")
+		pageinfo.TagNum = strconv.Itoa(len(g.Tags()))
+		pageinfo.CommitNum = strconv.Itoa(g.TotalCommits())
+		pageinfo.SHA = g.SHA(ref)
+		pageinfo.GitDir = gitDir
 	}
 
 	// TODO: all of the below case blocks may misbehave if the URL
@@ -150,8 +148,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	case strings.Contains(req.URL.Path, "tree"):
 		// This will catch cases needing to serve directories within
 		// git repositories.
-		err, status = MakeTreePage(w, t, pageinfo, req, file, url,
-			g, ref, pathto)
+		err, status = MakeTreePage(w, req, t, pageinfo, g, ref, file)
 	case strings.Contains(req.URL.Path, "blob"):
 		// This will catch cases needing to serve files.
 		err, status = MakeFilePage(w, t, pageinfo, g, ref, file)
@@ -353,11 +350,6 @@ func MakeGitPage(w http.ResponseWriter, req *http.Request, t *template.Template,
 	// Parse the log to retrieve the commits.
 	commits := g.Commits(ref, maxCommits)
 
-	pageinfo.Branch = g.Branch("HEAD")
-	pageinfo.TagNum = strconv.Itoa(len(g.Tags()))
-	pageinfo.CommitNum = strconv.Itoa(g.TotalCommits())
-	pageinfo.SHA = g.SHA(ref)
-
 	pageinfo.Logs = make([]*gitLog, len(commits))
 	for i, c := range commits {
 		if len(c.SHA) == 0 {
@@ -401,40 +393,27 @@ func MakeGitPage(w http.ResponseWriter, req *http.Request, t *template.Template,
 }
 
 // MakeTreePage makes directory listings from within git repositories.
-// It writes the webpage to the provided io.Writer.
-func MakeTreePage(w io.Writer, t *template.Template, pageinfo *gitPage,
-	req *http.Request, file string, url string, g *git, ref string,
-	pathto []string) (err error, status int) {
+// It writes the webpage to the provided http.ResponseWriter.
+func MakeTreePage(w http.ResponseWriter, req *http.Request, t *template.Template, pageinfo *gitPage, g *git, ref, file string) (err error, status int) {
 	pageinfo.Location = template.URL("/" + file)
 	if strings.HasSuffix(file, "/") {
-		List := make([]*dirList, 0)
 		files := g.GetDir(ref, file)
-		for _, f := range files {
-			if strings.HasSuffix(f, "/") {
-				List = append(List, &dirList{
-					URL:      template.URL(f),
-					Type:     "tree",
-					Host:     req.Host,
-					Path:     pathto[1],
-					Name:     f,
-					Location: file,
-					Version:  Version,
-					Class:    "file",
-				})
-			} else {
-				List = append(List, &dirList{
-					URL:      template.URL(f),
-					Type:     "blob",
-					Name:     f,
-					Host:     req.Host,
-					Path:     pathto[1],
-					Location: file,
-					Class:    "file",
-					Version:  Version,
-				})
+		pageinfo.List = make([]*dirList, len(files))
+		for n, f := range files {
+			d := &dirList{
+				URL:   template.URL(f),
+				Name:  f,
+				Class: "file",
 			}
+
+			if strings.HasSuffix(f, "/") {
+				d.Type = "tree"
+			} else {
+				d.Type = "blob"
+			}
+			d.Link = "http://" + req.Host + pageinfo.Path + "/" + d.Type + "/" + path.Join(file, f)
+			pageinfo.List[n] = d
 		}
-		pageinfo.List = List
 		t, _ = template.ParseFiles(path.Join(*fRes, "templates/tree.html"))
 	}
 	// We return 500 here because the error will only be reported

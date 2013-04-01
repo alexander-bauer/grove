@@ -7,7 +7,7 @@
 	<body>
     
 		<div class="bigtitle">
-			<h5><a href="http://{{.Host}}{{.Path}}/tree{{.Location}}../">.. / </a>{{.BasePath}}/tree{{.Location}}</h5>
+			<h5><a href="http://{{.Host}}{{.Path}}/tree{{.Location}}../">..</a> / {{.InRepoPath}}</h5>
 		</div>
 		
 		<div class="wrapper">
@@ -31,7 +31,7 @@
 			<ul>
             	<a href="{{.URL}}/../"><li class="li-long">..</li></a>
 				{{range $l := .List}}
-					<a href="http://{{.Host}}{{.Path}}/{{.Type}}/{{.Location}}{{.URL}}"><li class="li-long">{{.Name}}</li></a>
+					<a href="{{.Link}}"><li class="li-long">{{.Name}}</li></a>
 				{{end}}
 			</ul>
 		</div>
