@@ -1,43 +1,41 @@
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>{{.Owner}} [Grove]</title>
-		<style type="text/css"> {{.CSS}} </style>
-	</head>
+		<link rel="stylesheet" href="/res/style.css"/>
+        <script type="text/javascript" src="/res/highlight.js"></script>
+		<script type="text/javascript">
+		hljs.tabReplace = '    ';
+		hljs.initHighlightingOnLoad();
+        </script>
 	<body>
     
-		<div class="title">
-			<a href="..">.. / </a>{{.BasePath}}{{.Location}}
-			<div class="cloneme">
-				http://{{.Host}}{{.Path}}/{{.GitDir}}
-			</div>   
+		<div class="bigtitle">
+			<h5><a href="..">.. / </a>{{.BasePath}}{{.Location}}</h5>
 		</div>
 		
-		<div class="wrapper">
-			<div class="button"><div class="buttontitle">Developer's Branch</div><br/><div class="buttontext">{{.Branch}}</div></div><div class="button"><div class="buttontitle">Tags</div><br/><div class="buttontext">{{.TagNum}}</div></div><div class="button"><div class="buttontitle">Commits</div><br/><div class="buttontext">{{.CommitNum}}</div></div><div class="button"><div class="buttontitle">Grove View</div><br/><div class="buttontext">{{.SHA}}</div></div>
-		</div>
+        <div class="wrapper">
+        <table>
+        	<th>Branch</th>
+            <th>Tags</th>
+            <th>Commits</th>
+            <th>SHA</th>
+            <tr>
+            	<td>{{.Branch}}</td>
+                <td>{{.TagNum}}</td>
+                <td>{{.CommitNum}}</td>
+                <td>{{.SHA}}</td>
+            </tr>
+        </table>
         
-		<div class="view-file">
-        	<div class="container">
-            	<div class="numbers heman">{{.Numbers}}</div>
-                <div class="content heman">{{.Content}}</div>
-            </div>
-		</div>
-        
-		<div class="log">
-			{{range $l := .Logs}}
-			<a href="#{{$l.SHA}}"><div class="loggy{{$l.Classtype}}" id="{{$l.SHA}}">
-				{{$l.Author}} &mdash; 
-				<span class="SHA{{$l.Classtype}}">
-					{{$l.SHA}}
-				</span> &mdash; 
-				{{$l.Time}} <br/><br/>
-			<div class="holdem">
-				<strong>{{$l.Subject}}</strong>
-				<br/><br/>
-				{{$l.Body}}
-			</div>
+		<input type="text" value="http://{{.Host}}{{.Path}}{{.GitDir}}" class="bar" onClick="select();"/>
         </div>
-		{{end}}
+        
+        <div class="wrap">
+        <pre><code>
+        	{{.Content}}
+        </code></pre>
+        </div>
         
         <div class="version">
           <a href="https://github.com/SashaCrofter/grove">

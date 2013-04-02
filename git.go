@@ -1,6 +1,6 @@
 package main
 
-// Copyright ⓒ 2013 Alexander Bauer (see LICENSE.md)
+// Copyright ⓒ 2013 Alexander Bauer and Luke Evers (see LICENSE.md)
 
 import (
 	"os/exec"
@@ -48,6 +48,20 @@ func (g *git) Branch(ref string) (branch string) {
 	return strings.TrimRight(branch, "\n")
 }
 
+// GetBranchDescription uses git config to retrieve the branch
+// description from the repository configuration file, if it's set. It
+// will attempt to parse branch names from refs like
+// `<oldRef>..<newRef>`.
+func (g *git) GetBranchDescription(branch string) (description string) {
+	// Attempt to parse the branch name if it looks like it's in the
+	// form of a comparison.
+	if idx := strings.LastIndex(branch, ".."); idx > -1 {
+		branch = branch[idx+2:] // Add 2 to ignore the ".."
+	} // Otherwise, just continue.
+	output, _ := g.execute("config", "branch."+branch+".description")
+	return strings.TrimRight(output, "\n")
+}
+
 // GetFile retrives the contents of a file from the repository. The
 // commit is either a SHA or pointer (such as HEAD, or HEAD^).
 func (g *git) GetFile(commit, file string) (contents []byte) {
@@ -79,57 +93,53 @@ func (g *git) Tags() (tags []string) {
 	return strings.Split(strings.TrimRight(t, "\n"), "\n")
 }
 
-func (g *git) TotalCommits() (commits string) {
+func (g *git) TotalCommits() (commits int) {
 	c, _ := g.execute("rev-list", "--all")
-	commit := strings.Split(strings.TrimRight(c, "\n"), "\n")
-	return strconv.Itoa(len(commit))
+	return len(strings.Split(strings.TrimRight(c, "\n"), "\n"))
 }
 
 func (g *git) RefExists(ref string) (exists bool) {
-	// If the exit status of 'git rev-list HEAD..<ref>' is nonzero,
-	// the ref does not exist in the repository. Cmd.Output(), which
-	// is used by execute(), uses Cmd.Run(), which returns an error if
-	// an exit status other than 0 is returned.
-	_, err := g.execute("rev-list", "HEAD.."+ref)
+	// If the exit status of 'git rev-list -n 1 <ref>' is nonzero, the
+	// ref does not exist in the current repository.
+	_, err := g.execute("rev-list", "-n 1", ref)
 	return err == nil
 }
 
 // Commits parses the log and returns an array of Commit types, up to
 // the given max.
 func (g *git) Commits(ref string, max int) (commits []*Commit) {
-	var log string
-	if max > 0 {
-		log, _ = g.execute("--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref, "-n "+strconv.Itoa(max))
-	} else {
-		log, _ = g.execute("--no-pager", "log", "--format=format:"+gitLogFmt+gitLogSep, ref)
-	}
-	commitLogs := strings.Split(log, gitLogSep)
-	commits = make([]*Commit, 0, len(commitLogs))
-	for _, l := range commitLogs {
-		commit := gitParseCommit(strings.Split(l, "\n"))
-		if commit != nil {
-			commits = append(commits, commit)
-		}
-	}
-	return
+	return g.parseLog(ref, max)
 }
 
 // CommitsByFile retrieves a list of commits which modify or otherwise
 // affect a file, up to the given maximum number of commits.
 func (g *git) CommitsByFile(ref, file string, max int) (commits []*Commit) {
-	var log string
+	return g.parseLog(ref, max, "--follow", "--", file)
+}
+
+// parseLog is a low-level utility for calling `git log` and producing
+// a []*Commit with no phantom commits. It invokes gitParseCommit to
+// parse individual commits.
+func (g *git) parseLog(ref string, max int, arguments ...string) (commits []*Commit) {
+	// First, we have to go through the arduous process of creating
+	// the command.
+	command := []string{"--no-pager", "log", ref,
+		"--format=format:" + gitLogFmt + gitLogSep}
 	if max > 0 {
-		log, _ = g.execute("--no-pager", "log", ref, "--follow", "--format=format:"+gitLogFmt+gitLogSep, "-n "+strconv.Itoa(max), "--", file)
-	} else {
-		log, _ = g.execute("--no-pager", "log", ref, "--follow", "--format=format:"+gitLogFmt+gitLogSep, "--", file)
+		command = append(command, "-n "+strconv.Itoa(max))
 	}
+	command = append(command, arguments...)
+
+	log, _ := g.execute(command...)
+	// Now we must parse the output of that command.
 	commitLogs := strings.Split(log, gitLogSep)
-	commits = make([]*Commit, 0, len(commitLogs))
-	for _, l := range commitLogs {
-		commit := gitParseCommit(strings.Split(l, "\n"))
-		if commit != nil {
-			commits = append(commits, commit)
-		}
+	// We will have a phantom commit here, though, so we must remove
+	// it.
+	commitLogs = commitLogs[:len(commitLogs)-1]
+
+	commits = make([]*Commit, len(commitLogs))
+	for n, l := range commitLogs {
+		commits[n] = gitParseCommit(strings.Split(l, "\n"))
 	}
 	return
 }
@@ -141,43 +151,31 @@ func (g *git) CommitsByFile(ref, file string, max int) (commits []*Commit) {
 //    <author name>
 //    <nonwrapped commit message>
 func gitParseCommit(log []string) (commit *Commit) {
-	var sha string
-	var time string
-	var author string
-	var subject string
-	var body string
-
+	commit = new(Commit)
 	for _, l := range log {
-		if len(sha) == 0 {
-			// If l is empty, then this will
-			// be run again.
-			sha = l
+		if len(commit.SHA) == 0 {
+			// If l is empty, then this will be run again.
+			commit.SHA = l
 			continue
 		}
-		if len(time) == 0 {
-			time = l
+		if len(commit.Time) == 0 {
+			commit.Time = l
 			continue
 		}
-		if len(author) == 0 {
-			author = l
+		if len(commit.Author) == 0 {
+			commit.Author = l
 			continue
 		}
-		if len(subject) == 0 {
-			subject = l
+		if len(commit.Subject) == 0 {
+			commit.Subject = l
 			continue
 		}
 
-		body += l + "\n"
+		commit.Body += l + "\n"
 	}
 
-	commit = &Commit{
-		SHA:     sha,
-		Time:    time,
-		Author:  author,
-		Subject: subject,
-		Body:    body,
-	}
-
+	// Now, remove the trailing "\n" characters.
+	commit.Body = strings.TrimRight(commit.Body, "\n")
 	return
 }
 

@@ -1,26 +1,25 @@
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>{{.Owner}} [Grove]</title>
-		<style type="text/css"> {{.CSS}} </style>
+		<link rel="stylesheet" href="/res/style.css"/>
 	</head>
 	<body>
     
-    	<div class="title">
-			{{.Path}}{{.Location}}
+    	<div class="bigtitle">
+			<h5>{{.Path}}{{.Location}}</h5>
 		</div>
     	
-		<div class="slogo"><a href="/"><div class="logo"></div></a></div>
-		<div class="view-dir">
-			<ul>
-				{{range $l := .List}}
-					<a href="{{$l.URL}}"><li class="li-long">{{$l.Name}}</li></a>
-				{{end}}
-			</ul>
+        <ul>
+            {{range $l := .List}}
+                <a href="{{$l.URL}}"><li class="li-long">{{$l.Name}}</li></a>
+            {{end}}
+        </ul>
+        
+		<div class="version">
+			<a href="https://github.com/SashaCrofter/grove">
+				Version {{.Version}}
+			</a>
 		</div>
-        <div class="version">
-          <a href="https://github.com/SashaCrofter/grove">
-        	Version {{.Version}}
-          </a>
-        </div>
 	</body>
 </html>

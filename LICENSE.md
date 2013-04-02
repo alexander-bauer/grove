@@ -1,5 +1,5 @@
 Grove - Git self-hosting for developers
-Copyright ⓒ 2013 Alexander Bauer
+Copyright ⓒ 2013 Alexander Bauer and Luke Evers
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
