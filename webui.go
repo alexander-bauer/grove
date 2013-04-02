@@ -31,7 +31,6 @@ type gitPage struct {
 	List       []*dirList
 	Logs       []*gitLog
 	Location   template.URL
-	Numbers    template.HTML
 	Version    string
 }
 
@@ -45,11 +44,9 @@ type gitLog struct {
 }
 
 type dirList struct {
-	URL   template.URL
-	Name  string
-	Class string
-	Type  string
-	Link  string
+	URL  template.URL
+	Name string
+	Link string
 }
 
 const (
@@ -213,13 +210,11 @@ func MakeDirPage(w http.ResponseWriter, t *template.Template, pageinfo *gitPage,
 		// navigation: "/" and ".."
 		pageinfo.List = append(pageinfo.List,
 			&dirList{ // append "/"
-				URL:   template.URL("/"),
-				Name:  "/",
-				Class: "dir",
+				URL:  template.URL("/"),
+				Name: "/",
 			}, &dirList{ // and append ".."
-				URL:   template.URL(pageinfo.URL + "/../"),
-				Name:  "..",
-				Class: "dir",
+				URL:  template.URL(pageinfo.URL + "/../"),
+				Name: "..",
 			})
 	}
 
@@ -255,9 +250,8 @@ func MakeDirPage(w http.ResponseWriter, t *template.Template, pageinfo *gitPage,
 		info, err := os.Stat(directory + "/" + n)
 		if err == nil && CheckPerms(info) {
 			dirbuf = append(dirbuf, &dirList{
-				URL:   template.URL(pageinfo.URL + "/" + info.Name() + "/"),
-				Name:  info.Name(),
-				Class: "dir",
+				URL:  template.URL(pageinfo.URL + "/" + info.Name() + "/"),
+				Name: info.Name(),
 			})
 
 		}
@@ -306,7 +300,6 @@ func MakeFilePage(w io.Writer, t *template.Template, pageinfo *gitPage,
 		}
 	}
 
-	pageinfo.Numbers = template.HTML(temp)
 	pageinfo.Content = template.HTML(temp_html)
 
 	// Finally, parse it.
@@ -401,17 +394,17 @@ func MakeTreePage(w http.ResponseWriter, req *http.Request, t *template.Template
 		pageinfo.List = make([]*dirList, len(files))
 		for n, f := range files {
 			d := &dirList{
-				URL:   template.URL(f),
-				Name:  f,
-				Class: "file",
+				URL:  template.URL(f),
+				Name: f,
 			}
 
+			var t string
 			if strings.HasSuffix(f, "/") {
-				d.Type = "tree"
+				t = "tree"
 			} else {
-				d.Type = "blob"
+				t = "blob"
 			}
-			d.Link = "http://" + req.Host + pageinfo.Path + "/" + d.Type + "/" + path.Join(file, f)
+			d.Link = "http://" + req.Host + pageinfo.Path + "/" + t + "/" + path.Join(file, f)
 			pageinfo.List[n] = d
 		}
 		t, _ = template.ParseFiles(path.Join(*fRes, "templates/tree.html"))
