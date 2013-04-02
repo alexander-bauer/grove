@@ -94,7 +94,6 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	g := &git{
 		Path: repository,
 	}
-
 	// First, establish the template and fill out some of the gitPage.
 	t := template.New("Grove!")
 	pageinfo := &gitPage{
@@ -106,7 +105,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		Location:   template.URL(file),
 		Path:       repository[len(handler.Dir):], // URL of repository
 	}
-
+	
 	// Now, check if the given directory is a git repository, and if
 	// so, parse some of the possible http forms.
 	var ref string
@@ -216,6 +215,8 @@ func MakeDirPage(w http.ResponseWriter, t *template.Template, pageinfo *gitPage,
 				URL:  template.URL(pageinfo.URL + "/../"),
 				Name: "..",
 			})
+	} else {
+		pageinfo.Path = "/"
 	}
 
 	// Open the file so that it can be read.
