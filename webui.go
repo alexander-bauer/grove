@@ -32,6 +32,7 @@ type gitPage struct {
 	Logs       []*gitLog
 	Location   template.URL
 	Version    string
+	Query      template.URL
 }
 
 type gitLog struct {
@@ -47,6 +48,7 @@ type dirList struct {
 	URL  template.URL
 	Name string
 	Link string
+	Query template.URL
 }
 
 const (
@@ -104,6 +106,12 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		Version:    Version,
 		Location:   template.URL(file),
 		Path:       repository[len(handler.Dir):], // URL of repository
+	}
+	
+	if req.URL.RawQuery == "" {
+		pageinfo.Query = template.URL(req.URL.RawQuery)
+	} else {
+		pageinfo.Query = template.URL("?" + req.URL.RawQuery)
 	}
 	
 	// Now, check if the given directory is a git repository, and if
@@ -397,6 +405,12 @@ func MakeTreePage(w http.ResponseWriter, req *http.Request, t *template.Template
 			d := &dirList{
 				URL:  template.URL(f),
 				Name: f,
+			}
+			
+			if req.URL.RawQuery == "" {
+				d.Query = template.URL(req.URL.RawQuery)
+			} else {
+				d.Query = template.URL("?" + req.URL.RawQuery)
 			}
 
 			var t string
