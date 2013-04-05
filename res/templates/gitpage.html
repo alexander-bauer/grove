@@ -12,7 +12,7 @@
 	<body>
     
 		<div class="bigtitle">
-			<h5><a href="{{.URL}}/..">.. / </a>{{.InRepoPath}}{{.Location}}</h5>
+			<h5><a href="{{.URL}}../">.. / </a>{{.InRepoPath}}</h5>
 		</div>
 		
         <div class="wrapper">
@@ -32,13 +32,13 @@
 		<input type="text" value="http://{{.Host}}{{.Path}}{{.GitDir}}" class="bar" onClick="select();"/>
         
         <div class="buttons">
-        	<a href="{{.URL}}/tree/{{.Query}}" class="button">View directory tree</a>
+        	<a href="{{.URL}}tree/{{.Query}}" class="button">View directory tree</a>
             <div class="readmebitch">
             <script type="text/javascript">
             	if (document.URL.split('#')[1] != "readme") {
 					document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href='{{.URL}}{{.Query}}#readme' class='button'>Display README file</a>";
 					}
-				else document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href='http://{{.Host}}{{.Path}}{{.Query}}' class='button'>Hide README file</a>";
+				else document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href='{{.URL}}{{.Query}}' class='button'>Hide README file</a>";
             </script>
             </div>
         </div>

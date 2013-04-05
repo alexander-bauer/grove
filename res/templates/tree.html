@@ -7,7 +7,7 @@
 	<body>
     
 		<div class="bigtitle">
-			<h5><a href="{{.URL}}">..</a> / {{.InRepoPath}}</h5>
+			<h5><a href="../{{.Query}}">..</a> / {{.InRepoPath}}</h5>
 		</div>
 		
 		<div class="wrapper">
@@ -29,7 +29,7 @@
         
 		<div class="view-dir">
 			<ul>
-            	<a href="{{.URL}}/../{{.Query}}"><li class="li-long">..</li></a>
+            	<a href="{{.URL}}..{{.Query}}"><li class="li-long">..</li></a>
 				{{range $l := .List}}
 					<a href="{{.Link}}{{.Query}}"><li class="li-long">{{.Name}}</li></a>
 				{{end}}
