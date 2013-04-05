@@ -1,7 +1,5 @@
 ![Logo by Dansup, many many thanks :D](https://raw.github.com/SashaCrofter/grove/development/res/logo.png)
 
-![Screenshot!](http://i.imgur.com/z5Te9.png)
-
 # Grove
 ## Git self-hosting for developers
 Copyright ⓒ 2013 Alexander Bauer (GPLv3)
