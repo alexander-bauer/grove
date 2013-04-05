@@ -77,7 +77,7 @@ func Serve(repodir string) {
 	return
 }
 
-// HandleCSS uses http.ServeFile() to serve `highlight.js` directly
+// HandleJS uses http.ServeFile() to serve `highlight.js` directly
 // from the file system.
 func HandleJS(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, path.Join(*fRes, "highlight.js"))

@@ -187,8 +187,14 @@ func Error(w http.ResponseWriter, status int) {
 // MakeRawPAge makes the raw page of which the files are shown as
 // completely raw files.
 func MakeRawPage(w io.Writer, file, ref string, g *git) (err error, status int) {
-	_, err = w.Write(g.GetFile(ref, file))
-	return err, http.StatusOK
+	f := g.GetFile(ref, file)
+	if len(f) != 0 {
+		_, err = w.Write(g.GetFile(ref, file))
+		status = http.StatusOK
+	} else {
+		status = http.StatusNotFound
+	}
+	return
 }
 
 // MakeDirPage makes filesystem directory listings, which are not
