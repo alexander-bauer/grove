@@ -8,7 +8,6 @@ import (
 	"github.com/russross/blackfriday"
 	"html"
 	"html/template"
-	"io"
 	"net/http"
 	"os"
 	"path"
@@ -186,7 +185,7 @@ func Error(w http.ResponseWriter, status int) {
 
 // MakeRawPAge makes the raw page of which the files are shown as
 // completely raw files.
-func MakeRawPage(w io.Writer, file, ref string, g *git) (err error, status int) {
+func MakeRawPage(w http.ResponseWriter, file, ref string, g *git) (err error, status int) {
 	f := g.GetFile(ref, file)
 	if len(f) != 0 {
 		_, err = w.Write(g.GetFile(ref, file))
@@ -279,8 +278,8 @@ func MakeDirPage(w http.ResponseWriter, pageinfo *gitPage,
 }
 
 // MakeFilePage shows the contents of a file within a git project. It
-// writes the webpage to the provided io.Writer.
-func MakeFilePage(w io.Writer, pageinfo *gitPage,
+// writes the webpage to the provided http.ResponseWriter.
+func MakeFilePage(w http.ResponseWriter, pageinfo *gitPage,
 	g *git, ref string, file string) (err error, status int) {
 	// First we need to get the content,
 	pageinfo.Content = template.HTML(string(g.GetFile(ref, file)))
@@ -324,7 +323,7 @@ func MakeFilePage(w io.Writer, pageinfo *gitPage,
 
 // MakeGitPage shows the "front page" that is the main directory of a
 // git reposiory, including the README and a directory listing. It
-// writes the webpage to the provided io.Writer.
+// writes the webpage to the provided http.ResponseWriter.
 func MakeGitPage(w http.ResponseWriter, req *http.Request, pageinfo *gitPage, g *git, ref, file string) (err error, status int) {
 
 	// To begin with, parse the remaining portions of the http form.
