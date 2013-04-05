@@ -4,6 +4,7 @@ package main
 
 import (
 	"compress/gzip"
+	"html/template"
 	"io"
 	"net/http"
 	"net/http/cgi"
@@ -18,6 +19,14 @@ var (
 	// 0: readable globally
 	// 1: readable by group
 	// 2: readable
+
+	handler *cgi.Handler       // git-http-backend CGI handler
+	t       *template.Template // Template containing all webui templates
+
+	templateFiles = []string{ // Basenames of the HTML templates
+		"dir.html", "file.html",
+		"gitpage.html", "tree.html",
+	}
 )
 
 type gzipResponseWriter struct {
@@ -39,6 +48,15 @@ func Serve(repodir string) {
 		Logger: &l.Logger,
 	}
 
+	var err error
+	t, err = getTemplate()
+	if err != nil {
+		l.Emerg("HTML templates failed to load; exiting\n")
+		return
+	} else {
+		l.Debug("Templates loaded successfully\n")
+	}
+
 	l.Infof("Starting server on %s:%s\n", *fBind, *fPort)
 	l.Infof("Serving %q\n", repodir)
 	l.Infof("Web access: %t\n", *fWeb)
@@ -52,7 +70,7 @@ func Serve(repodir string) {
 		http.HandleFunc("/favicon.ico", gzipHandler(HandleIcon))
 	}
 
-	err := http.ListenAndServe(*fBind+":"+*fPort, nil)
+	err = http.ListenAndServe(*fBind+":"+*fPort, nil)
 	if err != nil {
 		l.Fatalf("Server crashed: %s", err)
 	}
@@ -267,4 +285,16 @@ func CheckPermBits(info os.FileInfo) (canServe bool) {
 	// Thus, the file is readable and listable by the group, and
 	// therefore okay to serve.
 	return (info.Mode().Perm()&os.FileMode((permBits<<(Perms*3))) > 0)
+}
+
+// getTemplate uses the global variables templateFiles and *fRes to
+// load the templates and return the given object.
+func getTemplate() (t *template.Template, err error) {
+	// First, ensure that the paths are correct.
+	files := make([]string, len(templateFiles))
+	for i, f := range templateFiles {
+		files[i] = path.Join(*fRes, "templates", f)
+	}
+	// Now, return the results.
+	return template.New("master").ParseFiles(files...)
 }

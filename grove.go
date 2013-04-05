@@ -7,7 +7,6 @@ import (
 	"flag"
 	"github.com/inhies/go-utils/log"
 	_ "log"
-	"net/http/cgi"
 	"os"
 	"path"
 )
@@ -22,8 +21,7 @@ var (
 )
 
 var (
-	l       *log.Logger
-	handler *cgi.Handler
+	l *log.Logger
 )
 
 const (
