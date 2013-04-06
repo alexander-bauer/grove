@@ -74,20 +74,6 @@ func isGit(repository string) (git bool, gitDir string) {
 	return
 }
 
-// Retrieval of file info is done in two steps so that we can use
-// os.Stat(), rather than os.Lstat(), the former of which follows
-// symlinks.
-func MakeDirInfos(repository string, dirnames []string) (dirinfos []os.FileInfo) {
-	dirinfos = make([]os.FileInfo, 0, len(dirnames))
-	for _, n := range dirnames {
-		info, err := os.Stat(repository + "/" + n)
-		if err == nil && CheckPerms(info) {
-			dirinfos = append(dirinfos, info)
-		}
-	}
-	return
-}
-
 // MakePage acts as a multiplexer for the various complex http
 // functions. It handles logging and web error reporting.
 func MakePage(w http.ResponseWriter, req *http.Request, repository string, file string, isFile bool) {
@@ -103,7 +89,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		Version:    Version,
 		Path:       repository[len(handler.Dir):], // URL of repository
 	}
-	
+
 	// Check to see if there's a query or not
 	if req.URL.RawQuery == "" {
 		pageinfo.Query = template.URL(req.URL.RawQuery)
