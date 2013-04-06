@@ -161,7 +161,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	case strings.Contains(pageinfo.URL, "/tree/"):
 		// This will catch cases needing to serve directories within
 		// git repositories.
-		err, status = MakeTreePage(w, req, pageinfo, g, ref, file)
+		err, status = MakeTreePage(w, pageinfo, g, ref, file)
 	case strings.Contains(pageinfo.URL, "/blob/"):
 		// This will catch cases needing to serve files.
 		err, status = MakeFilePage(w, pageinfo, g, ref, file)
@@ -378,32 +378,32 @@ func MakeGitPage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref, file str
 
 // MakeTreePage makes directory listings from within git repositories.
 // It writes the webpage to the provided http.ResponseWriter.
-func MakeTreePage(w http.ResponseWriter, req *http.Request, pageinfo *gitPage, g *git, ref, file string) (err error, status int) {
-	if strings.HasSuffix(file, "/") {
-		files := g.GetDir(ref, file)
-		pageinfo.List = make([]*dirList, len(files))
-		for n, f := range files {
-			d := &dirList{
-				URL:  template.URL(f),
-				Name: f,
-			}
+func MakeTreePage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref, file string) (err error, status int) {
+	// Retrieve the list of files from the repository.
+	files := g.GetDir(ref, file)
 
-			if req.URL.RawQuery == "" {
-				d.Query = template.URL(req.URL.RawQuery)
-			} else {
-				d.Query = template.URL("?" + req.URL.RawQuery)
-			}
+	// If there are no files, return an error.
+	if len(files) == 0 {
+		return notFound, http.StatusNotFound
+	} // Otherwise, continue as normal.
 
-			var t string
-			if strings.HasSuffix(f, "/") {
-				t = "tree"
-			} else {
-				t = "blob"
-			}
-			d.Link = "http://" + req.Host + pageinfo.Path + "/" + t + "/" + path.Join(file, f)
-			pageinfo.List[n] = d
+	pageinfo.List = make([]*dirList, len(files))
+	for n, f := range files {
+		d := &dirList{
+			URL:  template.URL(f),
+			Name: f,
 		}
+
+		var t string
+		if strings.HasSuffix(f, "/") {
+			t = "tree"
+		} else {
+			t = "blob"
+		}
+		d.Link = "http://" + pageinfo.Host + pageinfo.Path + "/" + t + "/" + path.Join(file, f)
+		pageinfo.List[n] = d
 	}
+
 	// We return 500 here because the error will only be reported
 	// if t.ExecuteTemplate() results in an error.
 	return t.ExecuteTemplate(w, "tree.html", pageinfo),
