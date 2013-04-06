@@ -90,10 +90,9 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		Path:       repository[len(handler.Dir):], // URL of repository
 	}
 
-	// Check to see if there's a query or not
-	if req.URL.RawQuery == "" {
-		pageinfo.Query = template.URL(req.URL.RawQuery)
-	} else {
+	// If there is a query, add it to the relevant field. Otherwise,
+	// leave it blank.
+	if len(req.URL.RawQuery) > 0 {
 		pageinfo.Query = template.URL("?" + req.URL.RawQuery)
 	}
 
@@ -131,17 +130,17 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	case !git:
 		// This will catch all non-git cases, eliminating the need for
 		// them below.
-		err, status = MakeDirPage(w, pageinfo, req, repository)
-	case strings.Contains(pageinfo.URL, "tree"):
+		err, status = MakeDirPage(w, pageinfo, repository)
+	case strings.Contains(pageinfo.URL, "/tree/"):
 		// This will catch cases needing to serve directories within
 		// git repositories.
 		err, status = MakeTreePage(w, req, pageinfo, g, ref, file)
-	case strings.Contains(pageinfo.URL, "blob"):
+	case strings.Contains(pageinfo.URL, "/blob/"):
 		// This will catch cases needing to serve files.
 		err, status = MakeFilePage(w, pageinfo, g, ref, file)
-	case strings.Contains(pageinfo.URL, "raw"):
+	case strings.Contains(pageinfo.URL, "/raw/"):
 		// This will catch cases needing to serve files directly.
-		err, status = MakeRawPage(w, file, ref, g)
+		MakeRawPage(w, file, ref, g)
 	case git:
 		// This will catch cases serving the main page of a repository
 		// directory. This needs to be last because the above cases
@@ -170,23 +169,23 @@ func Error(w http.ResponseWriter, status int) {
 }
 
 // MakeRawPAge makes the raw page of which the files are shown as
-// completely raw files.
-func MakeRawPage(w http.ResponseWriter, file, ref string, g *git) (err error, status int) {
+// completely raw files. It calls Error() if necessary.
+func MakeRawPage(w http.ResponseWriter, file, ref string, g *git) {
 	f := g.GetFile(ref, file)
-	if len(f) != 0 {
-		_, err = w.Write(g.GetFile(ref, file))
-		status = http.StatusOK
-	} else {
-		status = http.StatusNotFound
+	if len(f) == 0 {
+		// If the file is not retrieved from git, call Error() and
+		// exit.
+		Error(w, http.StatusNotFound)
+		return
 	}
-	return
+	// If it is found, write the contents to the connection directly.
+	w.Write(f)
 }
 
 // MakeDirPage makes filesystem directory listings, which are not
 // contained within git projects. It writes the webpage to the
 // provided http.ResponseWriter.
-func MakeDirPage(w http.ResponseWriter, pageinfo *gitPage,
-	req *http.Request, directory string) (err error, status int) {
+func MakeDirPage(w http.ResponseWriter, pageinfo *gitPage, directory string) (err error, status int) {
 
 	// First, check the permissions of the file to be displayed.
 	fi, err := os.Stat(directory)
@@ -219,12 +218,8 @@ func MakeDirPage(w http.ResponseWriter, pageinfo *gitPage,
 
 	// Open the file so that it can be read.
 	f, err := os.Open(directory)
-	if err != nil || f == nil {
-		// If there is an error opening the file, return 500.
-		l.Errf("View of %q from %q caused error: %s",
-			pageinfo.Path, req.RemoteAddr, err)
-		Error(w, http.StatusNotFound)
-		return
+	if err != nil {
+		return err, http.StatusNotFound
 	}
 
 	// To list the directory properly, we have to do it in two
@@ -234,11 +229,7 @@ func MakeDirPage(w http.ResponseWriter, pageinfo *gitPage,
 	dirnames, err := f.Readdirnames(0)
 	f.Close()
 	if err != nil {
-		// If the directory could not be opened, return 500.
-		l.Errf("View of %q from %q caused error: %s",
-			pageinfo.Path, req.RemoteAddr, err)
-		Error(w, http.StatusInternalServerError)
-		return
+		return err, http.StatusInternalServerError
 	}
 	// We have the directory names; go on to calling os.Stat() and
 	// checking their permissions. If they should be listed, add
