@@ -59,6 +59,8 @@ var (
 		http.StatusText(http.StatusInternalServerError))
 	forbidden = errors.New(
 		http.StatusText(http.StatusForbidden))
+	notFound = errors.New(
+		http.StatusText(http.StatusNotFound))
 )
 
 // Check for a .git directory in the repository argument. If one does
@@ -99,6 +101,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	// Now, check if the given directory is a git repository, and if
 	// so, parse some of the possible http forms.
 	var ref string
+	var maxCommits int
 	git, gitDir := isGit(repository)
 	if git {
 		// ref is the git commit reference. If the form is not submitted,
@@ -113,6 +116,30 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		// results will include <ref> and exclude <since>.
 		if since := req.FormValue("since"); g.RefExists(since) {
 			ref = since + ".." + ref
+		}
+
+		// maxCommits is the maximum number of commits to be loaded via
+		// the log.
+		var err error
+		maxCommits, err = strconv.Atoi(req.FormValue("c"))
+		if err != nil {
+			maxCommits = 10
+		}
+
+		// Now, switch to using the API if it is requested. We access
+		// req.Form directly because the form can be empty. (In this
+		// case, we would fall back to checking the Accept field in
+		// the header.)
+		if _, useAPI := req.Form["api"]; useAPI {
+			err = ServeAPI(w, req, g, ref, maxCommits)
+			if err != nil {
+				l.Errf("API request %q from %q failed: %s",
+					req.URL, req.RemoteAddr, err)
+			} else {
+				l.Debugf("API request %q from %q\n",
+					req.URL, req.RemoteAddr)
+			}
+			return
 		}
 
 		pageinfo.Branch = g.Branch("HEAD")
@@ -140,12 +167,12 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		err, status = MakeFilePage(w, pageinfo, g, ref, file)
 	case strings.Contains(pageinfo.URL, "/raw/"):
 		// This will catch cases needing to serve files directly.
-		MakeRawPage(w, file, ref, g)
+		err, status = MakeRawPage(w, file, ref, g)
 	case git:
 		// This will catch cases serving the main page of a repository
 		// directory. This needs to be last because the above cases
 		// for "tree" and "blob" will also have `git` as true.
-		err, status = MakeGitPage(w, req, pageinfo, g, ref, file)
+		err, status = MakeGitPage(w, pageinfo, g, ref, file, maxCommits)
 	}
 
 	// If an error was encountered, ensure that an error page is
@@ -169,17 +196,16 @@ func Error(w http.ResponseWriter, status int) {
 }
 
 // MakeRawPAge makes the raw page of which the files are shown as
-// completely raw files. It calls Error() if necessary.
-func MakeRawPage(w http.ResponseWriter, file, ref string, g *git) {
+// completely raw files.
+func MakeRawPage(w http.ResponseWriter, file, ref string, g *git) (err error, status int) {
 	f := g.GetFile(ref, file)
 	if len(f) == 0 {
-		// If the file is not retrieved from git, call Error() and
-		// exit.
-		Error(w, http.StatusNotFound)
-		return
+		// If the file is not retrieved from git, return the error.
+		return notFound, http.StatusNotFound
 	}
 	// If it is found, write the contents to the connection directly.
 	w.Write(f)
+	return
 }
 
 // MakeDirPage makes filesystem directory listings, which are not
@@ -256,10 +282,13 @@ func MakeDirPage(w http.ResponseWriter, pageinfo *gitPage, directory string) (er
 
 // MakeFilePage shows the contents of a file within a git project. It
 // writes the webpage to the provided http.ResponseWriter.
-func MakeFilePage(w http.ResponseWriter, pageinfo *gitPage,
-	g *git, ref string, file string) (err error, status int) {
+func MakeFilePage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref string, file string) (err error, status int) {
 	// First we need to get the content,
 	pageinfo.Content = template.HTML(string(g.GetFile(ref, file)))
+	if len(pageinfo.Content) == 0 {
+		// If there is no content, return an error.
+		return notFound, http.StatusNotFound
+	}
 	// then we need to figure out how many lines there are.
 	lines := strings.Count(string(pageinfo.Content), "\n")
 	// For each of the lines, we want to prepend
@@ -301,32 +330,7 @@ func MakeFilePage(w http.ResponseWriter, pageinfo *gitPage,
 // MakeGitPage shows the "front page" that is the main directory of a
 // git reposiory, including the README and a directory listing. It
 // writes the webpage to the provided http.ResponseWriter.
-func MakeGitPage(w http.ResponseWriter, req *http.Request, pageinfo *gitPage, g *git, ref, file string) (err error, status int) {
-
-	// To begin with, parse the remaining portions of the http form.
-
-	// maxCommits is the maximum number of commits to be loaded via
-	// the log.
-	maxCommits, err := strconv.Atoi(req.FormValue("c"))
-	if err != nil {
-		maxCommits = 10
-	}
-
-	// useAPI is a boolean indicator of whether or not to use the
-	// API. It must be retrieved by direct access to req.Form because
-	// the form can be empty. (In this case, we would fall back to
-	// checking the Accept field in the header.)
-	if _, useAPI := req.Form["api"]; useAPI {
-		err = ServeAPI(w, req, g, ref, maxCommits)
-		if err != nil {
-			l.Errf("API request %q from %q failed: %s",
-				req.URL, req.RemoteAddr, err)
-		} else {
-			l.Debugf("API request %q from %q\n",
-				req.URL, req.RemoteAddr)
-		}
-	}
-
+func MakeGitPage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref, file string, maxCommits int) (err error, status int) {
 	// Parse the log to retrieve the commits.
 	commits := g.Commits(ref, maxCommits)
 
