@@ -8,6 +8,7 @@
 		hljs.tabReplace = '    ';
 		hljs.initHighlightingOnLoad();
         </script>
+    </head>
 	<body>
     
 		<div class="bigtitle">
@@ -28,7 +29,7 @@
             </tr>
         </table>
         
-		<input type="text" value="http://{{.Host}}{{.Path}}{{.GitDir}}" class="bar" onClick="select();"/>
+		<input type="text" value="{{.RootLink}}{{.Path}}{{.GitDir}}" class="bar" onClick="select();"/>
         </div>
         
         <div class="wrap">

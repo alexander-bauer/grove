@@ -21,7 +21,7 @@ type gitPage struct {
 	URL        string
 	GitDir     string
 	Branch     string
-	Host       string
+	RootLink   string
 	TagNum     string
 	Path       string
 	CommitNum  string
@@ -71,7 +71,7 @@ func isGit(repository string) (git bool, gitDir string) {
 	if err == nil {
 		// Note that err EQUALS nil
 		git = true
-		gitDir = "/.git"
+		gitDir = ".git"
 	}
 	return
 }
@@ -83,14 +83,16 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		Path: repository,
 	}
 	// First, establish the template and fill out some of the gitPage.
+	l.Debugln(req.RequestURI)
 	pageinfo := &gitPage{
 		Owner:      gitVarUser(),
 		InRepoPath: path.Join(path.Base(repository), file),
-		URL:        "http://" + req.Host + strings.TrimRight(req.URL.Path, "/") + "/",
-		Host:       req.Host,
+		RootLink:   "http://" + req.Host,
+		Path:       repository[len(handler.Dir):] + "/", // Path without in-git
 		Version:    Version,
-		Path:       repository[len(handler.Dir):], // URL of repository
 	}
+	pageinfo.URL = pageinfo.RootLink + strings.TrimRight(
+		req.URL.Path, "/") + "/" // Full URL with assured trailing slash
 
 	// If there is a query, add it to the relevant field. Otherwise,
 	// leave it blank.
@@ -400,7 +402,7 @@ func MakeTreePage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref, file st
 		} else {
 			t = "blob"
 		}
-		d.Link = "http://" + pageinfo.Host + pageinfo.Path + "/" + t + "/" + path.Join(file, f)
+		d.Link = pageinfo.RootLink + pageinfo.Path + "/" + t + "/" + path.Join(file, f)
 		pageinfo.List[n] = d
 	}
 
