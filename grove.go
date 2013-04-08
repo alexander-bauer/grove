@@ -14,10 +14,12 @@ import (
 var (
 	Version = "0.5.10"
 
-	Bind                   = "0.0.0.0"          // Interface to bind to
-	Port                   = "8860"             // Port to bind to
-	Resources              = "/usr/share/grove" // Directory to store resources in
-	LogLevel  log.LogLevel = log.INFO           // Default log level
+	Bind      = "0.0.0.0"          // Interface to bind to
+	Port      = "8860"             // Port to bind to
+	Resources = "/usr/share/grove" // Directory to store resources in
+	BaseURL   = ""                 // Hostname and prefix to use in links
+
+	LogLevel log.LogLevel = log.INFO // Default log level
 )
 
 var (
@@ -36,7 +38,9 @@ var (
 	fBind = flag.String("bind", Bind, "interface to bind to")
 	fPort = flag.String("port", Port, "port to listen on")
 	fRes  = flag.String("res", Resources, "resources directory")
-	fWeb  = flag.Bool("web", true, "enable web browsing")
+	fHost = flag.String("host", BaseURL,
+		"hostname and prefix to use in links")
+	fWeb = flag.Bool("web", true, "enable web browsing")
 
 	fShowVersion  = flag.Bool("version", false, "print major version and exit")
 	fShowFVersion = flag.Bool("version-full", false, "print full version and exit")

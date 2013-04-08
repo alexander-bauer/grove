@@ -87,9 +87,13 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	pageinfo := &gitPage{
 		Owner:      gitVarUser(),
 		InRepoPath: path.Join(path.Base(repository), file),
-		RootLink:   "http://" + req.Host,
 		Path:       repository[len(handler.Dir):] + "/", // Path without in-git
 		Version:    Version,
+	}
+	if len(*fHost) > 0 {
+		pageinfo.RootLink = "http://" + *fHost
+	} else {
+		pageinfo.RootLink = "http://" + req.Host
 	}
 	pageinfo.URL = pageinfo.RootLink + strings.TrimRight(
 		req.URL.Path, "/") + "/" // Full URL with assured trailing slash
