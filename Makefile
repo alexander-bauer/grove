@@ -1,14 +1,14 @@
-program_NAME := grove
+PROGRAM_NAME := grove
 GOCOMPILER := go build
-GOFLAGS	+= -ldflags "-X main.Version $(shell git describe)"
+GOFLAGS	+= -ldflags "-X main.Version $(shell git describe --dirty=+)"
 
 
-.PHONY: all install clean disclean
+.PHONY: all clean
 
-all: $(program_NAME)
+all: $(PROGRAM_NAME)
 
-$(program_NAME):
+$(PROGRAM_NAME):
 	$(GOCOMPILER) $(GOFLAGS)
 
 clean:
-	@- $(RM) $(program_NAME)
+	@- $(RM) $(PROGRAM_NAME)
