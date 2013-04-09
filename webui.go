@@ -96,7 +96,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	} else {
 		pageinfo.RootLink = "http://" + req.Host
 	}
-	pageinfo.URL = pageinfo.RootLink + strings.TrimRight(
+	pageinfo.URL = prefix + strings.TrimRight(
 		req.URL.Path, "/") + "/" // Full URL with assured trailing slash
 
 	// If there is a query, add it to the relevant field. Otherwise,
@@ -165,14 +165,14 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		// This will catch all non-git cases, eliminating the need for
 		// them below.
 		err, status = MakeDirPage(w, pageinfo, repository)
-	case strings.Contains(pageinfo.URL, "/tree/"):
+	case strings.Contains(req.URL.Path, "/tree/"):
 		// This will catch cases needing to serve directories within
 		// git repositories.
 		err, status = MakeTreePage(w, pageinfo, g, ref, file)
-	case strings.Contains(pageinfo.URL, "/blob/"):
+	case strings.Contains(req.URL.Path, "/blob/"):
 		// This will catch cases needing to serve files.
 		err, status = MakeFilePage(w, pageinfo, g, ref, file)
-	case strings.Contains(pageinfo.URL, "/raw/"):
+	case strings.Contains(req.URL.Path, "/raw/"):
 		// This will catch cases needing to serve files directly.
 		err, status = MakeRawPage(w, file, ref, g)
 	case git:
@@ -186,11 +186,11 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	// displayed, then close the connection and return.
 	if err != nil {
 		l.Errf("View of %q from %q caused error: %s",
-			pageinfo.Path, req.RemoteAddr, err)
+			req.URL.Path, req.RemoteAddr, err)
 		Error(w, status)
 	} else {
 		l.Debugf("View of %q from %q\n",
-			pageinfo.Path, req.RemoteAddr)
+			req.URL.Path, req.RemoteAddr)
 	}
 }
 
@@ -242,7 +242,7 @@ func MakeDirPage(w http.ResponseWriter, pageinfo *gitPage, directory string) (er
 				URL:  template.URL(prefix + "/"),
 				Name: "/",
 			}, &dirList{ // and append ".."
-				URL:  template.URL(pageinfo.URL + "../"),
+				URL:  template.URL(prefix + pageinfo.Path + "../"),
 				Name: "..",
 			})
 	}
@@ -271,7 +271,8 @@ func MakeDirPage(w http.ResponseWriter, pageinfo *gitPage, directory string) (er
 		info, err := os.Stat(directory + "/" + n)
 		if err == nil && CheckPerms(info) {
 			dirbuf = append(dirbuf, &dirList{
-				URL:  template.URL(pageinfo.URL + info.Name() + "/"),
+				URL: template.URL(prefix + pageinfo.Path +
+					info.Name() + "/"),
 				Name: info.Name(),
 			})
 
@@ -405,7 +406,7 @@ func MakeTreePage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref, file st
 		} else {
 			t = "blob"
 		}
-		d.Link = pageinfo.RootLink + pageinfo.Path + "/" + t + "/" + path.Join(file, f)
+		d.Link = prefix + pageinfo.Path + t + "/" + path.Join(file, f)
 		pageinfo.List[n] = d
 	}
 
