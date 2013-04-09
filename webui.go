@@ -16,6 +16,7 @@ import (
 )
 
 type gitPage struct {
+	Prefix     string // URL prefix to be prepended
 	Owner      string
 	InRepoPath string
 	URL        string
@@ -85,6 +86,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	// First, establish the template and fill out some of the gitPage.
 	l.Debugln(req.RequestURI)
 	pageinfo := &gitPage{
+		Prefix:     prefix,
 		Owner:      gitVarUser(),
 		InRepoPath: path.Join(path.Base(repository), file),
 		Path:       repository[len(handler.Dir):] + "/", // Path without in-git

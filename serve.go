@@ -20,6 +20,9 @@ var (
 	// 1: readable by group
 	// 2: readable
 
+	prefix       string // Path to prepend to links
+	prefixLength int    // Number of characters to strip from requests
+
 	handler *cgi.Handler       // git-http-backend CGI handler
 	t       *template.Template // Template containing all webui templates
 
@@ -48,6 +51,13 @@ func Serve(repodir string) {
 		Logger: &l.Logger,
 	}
 
+	// Set up the stripProxy variable, but only if *fHost contains a
+	// path to strip, such as "example.com/grove"
+	if hostLength := strings.Index(*fHost, "/"); hostLength > 0 {
+		prefixLength = len(*fHost) - hostLength
+		prefix = (*fHost)[hostLength:]
+	}
+
 	var err error
 	t, err = getTemplate()
 	if err != nil {
@@ -65,9 +75,9 @@ func Serve(repodir string) {
 
 	// If we support web browsing, then add these handlers.
 	if *fWeb {
-		http.HandleFunc("/res/style.css", gzipHandler(HandleCSS))
-		http.HandleFunc("/res/highlight.js", gzipHandler(HandleJS))
-		http.HandleFunc("/favicon.ico", gzipHandler(HandleIcon))
+		http.HandleFunc(prefix+"/res/style.css", gzipHandler(HandleCSS))
+		http.HandleFunc(prefix+"/res/highlight.js", gzipHandler(HandleJS))
+		http.HandleFunc(prefix+"/favicon.ico", gzipHandler(HandleIcon))
 	}
 
 	err = http.ListenAndServe(*fBind+":"+*fPort, nil)
@@ -98,7 +108,18 @@ func HandleIcon(w http.ResponseWriter, req *http.Request) {
 // HandleWeb handles general requests, such as for the web interface
 // or git-over-http requests.
 func HandleWeb(w http.ResponseWriter, req *http.Request) {
-	// Determine the filesystem path from the URL.
+	// Determine the filesystem path from the URL. We must first make
+	// sure that we strip the prefix, if appropriate. We do this by
+	// modifying the http.Request directly.
+	if len(req.URL.Path) < prefixLength {
+		// If the request URL is shorter than the prefix, (which will
+		// never occur when the prefix is not specified), then throw
+		// an error.
+		Error(w, http.StatusBadRequest)
+		return
+	} else {
+		req.URL.Path = req.URL.Path[prefixLength:]
+	}
 	p := path.Join(handler.Dir, req.URL.Path)
 
 	// Send the request to the git http backend if it is to a .git
