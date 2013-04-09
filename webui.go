@@ -84,7 +84,6 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		Path: repository,
 	}
 	// First, establish the template and fill out some of the gitPage.
-	l.Debugln(req.RequestURI)
 	pageinfo := &gitPage{
 		Prefix:     prefix,
 		Owner:      gitVarUser(),
@@ -235,19 +234,17 @@ func MakeDirPage(w http.ResponseWriter, pageinfo *gitPage, directory string) (er
 	// We begin the template here so that we can fill it out.
 
 	pageinfo.List = make([]*dirList, 0, 2)
-	if pageinfo.Path != "" {
+	if pageinfo.Path != "/" {
 		// If we're not on the root directory, we need two links for
 		// navigation: "/" and ".."
 		pageinfo.List = append(pageinfo.List,
 			&dirList{ // append "/"
-				URL:  template.URL("/"),
+				URL:  template.URL(prefix + "/"),
 				Name: "/",
 			}, &dirList{ // and append ".."
 				URL:  template.URL(pageinfo.URL + "../"),
 				Name: "..",
 			})
-	} else {
-		pageinfo.Path = "/"
 	}
 
 	// Open the file so that it can be read.
