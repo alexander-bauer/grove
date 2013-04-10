@@ -401,7 +401,7 @@ func MakeTreePage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref, file st
 	pageinfo.List = make([]*dirList, len(files))
 	for n, f := range files {
 		d := &dirList{
-			URL:  template.URL(f),
+			URL:  template.URL(f)+pageinfo.Query,
 			Name: f,
 		}
 
@@ -411,7 +411,7 @@ func MakeTreePage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref, file st
 		} else {
 			t = "blob"
 		}
-		d.Link = prefix + pageinfo.Path + t + "/" + path.Join(file, f)
+		d.Link = prefix + pageinfo.Path + t + "/" + path.Join(file, f) + string(pageinfo.Query)
 		pageinfo.List[n] = d
 	}
 
