@@ -32,6 +32,7 @@ type gitPage struct {
 	Logs       []*gitLog
 	Version    string
 	Query      template.URL
+	Status     string
 }
 
 type gitLog struct {
@@ -197,9 +198,13 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 // Error reports an error of the given status to the given http
 // connection using http.StatusText().
 func Error(w http.ResponseWriter, status int) {
-	// TODO: use templates to give informative error pages.
-	http.Error(w, strconv.Itoa(status)+" - "+http.StatusText(status),
-		status)
+	pageinfo := &gitPage{
+			Owner:      gitVarUser(),
+			Status:     strconv.Itoa(status)+" - "+http.StatusText(status),
+			Version:    Version,
+		}
+		
+	t.ExecuteTemplate(w, "error.html", pageinfo)
 }
 
 // MakeRawPAge makes the raw page of which the files are shown as

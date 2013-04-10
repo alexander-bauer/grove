@@ -29,6 +29,7 @@ var (
 	templateFiles = []string{ // Basenames of the HTML templates
 		"dir.html", "file.html",
 		"gitpage.html", "tree.html",
+		"error.html",
 	}
 )
 
