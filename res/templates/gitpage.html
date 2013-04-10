@@ -2,8 +2,8 @@
 <html>
 	<head>
 		<title>{{.Owner}} [Grove]</title>
-		<link rel="stylesheet" href="/res/style.css"/>
-        <script type="text/javascript" src="/res/highlight.js"></script>
+		<link rel="stylesheet" href="{{.Prefix}}/res/style.css"/>
+        <script type="text/javascript" src="{{.Prefix}}/res/highlight.js"></script>
 		<script type="text/javascript">
 		hljs.tabReplace = '    ';
 		hljs.initHighlightingOnLoad();
@@ -12,7 +12,7 @@
 	<body>
     
 		<div class="bigtitle">
-			<h5><a href="{{.URL}}/..">.. / </a>{{.BasePath}}{{.Location}}</h5>
+			<h5><a href="{{.Prefix}}{{.Path}}../">.. / </a>{{.InRepoPath}}</h5>
 		</div>
 		
         <div class="wrapper">
@@ -29,16 +29,16 @@
             </tr>
         </table>
 
-		<input type="text" value="{{.URL}}{{.GitDir}}" class="bar" onClick="select();"/>
+		<input type="text" value="{{.RootLink}}{{.Path}}{{.GitDir}}" class="bar" onClick="select();"/>
         
         <div class="buttons">
-        	<a href="{{.URL}}/tree" class="button">View directory tree</a>
+        	<a href="{{.URL}}tree/{{.Query}}" class="button">View directory tree</a>
             <div class="readmebitch">
             <script type="text/javascript">
             	if (document.URL.split('#')[1] != "readme") {
-					document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href={{.URL}}#readme class='button'>Display README file</a>";
+					document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href='{{.URL}}#readme' class='button'>Display README file</a>";
 					}
-				else document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href='http://{{.Host}}{{.Path}}/' class='button'>Hide README file</a>";
+				else document.getElementsByClassName('readmebitch').item(0).innerHTML = "<a href='{{.URL}}{{.Query}}' class='button'>Hide README file</a>";
             </script>
             </div>
         </div>
@@ -50,21 +50,21 @@
         <div class="buttons">
         	<h4 class="left">Log</h4>
         </div>
-		<div class="log">
-			{{range $l := .Logs}}
-			<a href="#{{$l.SHA}}"><div class="loggy{{$l.Classtype}}" id="{{$l.SHA}}">
-            	<div class="logtitle">
-				{{$l.Author}} &mdash; 
-				<span class="SHA{{$l.Classtype}}">
-					{{$l.SHA}}
-				</span> &mdash; 
-				{{$l.Time}} <br/><br/>
-                    <strong>{{$l.Subject}}</strong></div>
-                    <div class="holdem"><div class="notcenter">
-                    <br/><br/>
-                    {{$l.Body}}</div>
-				</div>
-        	</div></a>
+			<div class="log">
+                {{range $l := .Logs}}
+                <a href="#{{$l.SHA}}"><div class="loggy{{$l.Classtype}}" id="{{$l.SHA}}">
+                 <div class="logtitle">
+                {{$l.Author}} &mdash;
+                <span class="SHA{{$l.Classtype}}">
+                {{$l.SHA}}
+                </span> &mdash;
+                {{$l.Time}} <br/><br/>
+				<strong>{{$l.Subject}}</strong></div>
+				<div class="holdem"><div class="notcenter">
+				<br/><br/>
+				{{$l.Body}}</div>
+                </div>
+         </div></a>
             {{end}}
         </div>
         

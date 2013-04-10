@@ -2,12 +2,12 @@
 <html>
 	<head>
 		<title>{{.Owner}} [Grove]</title>
-		<link rel="stylesheet" href="/res/style.css"/>
+		<link rel="stylesheet" href="{{.Prefix}}/res/style.css"/>
 	</head>
 	<body>
     
 		<div class="bigtitle">
-			<h5><a href="http://{{.Host}}{{.Path}}/tree{{.Location}}../">.. / </a>{{.BasePath}}/tree{{.Location}}</h5>
+			<h5><a href="../{{.Query}}">..</a> / {{.InRepoPath}}</h5>
 		</div>
 		
 		<div class="wrapper">
@@ -24,14 +24,14 @@
             </tr>
         </table>
         
-		<input type="text" value="http://{{.Host}}{{.Path}}{{.GitDir}}" class="bar" onClick="select();"/>
+		<input type="text" value="{{.RootLink}}{{.Path}}{{.GitDir}}" class="bar" onClick="select();"/>
         </div>
         
 		<div class="view-dir">
 			<ul>
-            	<a href="{{.URL}}/../"><li class="li-long">..</li></a>
+            	<a href="{{.URL}}..{{.Query}}"><li class="li-long">..</li></a>
 				{{range $l := .List}}
-					<a href="http://{{.Host}}{{.Path}}/{{.Type}}/{{.Location}}{{.URL}}"><li class="li-long">{{.Name}}</li></a>
+					<a href="{{.Link}}{{.Query}}"><li class="li-long">{{.Name}}</li></a>
 				{{end}}
 			</ul>
 		</div>

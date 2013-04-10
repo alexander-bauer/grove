@@ -8,7 +8,6 @@ import (
 	"github.com/russross/blackfriday"
 	"html"
 	"html/template"
-	"io"
 	"net/http"
 	"os"
 	"path"
@@ -17,22 +16,23 @@ import (
 )
 
 type gitPage struct {
-	Owner     string
-	BasePath  string
-	URL       string
-	GitDir    string
-	Branch    string
-	Host      string
-	TagNum    string
-	Path      string
-	CommitNum string
-	SHA       string
-	Content   template.HTML
-	List      []*dirList
-	Logs      []*gitLog
-	Location  template.URL
-	Numbers   template.HTML
-	Version   string
+	Prefix     string // URL prefix to be prepended
+	Owner      string
+	InRepoPath string
+	URL        string
+	GitDir     string
+	Branch     string
+	RootLink   string
+	TagNum     string
+	Path       string
+	CommitNum  string
+	SHA        string
+	Content    template.HTML
+	List       []*dirList
+	Logs       []*gitLog
+	Version    string
+	Query      template.URL
+	Status     string
 }
 
 type gitLog struct {
@@ -45,14 +45,10 @@ type gitLog struct {
 }
 
 type dirList struct {
-	URL      template.URL
-	Name     string
-	Class    string
-	Type     string
-	Host     string
-	Path     string
-	Location string
-	Version  string
+	URL   template.URL
+	Name  string
+	Link  string
+	Query template.URL
 }
 
 const (
@@ -65,6 +61,8 @@ var (
 		http.StatusText(http.StatusInternalServerError))
 	forbidden = errors.New(
 		http.StatusText(http.StatusForbidden))
+	notFound = errors.New(
+		http.StatusText(http.StatusNotFound))
 )
 
 // Check for a .git directory in the repository argument. If one does
@@ -75,216 +73,233 @@ func isGit(repository string) (git bool, gitDir string) {
 	if err == nil {
 		// Note that err EQUALS nil
 		git = true
-		gitDir = "/.git"
+		gitDir = ".git"
 	}
 	return
 }
 
-// Retrieval of file info is done in two steps so that we can use
-// os.Stat(), rather than os.Lstat(), the former of which follows
-// symlinks.
-func MakeDirInfos(repository string, dirnames []string) (dirinfos []os.FileInfo) {
-	dirinfos = make([]os.FileInfo, 0, len(dirnames))
-	for _, n := range dirnames {
-		info, err := os.Stat(repository + "/" + n)
-		if err == nil && CheckPerms(info) {
-			dirinfos = append(dirinfos, info)
-		}
-	}
-	return
-}
-
-func MakePage(w http.ResponseWriter, req *http.Request, repository string, file string, isFile bool) (err error) {
+// MakePage acts as a multiplexer for the various complex http
+// functions. It handles logging and web error reporting.
+func MakePage(w http.ResponseWriter, req *http.Request, repository string, file string, isFile bool) {
 	g := &git{
 		Path: repository,
 	}
-
-	url := "http://" + req.Host + strings.TrimRight(req.URL.Path, "/")
-
-	// ref is the git commit reference. If the form is not submitted,
-	// (or is invalid), it is set to "HEAD".
-	ref := req.FormValue("ref")
-	if len(ref) == 0 || !g.RefExists(ref) {
-		ref = "HEAD" // The commit or branch reference
-	}
-
-	// The form value since is just a shortcut for
-	// "?ref=<ref>..<since>", so we check it here. Note that the
-	// results will include <ref> and exclude <since>.
-	if since := req.FormValue("since"); g.RefExists(since) {
-		ref = since + ".." + ref
-	}
-
-	// maxCommits is the maximum number of commits to be loaded via
-	// the log.
-	maxCommits, err := strconv.Atoi(req.FormValue("c"))
-	if err != nil {
-		maxCommits = 10
-	}
-
-	// useAPI is a boolean indicator of whether or not to use the
-	// API. It must be retrieved by direct access to req.Form because
-	// the form can be empty. (In this case, we would fall back to
-	// checking the Accept field in the header.)
-	_, useAPI := req.Form["api"]
-
-	// If the request is specified as using the JSON interface, then
-	// we switch to that. This usually isn't done, but it is better to
-	// do it here than to wait until the dirinfos are retrieved.
-	git, gitDir := isGit(repository)
-	if useAPI && git {
-		err = ServeAPI(w, req, g, ref, maxCommits)
-		if err != nil {
-			l.Errf("API request %q from %q failed: %s",
-				req.URL, req.RemoteAddr, err)
-		} else {
-			l.Debugf("API request %q from %q",
-				req.URL, req.RemoteAddr)
-		}
-		return
-	}
-
-	// If we're doing a directory listing, then we need to retrieve
-	// the directory list.
-	var dirinfos []os.FileInfo
-	if !git {
-		// Open the file so that it can be read.
-		f, err := os.Open(repository)
-		if err != nil || f == nil {
-			// If there is an error opening the file, return 500.
-			return internalServerError
-		}
-		dirnames, err := f.Readdirnames(0)
-		f.Close()
-		if err != nil {
-			// If the directory could not be opened, return 500.
-			return internalServerError
-		}
-		dirinfos = MakeDirInfos(repository, dirnames)
-	}
-
-	// Get the user.name from the git config
-	owner := gitVarUser()
-
-	var commits []*Commit
-	if len(file) != 0 {
-		commits = g.CommitsByFile(ref, file, maxCommits)
-	} else {
-		commits = g.Commits(ref, maxCommits)
-	}
-
-	commitNum := g.TotalCommits()
-	tagNum := len(g.Tags())
-	branch := g.Branch("HEAD")
-	sha := g.SHA(ref)
-
-	t := template.New("Grove!")
-
-	// Set up the gitPage template.
-	pathto := strings.SplitAfter(string(repository), handler.Dir)
+	// First, establish the template and fill out some of the gitPage.
 	pageinfo := &gitPage{
-		Owner:     owner,
-		BasePath:  path.Base(repository),
-		URL:       url,
-		GitDir:    gitDir,
-		Host:      req.Host,
-		Version:   Version,
-		Path:      pathto[1],
-		Branch:    branch,
-		TagNum:    strconv.Itoa(tagNum),
-		CommitNum: strconv.Itoa(commitNum),
-		SHA:       sha,
-		Location:  template.URL(""),
+		Prefix:     prefix,
+		Owner:      gitVarUser(),
+		InRepoPath: path.Join(path.Base(repository), file),
+		Path:       repository[len(handler.Dir):] + "/", // Path without in-git
+		Version:    Version,
+	}
+	if len(*fHost) > 0 {
+		pageinfo.RootLink = "http://" + *fHost
+	} else {
+		pageinfo.RootLink = "http://" + req.Host
+	}
+	pageinfo.URL = prefix + strings.TrimRight(
+		req.URL.Path, "/") + "/" // Full URL with assured trailing slash
+
+	// If there is a query, add it to the relevant field. Otherwise,
+	// leave it blank.
+	if len(req.URL.RawQuery) > 0 {
+		pageinfo.Query = template.URL("?" + req.URL.RawQuery)
+	}
+
+	// Now, check if the given directory is a git repository, and if
+	// so, parse some of the possible http forms.
+	var ref string
+	var maxCommits int
+	git, gitDir := isGit(repository)
+	if git {
+		// ref is the git commit reference. If the form is not submitted,
+		// (or is invalid), it is set to "HEAD".
+		ref = req.FormValue("ref")
+		if len(ref) == 0 || !g.RefExists(ref) {
+			ref = "HEAD" // The commit or branch reference
+		}
+
+		// The form value since is just a shortcut for
+		// "?ref=<ref>..<since>", so we check it here. Note that the
+		// results will include <ref> and exclude <since>.
+		if since := req.FormValue("since"); g.RefExists(since) {
+			ref = since + ".." + ref
+		}
+
+		// maxCommits is the maximum number of commits to be loaded via
+		// the log.
+		var err error
+		maxCommits, err = strconv.Atoi(req.FormValue("c"))
+		if err != nil {
+			maxCommits = 10
+		}
+
+		// Now, switch to using the API if it is requested. We access
+		// req.Form directly because the form can be empty. (In this
+		// case, we would fall back to checking the Accept field in
+		// the header.)
+		if _, useAPI := req.Form["api"]; useAPI {
+			err = ServeAPI(w, req, g, ref, maxCommits)
+			if err != nil {
+				l.Errf("API request %q from %q failed: %s",
+					req.URL, req.RemoteAddr, err)
+			} else {
+				l.Debugf("API request %q from %q\n",
+					req.URL, req.RemoteAddr)
+			}
+			return
+		}
+
+		pageinfo.Branch = g.Branch("HEAD")
+		pageinfo.TagNum = strconv.Itoa(len(g.Tags()))
+		pageinfo.CommitNum = strconv.Itoa(g.TotalCommits())
+		pageinfo.SHA = g.SHA(ref)
+		pageinfo.GitDir = gitDir
 	}
 
 	// TODO: all of the below case blocks may misbehave if the URL
 	// contains a keyword.
+	var err error
+	var status int
 	switch {
 	case !git:
 		// This will catch all non-git cases, eliminating the need for
 		// them below.
-		return MakeDirPage(w, t, pageinfo, req, repository, url, dirinfos)
-	case strings.Contains(req.URL.Path, "tree"):
+		err, status = MakeDirPage(w, pageinfo, repository)
+	case strings.Contains(req.URL.Path, "/tree/"):
 		// This will catch cases needing to serve directories within
 		// git repositories.
-		return MakeTreePage(w, t, pageinfo, req, file, url,
-			g, ref, pathto)
-	case strings.Contains(req.URL.Path, "blob"):
+		err, status = MakeTreePage(w, pageinfo, g, ref, file)
+	case strings.Contains(req.URL.Path, "/blob/"):
 		// This will catch cases needing to serve files.
-		return MakeFilePage(w, t, pageinfo, g, ref, file)
-	case strings.Contains(req.URL.Path, "raw"):
+		err, status = MakeFilePage(w, pageinfo, g, ref, file)
+	case strings.Contains(req.URL.Path, "/raw/"):
 		// This will catch cases needing to serve files directly.
-		return MakeRawPage(w, file, ref, g)
+		err, status = MakeRawPage(w, file, ref, g)
 	case git:
 		// This will catch cases serving the main page of a repository
 		// directory. This needs to be last because the above cases
 		// for "tree" and "blob" will also have `git` as true.
-		return MakeGitPage(w, t, pageinfo, ref, g, commits,
-			owner, maxCommits, file)
+		err, status = MakeGitPage(w, pageinfo, g, ref, file, maxCommits)
 	}
-	// Finally, if this case is reached, something is very wrong.
-	return errors.New(http.StatusText(http.StatusInternalServerError))
+
+	// If an error was encountered, ensure that an error page is
+	// displayed, then close the connection and return.
+	if err != nil {
+		l.Errf("View of %q from %q caused error: %s",
+			req.URL.Path, req.RemoteAddr, err)
+		Error(w, status)
+	} else {
+		l.Debugf("View of %q from %q\n",
+			req.URL.Path, req.RemoteAddr)
+	}
 }
 
-func MakeRawPage(w io.Writer, file, ref string, g *git) (err error) {
-	_, err = w.Write(g.GetFile(ref, file))
+// Error reports an error of the given status to the given http
+// connection using http.StatusText().
+func Error(w http.ResponseWriter, status int) {
+	pageinfo := &gitPage{
+			Owner:      gitVarUser(),
+			Status:     strconv.Itoa(status)+" - "+http.StatusText(status),
+			Version:    Version,
+		}
+		
+	t.ExecuteTemplate(w, "error.html", pageinfo)
+}
+
+// MakeRawPAge makes the raw page of which the files are shown as
+// completely raw files.
+func MakeRawPage(w http.ResponseWriter, file, ref string, g *git) (err error, status int) {
+	f := g.GetFile(ref, file)
+	if len(f) == 0 {
+		// If the file is not retrieved from git, return the error.
+		return notFound, http.StatusNotFound
+	}
+	// If it is found, write the contents to the connection directly.
+	w.Write(f)
 	return
 }
 
 // MakeDirPage makes filesystem directory listings, which are not
 // contained within git projects. It writes the webpage to the
-// provided io.Writer.
-func MakeDirPage(w io.Writer, t *template.Template, pageinfo *gitPage,
-	req *http.Request, directory, url string,
-	dirinfos []os.FileInfo) (err error) {
+// provided http.ResponseWriter.
+func MakeDirPage(w http.ResponseWriter, pageinfo *gitPage, directory string) (err error, status int) {
 
 	// First, check the permissions of the file to be displayed.
 	fi, err := os.Stat(directory)
 	if err != nil {
-		return err
+		return err, http.StatusNotFound
 	}
 	if !CheckPerms(fi) {
-		return forbidden
+		return forbidden, http.StatusForbidden
 	}
+	// We only get beyond this point if we are allowed to serve the
+	// directory.
 
-	pageinfo.Location = template.URL(directory)
-	List := make([]*dirList, 0)
-	if url != ("http://" + req.Host + "") {
-		List = append(List, &dirList{
-			URL:   template.URL("/"),
-			Name:  "/",
-			Class: "dir",
-		})
-		List = append(List, &dirList{
-			URL:   template.URL(url + "/../"),
-			Name:  "..",
-			Class: "dir",
-		})
-	}
+	// We begin the template here so that we can fill it out.
 
-	// If is directory, and does not start with '.', and is globally
-	// readable
-	for _, info := range dirinfos {
-		if info.IsDir() && CheckPerms(info) {
-			List = append(List, &dirList{
-				URL:   template.URL(info.Name() + "/"),
-				Name:  info.Name(),
-				Class: "dir",
+	pageinfo.List = make([]*dirList, 0, 2)
+	if pageinfo.Path != "/" {
+		// If we're not on the root directory, we need two links for
+		// navigation: "/" and ".."
+		pageinfo.List = append(pageinfo.List,
+			&dirList{ // append "/"
+				URL:  template.URL(prefix + "/"),
+				Name: "/",
+			}, &dirList{ // and append ".."
+				URL:  template.URL(prefix + pageinfo.Path + "../"),
+				Name: "..",
 			})
+	}
+
+	// Open the file so that it can be read.
+	f, err := os.Open(directory)
+	if err != nil {
+		return err, http.StatusNotFound
+	}
+
+	// To list the directory properly, we have to do it in two
+	// steps. First, retrieve the names, then perform os.Stat() on the
+	// result. This is so that simlinks are followed. We will also
+	// check file permissions.
+	dirnames, err := f.Readdirnames(0)
+	f.Close()
+	if err != nil {
+		return err, http.StatusInternalServerError
+	}
+	// We have the directory names; go on to calling os.Stat() and
+	// checking their permissions. If they should be listed, add
+	// them to a buffer, then append that to the dirlist at the
+	// end.
+	dirbuf := make([]*dirList, 0, len(dirnames))
+	for _, n := range dirnames {
+		info, err := os.Stat(directory + "/" + n)
+		if err == nil && CheckPerms(info) {
+			dirbuf = append(dirbuf, &dirList{
+				URL: template.URL(prefix + pageinfo.Path +
+					info.Name() + "/"),
+				Name: info.Name(),
+			})
+
 		}
 	}
-	pageinfo.List = List
-	t, _ = template.ParseFiles(path.Join(*fRes, "templates/dir.html"))
+	pageinfo.List = append(pageinfo.List, dirbuf...)
 
-	return t.Execute(w, pageinfo)
+	// We return 500 here because the error will only be reported
+	// if t.ExecuteTemplate() results in an error.
+	return t.ExecuteTemplate(w, "dir.html", pageinfo),
+		http.StatusInternalServerError
 }
 
 // MakeFilePage shows the contents of a file within a git project. It
-// writes the webpage to the provided io.Writer.
-func MakeFilePage(w io.Writer, t *template.Template, pageinfo *gitPage,
-	g *git, ref string, file string) (err error) {
+// writes the webpage to the provided http.ResponseWriter.
+func MakeFilePage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref string, file string) (err error, status int) {
 	// First we need to get the content,
 	pageinfo.Content = template.HTML(string(g.GetFile(ref, file)))
+	if len(pageinfo.Content) == 0 {
+		// If there is no content, return an error.
+		return notFound, http.StatusNotFound
+	}
 	// then we need to figure out how many lines there are.
 	lines := strings.Count(string(pageinfo.Content), "\n")
 	// For each of the lines, we want to prepend
@@ -314,21 +329,23 @@ func MakeFilePage(w io.Writer, t *template.Template, pageinfo *gitPage,
 		}
 	}
 
-	pageinfo.Numbers = template.HTML(temp)
 	pageinfo.Content = template.HTML(temp_html)
 
-	// Finally, parse it.
-	t, _ = template.ParseFiles(path.Join(*fRes, "templates/file.html"))
-	return t.Execute(w, pageinfo)
+	// We return 500 here because the error will only be reported
+	// if t.ExecuteTemplate() results in an error.
+	return t.ExecuteTemplate(w, "file.html", pageinfo),
+		http.StatusInternalServerError
+
 }
 
 // MakeGitPage shows the "front page" that is the main directory of a
 // git reposiory, including the README and a directory listing. It
-// writes the webpage to the provided io.Writer.
-func MakeGitPage(w io.Writer, t *template.Template, pageinfo *gitPage,
-	ref string, g *git, commits []*Commit, owner string, maxCommits int,
-	file string) (err error) {
-	Logs := make([]*gitLog, 0)
+// writes the webpage to the provided http.ResponseWriter.
+func MakeGitPage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref, file string, maxCommits int) (err error, status int) {
+	// Parse the log to retrieve the commits.
+	commits := g.Commits(ref, maxCommits)
+
+	pageinfo.Logs = make([]*gitLog, len(commits))
 	for i, c := range commits {
 		if len(c.SHA) == 0 {
 			// If, for some reason, the commit doesn't have content,
@@ -336,24 +353,20 @@ func MakeGitPage(w io.Writer, t *template.Template, pageinfo *gitPage,
 			continue
 		}
 		var classtype string
-		if c.Author == owner {
+		if c.Author == pageinfo.Owner {
 			classtype = "-owner"
 		}
 
-		Logs = append(Logs, &gitLog{
+		pageinfo.Logs[i] = &gitLog{
 			Author:    c.Author,
 			Classtype: classtype,
 			SHA:       c.SHA,
 			Time:      c.Time,
 			Subject:   template.HTML(html.EscapeString(c.Subject)),
 			Body:      template.HTML(strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1)),
-		})
-		if i == maxCommits-1 {
-			// but only display certain log messages
-			break
 		}
 	}
-	pageinfo.Logs = Logs
+
 	if len(file) == 0 {
 		// Load the README if it can be located. To locate, go through
 		// a list of possible names and break the loop at the first
@@ -366,47 +379,44 @@ func MakeGitPage(w io.Writer, t *template.Template, pageinfo *gitPage,
 				break
 			}
 		}
-		t, _ = template.ParseFiles(path.Join(*fRes, "templates/gitpage.html"))
 	}
-	return t.Execute(w, pageinfo)
+
+	// We return 500 here because the error will only be reported
+	// if t.ExecuteTemplate() results in an error.
+	return t.ExecuteTemplate(w, "gitpage.html", pageinfo),
+		http.StatusInternalServerError
 }
 
 // MakeTreePage makes directory listings from within git repositories.
-// It writes the webpage to the provided io.Writer.
-func MakeTreePage(w io.Writer, t *template.Template, pageinfo *gitPage,
-	req *http.Request, file string, url string, g *git, ref string,
-	pathto []string) (err error) {
-	pageinfo.Location = template.URL("/" + file)
-	if strings.HasSuffix(file, "/") {
-		List := make([]*dirList, 0)
-		files := g.GetDir(ref, file)
-		for _, f := range files {
-			if strings.HasSuffix(f, "/") {
-				List = append(List, &dirList{
-					URL:      template.URL(f),
-					Type:     "tree",
-					Host:     req.Host,
-					Path:     pathto[1],
-					Name:     f,
-					Location: file,
-					Version:  Version,
-					Class:    "file",
-				})
-			} else {
-				List = append(List, &dirList{
-					URL:      template.URL(f),
-					Type:     "blob",
-					Name:     f,
-					Host:     req.Host,
-					Path:     pathto[1],
-					Location: file,
-					Class:    "file",
-					Version:  Version,
-				})
-			}
+// It writes the webpage to the provided http.ResponseWriter.
+func MakeTreePage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref, file string) (err error, status int) {
+	// Retrieve the list of files from the repository.
+	files := g.GetDir(ref, file)
+
+	// If there are no files, return an error.
+	if len(files) == 0 {
+		return notFound, http.StatusNotFound
+	} // Otherwise, continue as normal.
+
+	pageinfo.List = make([]*dirList, len(files))
+	for n, f := range files {
+		d := &dirList{
+			URL:  template.URL(f),
+			Name: f,
 		}
-		pageinfo.List = List
-		t, _ = template.ParseFiles(path.Join(*fRes, "templates/tree.html"))
+
+		var t string
+		if strings.HasSuffix(f, "/") {
+			t = "tree"
+		} else {
+			t = "blob"
+		}
+		d.Link = prefix + pageinfo.Path + t + "/" + path.Join(file, f)
+		pageinfo.List[n] = d
 	}
-	return t.Execute(w, pageinfo)
+
+	// We return 500 here because the error will only be reported
+	// if t.ExecuteTemplate() results in an error.
+	return t.ExecuteTemplate(w, "tree.html", pageinfo),
+		http.StatusInternalServerError
 }

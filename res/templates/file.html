@@ -2,16 +2,17 @@
 <html>
 	<head>
 		<title>{{.Owner}} [Grove]</title>
-		<link rel="stylesheet" href="/res/style.css"/>
-        <script type="text/javascript" src="/res/highlight.js"></script>
+		<link rel="stylesheet" href="{{.Prefix}}/res/style.css"/>
+        <script type="text/javascript" src="{{.Prefix}}/res/highlight.js"></script>
 		<script type="text/javascript">
 		hljs.tabReplace = '    ';
 		hljs.initHighlightingOnLoad();
         </script>
+    </head>
 	<body>
     
 		<div class="bigtitle">
-			<h5><a href="..">.. / </a>{{.BasePath}}{{.Location}}</h5>
+			<h5><a href="..">.. / </a>{{.InRepoPath}}</h5>
 		</div>
 		
         <div class="wrapper">
@@ -28,7 +29,7 @@
             </tr>
         </table>
         
-		<input type="text" value="http://{{.Host}}{{.Path}}{{.GitDir}}" class="bar" onClick="select();"/>
+		<input type="text" value="{{.RootLink}}{{.Path}}{{.GitDir}}" class="bar" onClick="select();"/>
         </div>
         
         <div class="wrap">

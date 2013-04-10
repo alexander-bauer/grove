@@ -4,6 +4,7 @@ package main
 
 import (
 	"compress/gzip"
+	"html/template"
 	"io"
 	"net/http"
 	"net/http/cgi"
@@ -18,6 +19,18 @@ var (
 	// 0: readable globally
 	// 1: readable by group
 	// 2: readable
+
+	prefix       string // Path to prepend to links
+	prefixLength int    // Number of characters to strip from requests
+
+	handler *cgi.Handler       // git-http-backend CGI handler
+	t       *template.Template // Template containing all webui templates
+
+	templateFiles = []string{ // Basenames of the HTML templates
+		"dir.html", "file.html",
+		"gitpage.html", "tree.html",
+		"error.html",
+	}
 )
 
 type gzipResponseWriter struct {
@@ -39,6 +52,22 @@ func Serve(repodir string) {
 		Logger: &l.Logger,
 	}
 
+	// Set up the stripProxy variable, but only if *fHost contains a
+	// path to strip, such as "example.com/grove"
+	if hostLength := strings.Index(*fHost, "/"); hostLength > 0 {
+		prefixLength = len(*fHost) - hostLength
+		prefix = (*fHost)[hostLength:]
+	}
+
+	var err error
+	t, err = getTemplate()
+	if err != nil {
+		l.Emerg("HTML templates failed to load; exiting\n")
+		return
+	} else {
+		l.Debug("Templates loaded successfully\n")
+	}
+
 	l.Infof("Starting server on %s:%s\n", *fBind, *fPort)
 	l.Infof("Serving %q\n", repodir)
 	l.Infof("Web access: %t\n", *fWeb)
@@ -47,19 +76,19 @@ func Serve(repodir string) {
 
 	// If we support web browsing, then add these handlers.
 	if *fWeb {
-		http.HandleFunc("/res/style.css", gzipHandler(HandleCSS))
-		http.HandleFunc("/res/highlight.js", gzipHandler(HandleJS))
-		http.HandleFunc("/favicon.ico", gzipHandler(HandleIcon))
+		http.HandleFunc(prefix+"/res/style.css", gzipHandler(HandleCSS))
+		http.HandleFunc(prefix+"/res/highlight.js", gzipHandler(HandleJS))
+		http.HandleFunc(prefix+"/favicon.ico", gzipHandler(HandleIcon))
 	}
 
-	err := http.ListenAndServe(*fBind+":"+*fPort, nil)
+	err = http.ListenAndServe(*fBind+":"+*fPort, nil)
 	if err != nil {
 		l.Fatalf("Server crashed: %s", err)
 	}
 	return
 }
 
-// HandleCSS uses http.ServeFile() to serve `highlight.js` directly
+// HandleJS uses http.ServeFile() to serve `highlight.js` directly
 // from the file system.
 func HandleJS(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, path.Join(*fRes, "highlight.js"))
@@ -80,7 +109,18 @@ func HandleIcon(w http.ResponseWriter, req *http.Request) {
 // HandleWeb handles general requests, such as for the web interface
 // or git-over-http requests.
 func HandleWeb(w http.ResponseWriter, req *http.Request) {
-	// Determine the filesystem path from the URL.
+	// Determine the filesystem path from the URL. We must first make
+	// sure that we strip the prefix, if appropriate. We do this by
+	// modifying the http.Request directly.
+	if len(req.URL.Path) < prefixLength {
+		// If the request URL is shorter than the prefix, (which will
+		// never occur when the prefix is not specified), then throw
+		// an error.
+		Error(w, http.StatusBadRequest)
+		return
+	} else {
+		req.URL.Path = req.URL.Path[prefixLength:]
+	}
 	p := path.Join(handler.Dir, req.URL.Path)
 
 	// Send the request to the git http backend if it is to a .git
@@ -114,36 +154,17 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 	// TODO: add an informative "about" page to redirect to.
 	if !*fWeb {
 		l.Noticef("Web access denied to %q\n", req.RemoteAddr)
-		http.Error(w, http.StatusText(http.StatusForbidden),
-			http.StatusForbidden)
+		Error(w, http.StatusForbidden)
 		return
 	}
 
 	// If web browsing is enabled:
-	l.Debugf("View of %q from %q\n",
-		req.URL.Path, req.RemoteAddr)
 
 	// Figure out which directory is being requested, and check
 	// whether we're allowed to serve it.
 	repository, file, isFile, status := SplitRepository(handler.Dir, p)
 	if status == http.StatusOK {
-		err := MakePage(w, req, repository, file, isFile)
-		if err != nil {
-			// TODO: Improve client error reporting.
-			l.Errf("View of %q from %q caused error: %s",
-				req.URL.Path, req.RemoteAddr, err)
-
-			// Detect the type of error.
-			// TODO: Report the error numerically, to avoid this step.
-			var status int
-			switch err {
-			case forbidden:
-				status = http.StatusForbidden
-			default:
-				status = http.StatusInternalServerError
-			}
-			http.Error(w, err.Error(), status)
-		}
+		MakePage(w, req, repository, file, isFile)
 	}
 }
 
@@ -286,4 +307,16 @@ func CheckPermBits(info os.FileInfo) (canServe bool) {
 	// Thus, the file is readable and listable by the group, and
 	// therefore okay to serve.
 	return (info.Mode().Perm()&os.FileMode((permBits<<(Perms*3))) > 0)
+}
+
+// getTemplate uses the global variables templateFiles and *fRes to
+// load the templates and return the given object.
+func getTemplate() (t *template.Template, err error) {
+	// First, ensure that the paths are correct.
+	files := make([]string, len(templateFiles))
+	for i, f := range templateFiles {
+		files[i] = path.Join(*fRes, "templates", f)
+	}
+	// Now, return the results.
+	return template.New("master").ParseFiles(files...)
 }
