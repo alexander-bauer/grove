@@ -99,7 +99,7 @@ func HandleJS(w http.ResponseWriter, req *http.Request) {
 // HandleCSS uses http.ServeFile() to serve `style.css` directly from
 // the file system.
 func HandleCSS(w http.ResponseWriter, req *http.Request) {
-	http.ServeFile(w, req, path.Join(*fRes, "style.css"))
+	http.ServeFile(w, req, path.Join(*fRes, "light.css"))
 }
 
 // HandleIcon uses http.ServeFile() to serve the favicon directly from
