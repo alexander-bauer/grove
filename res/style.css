@@ -11,7 +11,16 @@ body {
 
 a {
 	text-decoration: none;
-	color: #333;
+	color: #AAA;
+	-webkit-transition: color .2s linear;
+	-moz-transition: color .2s linear;
+	-ms-transition: color .2s linear;
+	-o-transition: color .2s linear;
+	transition: color .2s linear;
+}
+
+a:hover {
+	color: #CCC;
 }
 
 /*
@@ -54,10 +63,6 @@ th {
 	background-color: #EEE;
 	padding: 10px;
 	border: 1px solid #CCC;
-}
-
-tr {
-	
 }
 
 td {
@@ -213,7 +218,6 @@ h6 {
 	color: #438A20;
 }
 
-
 /*
 ==============================
          GITPAGE
@@ -312,11 +316,6 @@ h6 {
 
 .md a {
 	color: #66cc33;
-	-webkit-transition: color .2s linear;
-	-moz-transition: color .2s linear;
-	-ms-transition: color .2s linear;
-	-o-transition: color .2s linear;
-	transition: color .2s linear;
 }
 
 .md a:hover {
