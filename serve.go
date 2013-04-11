@@ -71,17 +71,12 @@ func Serve(repodir string) {
 	l.Infof("Starting server on %s:%s\n", *fBind, *fPort)
 	l.Infof("Serving %q\n", repodir)
 	l.Infof("Web access: %t\n", *fWeb)
-	l.Infof("Dark theme: %t\n", *fDark)
-	
-	// Regardless if fWeb is true or not, host the CSS
-	// If the dark theme is specified, only serve that
-	// file, but if it's not, then serve the light one
-	if *fDark {
-		http.HandleFunc(prefix+"/res/dark.css", gzipHandler(HandleDarkCSS))
-	} else {
-		http.HandleFunc(prefix+"/res/light.css", gzipHandler(HandleCSS))
-	}
-	
+
+	// Set up the appropriate handlers depending on whether web
+	// browsing is enabled or not.
+
+	http.HandleFunc(prefix+"/res/"+*fTheme+".css", gzipHandler(HandleCSS))
+
 	if *fWeb {
 		http.HandleFunc(prefix+"/res/highlight.js", gzipHandler(HandleJS))
 		http.HandleFunc(prefix+"/favicon.ico", gzipHandler(HandleIcon))
@@ -103,16 +98,10 @@ func HandleJS(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, path.Join(*fRes, "highlight.js"))
 }
 
-// HandleCSS uses http.ServeFile() to serve `light.css` directly
-// from the file system as `style.css`
+// HandleCSS uses http.ServeFile() to serve *fTheme.css directly from
+// the file system as `style.css`
 func HandleCSS(w http.ResponseWriter, req *http.Request) {
-	http.ServeFile(w, req, path.Join(*fRes, "light.css"))
-}
-
-// HandleDarkCSS uses http.ServeFile() to serve `dark.css` directly
-// from the file system as `style.css`
-func HandleDarkCSS(w http.ResponseWriter, req *http.Request) {
-	http.ServeFile(w, req, path.Join(*fRes, "dark.css"))
+	http.ServeFile(w, req, path.Join(*fRes, *fTheme+".css"))
 }
 
 // HandleIcon uses http.ServeFile() to serve the favicon directly from
@@ -311,13 +300,13 @@ func CheckPermBits(info os.FileInfo) (canServe bool) {
 	}
 
 	// For example, consider the following:
-	// 
+	//
 	//       rwl rwl rwl       r-l
 	//    0b 111 101 101 & (0b 101 << 3)  > 0
 	//    0b 111 101 101 & 0b 000 101 000 > 0
 	//    0b 000 101 000                  > 0
 	//    TRUE
-	// 
+	//
 	// Thus, the file is readable and listable by the group, and
 	// therefore okay to serve.
 	return (info.Mode().Perm()&os.FileMode((permBits<<(Perms*3))) > 0)

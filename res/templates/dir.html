@@ -2,11 +2,7 @@
 <html>
 	<head>
 		<title>{{.Owner}} [Grove]</title>
-        {{if .Dark}}
-			<link rel="stylesheet" href="{{.Prefix}}/res/dark.css"/>
-        {{else}}
-        	<link rel="stylesheet" href="{{.Prefix}}/res/light.css"/>
-        {{end}}
+		<link rel="stylesheet" href="{{.Prefix}}/res/{{.Theme}}.css"/>
 	</head>
 	<body>
     

@@ -2,11 +2,7 @@
 <html>
 	<head>
 		<title>{{.Owner}} [Grove]</title>
-		{{if .Dark}}
-			<link rel="stylesheet" href="{{.Prefix}}/res/dark.css"/>
-        {{else}}
-        	<link rel="stylesheet" href="{{.Prefix}}/res/light.css"/>
-        {{end}}
+		<link rel="stylesheet" href="{{.Prefix}}/res/{{.Theme}}.css"/>
         <script type="text/javascript" src="{{.Prefix}}/res/highlight.js"></script>
 		<script type="text/javascript">
 		hljs.tabReplace = '    ';

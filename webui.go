@@ -33,7 +33,7 @@ type gitPage struct {
 	Version    string
 	Query      template.URL
 	Status     string
-	Dark       bool
+	Theme      string
 }
 
 type gitLog struct {
@@ -91,8 +91,8 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		Owner:      gitVarUser(),
 		InRepoPath: path.Join(path.Base(repository), file),
 		Path:       repository[len(handler.Dir):] + "/", // Path without in-git
-		Dark:       *fDark,
 		Version:    Version,
+		Theme:      *fTheme,
 	}
 	if len(*fHost) > 0 {
 		pageinfo.RootLink = "http://" + *fHost
@@ -201,20 +201,21 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 // connection using http.StatusText().
 func Error(w http.ResponseWriter, status int) {
 	pageinfo := &gitPage{
-			Owner:      gitVarUser(),
-			Status:     strconv.Itoa(status)+" - "+http.StatusText(status),
-			Version:    Version,
-		}
-		
+		Owner:   gitVarUser(),
+		Status:  strconv.Itoa(status) + " - " + http.StatusText(status),
+		Version: Version,
+		Theme:   *fTheme,
+	}
+
 	t.ExecuteTemplate(w, "error.html", pageinfo)
 }
 
 func MakeAboutPage(w http.ResponseWriter) {
 	pageinfo := &gitPage{
-		Owner:      gitVarUser(),
-		Version:    Version,
+		Owner:   gitVarUser(),
+		Version: Version,
 	}
-	
+
 	t.ExecuteTemplate(w, "about.html", pageinfo)
 }
 
@@ -412,7 +413,7 @@ func MakeTreePage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref, file st
 	pageinfo.List = make([]*dirList, len(files))
 	for n, f := range files {
 		d := &dirList{
-			URL:  template.URL(f)+pageinfo.Query,
+			URL:  template.URL(f) + pageinfo.Query,
 			Name: f,
 		}
 

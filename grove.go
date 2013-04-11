@@ -18,6 +18,7 @@ var (
 	Port      = "8860"             // Port to bind to
 	Resources = "/usr/share/grove" // Directory to store resources in
 	BaseURL   = ""                 // Hostname and prefix to use in links
+	Theme     = "light"            // Default CSS to use
 
 	LogLevel log.LogLevel = log.INFO // Default log level
 )
@@ -39,9 +40,9 @@ var (
 	fPort = flag.String("port", Port, "port to listen on")
 	fRes  = flag.String("res", Resources, "resources directory")
 	fHost = flag.String("host", BaseURL, "hostname and prefix to use in links")
-	
-	fWeb  = flag.Bool("web", true, "enable web browsing")
-	fDark = flag.Bool("dark", false, "enable dark theme")
+
+	fWeb   = flag.Bool("web", true, "enable web browsing")
+	fTheme = flag.String("theme", Theme, "use a particular theme")
 
 	fShowVersion  = flag.Bool("version", false, "print major version and exit")
 	fShowFVersion = flag.Bool("version-full", false, "print full version and exit")
