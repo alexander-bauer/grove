@@ -39,7 +39,9 @@ var (
 	fPort = flag.String("port", Port, "port to listen on")
 	fRes  = flag.String("res", Resources, "resources directory")
 	fHost = flag.String("host", BaseURL, "hostname and prefix to use in links")
-	fWeb = flag.Bool("web", true, "enable web browsing")
+	
+	fWeb  = flag.Bool("web", true, "enable web browsing")
+	fDark = flag.Bool("dark", false, "enable dark theme")
 
 	fShowVersion  = flag.Bool("version", false, "print major version and exit")
 	fShowFVersion = flag.Bool("version-full", false, "print full version and exit")
