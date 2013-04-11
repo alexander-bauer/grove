@@ -20,9 +20,6 @@ var (
 	// 1: readable by group
 	// 2: readable
 
-	prefix       string // Path to prepend to links
-	prefixLength int    // Number of characters to strip from requests
-
 	handler *cgi.Handler       // git-http-backend CGI handler
 	t       *template.Template // Template containing all webui templates
 
@@ -31,6 +28,8 @@ var (
 		"gitpage.html", "tree.html",
 		"error.html", "about.html",
 	}
+
+	prefixLength int // Length of *fPrefix
 )
 
 type gzipResponseWriter struct {
@@ -52,13 +51,6 @@ func Serve(repodir string) {
 		Logger: &l.Logger,
 	}
 
-	// Set up the stripProxy variable, but only if *fHost contains a
-	// path to strip, such as "example.com/grove"
-	if hostLength := strings.Index(*fHost, "/"); hostLength > 0 {
-		prefixLength = len(*fHost) - hostLength
-		prefix = (*fHost)[hostLength:]
-	}
-
 	var err error
 	t, err = getTemplate()
 	if err != nil {
@@ -70,17 +62,21 @@ func Serve(repodir string) {
 
 	l.Infof("Starting server on %s:%s\n", *fBind, *fPort)
 	l.Infof("Serving %q\n", repodir)
+	l.Infof("Prefix: %s", *fPrefix)
 	l.Infof("Web access: %t\n", *fWeb)
 	l.Infof("Theme: %s", *fTheme)
+
+	// Set the prefixLength variable, for easy use in the future.
+	prefixLength = len(*fPrefix)
 
 	// Set up the appropriate handlers depending on whether web
 	// browsing is enabled or not.
 
-	http.HandleFunc(prefix+"/res/"+*fTheme+".css", gzipHandler(HandleCSS))
+	http.HandleFunc(*fPrefix+"/res/"+*fTheme+".css", gzipHandler(HandleCSS))
 
 	if *fWeb {
-		http.HandleFunc(prefix+"/res/highlight.js", gzipHandler(HandleJS))
-		http.HandleFunc(prefix+"/favicon.ico", gzipHandler(HandleIcon))
+		http.HandleFunc(*fPrefix+"/res/highlight.js", gzipHandler(HandleJS))
+		http.HandleFunc(*fPrefix+"/favicon.ico", gzipHandler(HandleIcon))
 		http.HandleFunc("/", gzipHandler(HandleWeb))
 	} else {
 		http.HandleFunc("/", gzipHandler(HandleAbout))

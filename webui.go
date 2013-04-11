@@ -87,19 +87,16 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	}
 	// First, establish the template and fill out some of the gitPage.
 	pageinfo := &gitPage{
-		Prefix:     prefix,
+		Prefix:     *fPrefix,
 		Owner:      gitVarUser(),
 		InRepoPath: path.Join(path.Base(repository), file),
 		Path:       repository[len(handler.Dir):] + "/", // Path without in-git
 		Version:    Version,
 		Theme:      *fTheme,
+		RootLink:   "http://" + req.Host,
 	}
-	if len(*fHost) > 0 {
-		pageinfo.RootLink = "http://" + *fHost
-	} else {
-		pageinfo.RootLink = "http://" + req.Host
-	}
-	pageinfo.URL = prefix + strings.TrimRight(
+
+	pageinfo.URL = *fPrefix + strings.TrimRight(
 		req.URL.Path, "/") + "/" // Full URL with assured trailing slash
 
 	// If there is a query, add it to the relevant field. Otherwise,
@@ -257,10 +254,10 @@ func MakeDirPage(w http.ResponseWriter, pageinfo *gitPage, directory string) (er
 		// navigation: "/" and ".."
 		pageinfo.List = append(pageinfo.List,
 			&dirList{ // append "/"
-				URL:  template.URL(prefix + "/"),
+				URL:  template.URL(*fPrefix + "/"),
 				Name: "/",
 			}, &dirList{ // and append ".."
-				URL:  template.URL(prefix + pageinfo.Path + "../"),
+				URL:  template.URL(*fPrefix + pageinfo.Path + "../"),
 				Name: "..",
 			})
 	}
@@ -289,7 +286,7 @@ func MakeDirPage(w http.ResponseWriter, pageinfo *gitPage, directory string) (er
 		info, err := os.Stat(directory + "/" + n)
 		if err == nil && CheckPerms(info) {
 			dirbuf = append(dirbuf, &dirList{
-				URL: template.URL(prefix + pageinfo.Path +
+				URL: template.URL(*fPrefix + pageinfo.Path +
 					info.Name() + "/"),
 				Name: info.Name(),
 			})
@@ -424,7 +421,7 @@ func MakeTreePage(w http.ResponseWriter, pageinfo *gitPage, g *git, ref, file st
 		} else {
 			t = "blob"
 		}
-		d.Link = prefix + pageinfo.Path + t + "/" + path.Join(file, f) + string(pageinfo.Query)
+		d.Link = *fPrefix + pageinfo.Path + t + "/" + path.Join(file, f) + string(pageinfo.Query)
 		pageinfo.List[n] = d
 	}
 

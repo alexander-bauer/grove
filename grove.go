@@ -17,7 +17,7 @@ var (
 	Bind      = "0.0.0.0"          // Interface to bind to
 	Port      = "8860"             // Port to bind to
 	Resources = "/usr/share/grove" // Directory to store resources in
-	BaseURL   = ""                 // Hostname and prefix to use in links
+	Prefix    = ""                 // Prefix to use in links
 	Theme     = "light"            // Default CSS to use
 
 	LogLevel log.LogLevel = log.INFO // Default log level
@@ -36,10 +36,10 @@ var (
 	//	fVerbose = flag.Bool("v", false, "enable verbose output")
 	fDebug = flag.Bool("debug", false, "enable debugging output")
 
-	fBind = flag.String("bind", Bind, "interface to bind to")
-	fPort = flag.String("port", Port, "port to listen on")
-	fRes  = flag.String("res", Resources, "resources directory")
-	fHost = flag.String("host", BaseURL, "hostname and prefix to use in links")
+	fBind   = flag.String("bind", Bind, "interface to bind to")
+	fPort   = flag.String("port", Port, "port to listen on")
+	fRes    = flag.String("res", Resources, "resources directory")
+	fPrefix = flag.String("prefix", Prefix, "prefix to use in links")
 
 	fWeb   = flag.Bool("web", true, "enable web browsing")
 	fTheme = flag.String("theme", Theme, "use a particular theme")
