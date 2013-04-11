@@ -33,6 +33,7 @@ type gitPage struct {
 	Version    string
 	Query      template.URL
 	Status     string
+	Dark       bool
 }
 
 type gitLog struct {
@@ -90,6 +91,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		Owner:      gitVarUser(),
 		InRepoPath: path.Join(path.Base(repository), file),
 		Path:       repository[len(handler.Dir):] + "/", // Path without in-git
+		Dark:       *fDark,
 		Version:    Version,
 	}
 	if len(*fHost) > 0 {

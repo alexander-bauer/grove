@@ -71,9 +71,16 @@ func Serve(repodir string) {
 	l.Infof("Starting server on %s:%s\n", *fBind, *fPort)
 	l.Infof("Serving %q\n", repodir)
 	l.Infof("Web access: %t\n", *fWeb)
+	l.Infof("Dark theme: %t\n", *fDark)
 	
 	// Regardless if fWeb is true or not, host the CSS
-	http.HandleFunc(prefix+"/res/style.css", gzipHandler(HandleCSS))
+	// If the dark theme is specified, only serve that
+	// file, but if it's not, then serve the light one
+	if *fDark {
+		http.HandleFunc(prefix+"/res/dark.css", gzipHandler(HandleDarkCSS))
+	} else {
+		http.HandleFunc(prefix+"/res/light.css", gzipHandler(HandleCSS))
+	}
 	
 	if *fWeb {
 		http.HandleFunc(prefix+"/res/highlight.js", gzipHandler(HandleJS))
@@ -96,17 +103,16 @@ func HandleJS(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, path.Join(*fRes, "highlight.js"))
 }
 
-// HandleCSS uses http.ServeFile() to serve `style.css` directly from
-// the file system. Since `style.css` is not an actual file, if fDark
-// is specified as a flag that is true, it serves dark.css, but if it
-// is not specified as a flag, or it is specified as a flag  that  is
-// false, it will handle light.css.
+// HandleCSS uses http.ServeFile() to serve `light.css` directly
+// from the file system as `style.css`
 func HandleCSS(w http.ResponseWriter, req *http.Request) {
-	if *fDark {
-		http.ServeFile(w, req, path.Join(*fRes, "dark.css"))
-	} else {
-	 	http.ServeFile(w, req, path.Join(*fRes, "light.css"))
-	}
+	http.ServeFile(w, req, path.Join(*fRes, "light.css"))
+}
+
+// HandleDarkCSS uses http.ServeFile() to serve `dark.css` directly
+// from the file system as `style.css`
+func HandleDarkCSS(w http.ResponseWriter, req *http.Request) {
+	http.ServeFile(w, req, path.Join(*fRes, "dark.css"))
 }
 
 // HandleIcon uses http.ServeFile() to serve the favicon directly from
