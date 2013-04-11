@@ -3,7 +3,7 @@
 body {
 	width: 100%;
 	margin: 0;
-	background-color: #333;
+	background-color: #000;
 	font-size: 12px;
 	font-family: "Helvetica Neue", Helvetica;
 	color: #FFF;
@@ -11,7 +11,7 @@ body {
 
 a {
 	text-decoration: none;
-	color: #333;
+	color: #FFF;
 	-webkit-transition: color .2s linear;
 	-moz-transition: color .2s linear;
 	-ms-transition: color .2s linear;
@@ -78,7 +78,7 @@ td {
 	list-style: none;
 	padding: 10px;
 	border: 1px solid #CCC;
-	background-color: #FFF;
+	background-color: #000;
 	-webkit-transition: background-color .2s linear;
 	-moz-transition: background-color .2s linear;
 	-ms-transition: background-color .2s linear;
@@ -90,7 +90,7 @@ td {
 }
 
 .li-long:hover {
-	background-color: #F6F6F6;
+	background-color: #333;
 	box-shadow: none;
 }
 
@@ -113,7 +113,7 @@ ul {
 
 .bigtitle {
 	padding: 10px;
-	border-bottom: 1px solid #CCC;
+	border-bottom: 1px solid #FFF;
 }
 
 /*
@@ -134,7 +134,7 @@ ul {
 */
 
 h1, h2, h3, h4, h5, h6 {
-	color: #333;
+	color: #FFF;
 	margin: 0;
 	font-weight: 900;
 }
@@ -189,7 +189,7 @@ h6 {
 }
 
 .loggy-owner {
-	border: 1px solid #AAA;
+	border: 1px solid #FFF;
 }
 
 .loggy:hover, .loggy-owner:hover {
