@@ -214,6 +214,7 @@ func MakeAboutPage(w http.ResponseWriter) {
 	pageinfo := &gitPage{
 		Owner:   gitVarUser(),
 		Version: Version,
+		Theme:   *fTheme,
 	}
 
 	t.ExecuteTemplate(w, "about.html", pageinfo)

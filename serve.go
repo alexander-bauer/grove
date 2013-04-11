@@ -71,6 +71,7 @@ func Serve(repodir string) {
 	l.Infof("Starting server on %s:%s\n", *fBind, *fPort)
 	l.Infof("Serving %q\n", repodir)
 	l.Infof("Web access: %t\n", *fWeb)
+	l.Infof("Theme: %s", *fTheme)
 
 	// Set up the appropriate handlers depending on whether web
 	// browsing is enabled or not.
