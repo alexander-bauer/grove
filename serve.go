@@ -97,9 +97,16 @@ func HandleJS(w http.ResponseWriter, req *http.Request) {
 }
 
 // HandleCSS uses http.ServeFile() to serve `style.css` directly from
-// the file system.
+// the file system. Since `style.css` is not an actual file, if fDark
+// is specified as a flag that is true, it serves dark.css, but if it
+// is not specified as a flag, or it is specified as a flag  that  is
+// false, it will handle light.css.
 func HandleCSS(w http.ResponseWriter, req *http.Request) {
-	http.ServeFile(w, req, path.Join(*fRes, "light.css"))
+	if *fDark {
+		http.ServeFile(w, req, path.Join(*fRes, "dark.css"))
+	} else {
+	 	http.ServeFile(w, req, path.Join(*fRes, "light.css"))
+	}
 }
 
 // HandleIcon uses http.ServeFile() to serve the favicon directly from
