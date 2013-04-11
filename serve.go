@@ -71,14 +71,16 @@ func Serve(repodir string) {
 	l.Infof("Starting server on %s:%s\n", *fBind, *fPort)
 	l.Infof("Serving %q\n", repodir)
 	l.Infof("Web access: %t\n", *fWeb)
-
-	http.HandleFunc("/", gzipHandler(HandleWeb))
-
-	// If we support web browsing, then add these handlers.
+	
+	// Regardless if fWeb is true or not, host the CSS
+	http.HandleFunc(prefix+"/res/style.css", gzipHandler(HandleCSS))
+	
 	if *fWeb {
-		http.HandleFunc(prefix+"/res/style.css", gzipHandler(HandleCSS))
 		http.HandleFunc(prefix+"/res/highlight.js", gzipHandler(HandleJS))
 		http.HandleFunc(prefix+"/favicon.ico", gzipHandler(HandleIcon))
+		http.HandleFunc("/", gzipHandler(HandleWeb))
+	} else {
+		http.HandleFunc("/", gzipHandler(HandleAbout))
 	}
 
 	err = http.ListenAndServe(*fBind+":"+*fPort, nil)
@@ -104,6 +106,14 @@ func HandleCSS(w http.ResponseWriter, req *http.Request) {
 // the filesystem.
 func HandleIcon(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, path.Join(*fRes, "favicon.png"))
+}
+
+// HandleAbout makes an about page to be served regardless of the path
+// that the user is trying to look at. This func is only to be used as
+// a handler when *fWeb is true.
+func HandleAbout(w http.ResponseWriter, req *http.Request) {
+	l.Noticef("Web access denied to %q\n", req.RemoteAddr)
+	MakeAboutPage(w)
 }
 
 // HandleWeb handles general requests, such as for the web interface
@@ -150,14 +160,6 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		handler.ServeHTTP(w, req)
 		return
 	}
-	// If web browsing is disabled, refuse to serve any more.
-	if !*fWeb {
-		l.Noticef("Web access denied to %q\n", req.RemoteAddr)
-		MakeAboutPage(w)
-		return
-	}
-
-	// If web browsing is enabled:
 
 	// Figure out which directory is being requested, and check
 	// whether we're allowed to serve it.
