@@ -38,8 +38,7 @@ var (
 	fBind = flag.String("bind", Bind, "interface to bind to")
 	fPort = flag.String("port", Port, "port to listen on")
 	fRes  = flag.String("res", Resources, "resources directory")
-	fHost = flag.String("host", BaseURL,
-		"hostname and prefix to use in links")
+	fHost = flag.String("host", BaseURL, "hostname and prefix to use in links")
 	fWeb = flag.Bool("web", true, "enable web browsing")
 
 	fShowVersion  = flag.Bool("version", false, "print major version and exit")

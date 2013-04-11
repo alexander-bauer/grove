@@ -29,7 +29,7 @@ var (
 	templateFiles = []string{ // Basenames of the HTML templates
 		"dir.html", "file.html",
 		"gitpage.html", "tree.html",
-		"error.html",
+		"error.html", "about.html",
 	}
 )
 
@@ -151,10 +151,9 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	// If web browsing is disabled, refuse to serve any more.
-	// TODO: add an informative "about" page to redirect to.
 	if !*fWeb {
 		l.Noticef("Web access denied to %q\n", req.RemoteAddr)
-		Error(w, http.StatusForbidden)
+		MakeAboutPage(w)
 		return
 	}
 

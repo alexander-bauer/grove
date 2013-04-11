@@ -207,6 +207,15 @@ func Error(w http.ResponseWriter, status int) {
 	t.ExecuteTemplate(w, "error.html", pageinfo)
 }
 
+func MakeAboutPage(w http.ResponseWriter) {
+	pageinfo := &gitPage{
+		Owner:      gitVarUser(),
+		Version:    Version,
+	}
+	
+	t.ExecuteTemplate(w, "about.html", pageinfo)
+}
+
 // MakeRawPAge makes the raw page of which the files are shown as
 // completely raw files.
 func MakeRawPage(w http.ResponseWriter, file, ref string, g *git) (err error, status int) {
