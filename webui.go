@@ -352,7 +352,7 @@ func MakeGitPage(w http.ResponseWriter, pi *pageinfo, g *git, ref, file string, 
 	commits := g.Commits(ref, maxCommits)
 
 	pi.Logs = make([]*gitLog, len(commits))
-	for i, c := range commits {
+	for n, c := range commits {
 		if len(c.SHA) == 0 {
 			// If, for some reason, the commit doesn't have content,
 			// skip it.
@@ -363,7 +363,7 @@ func MakeGitPage(w http.ResponseWriter, pi *pageinfo, g *git, ref, file string, 
 			classtype = "-owner"
 		}
 
-		pi.Logs[i] = &gitLog{
+		pi.Logs[n] = &gitLog{
 			Author:    c.Author,
 			Classtype: classtype,
 			SHA:       c.SHA,
