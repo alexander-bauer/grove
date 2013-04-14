@@ -304,42 +304,38 @@ func MakeDirPage(w http.ResponseWriter, pi *pageinfo, directory string) (err err
 // MakeFilePage shows the contents of a file within a git project. It
 // writes the webpage to the provided http.ResponseWriter.
 func MakeFilePage(w http.ResponseWriter, pi *pageinfo, g *git, ref string, file string) (err error, status int) {
-	// First we need to get the content,
-	pi.Content = template.HTML(string(g.GetFile(ref, file)))
-	if len(pi.Content) == 0 {
+	// First we need to get the file's contents. Note that it will be
+	// a []byte here.
+	fileContents := g.GetFile(ref, file)
+	if len(fileContents) == 0 {
 		// If there is no content, return an error.
 		return notFound, http.StatusNotFound
 	}
-	// then we need to figure out how many lines there are.
-	lines := strings.Count(string(pi.Content), "\n")
-	// For each of the lines, we want to prepend
-	//    <div id=\"L-"+j+"\">
-	// and append
-	//    </div>
-	// Also, we want to add line numbers.
-	temp := ""
-	temp_html := ""
-	temp_content := strings.SplitAfter(string(pi.Content), "\n")
 
-	// Image support
+	var contents string
+	// If the file is an image, handle it here.
 	if extention := path.Ext(file); extention == ".png" ||
 		extention == ".jpg" ||
 		extention == ".jpeg" ||
 		extention == ".gif" {
 
-		var image []byte = []byte(pi.Content)
-		img := base64.StdEncoding.EncodeToString(image)
-		temp_html = "<img src=\"data:image/" + strings.TrimLeft(extention, ".") + ";base64," + img + "\"/>"
+		contents = "<img src=\"data:image/" + strings.TrimLeft(extention, ".") +
+			";base64," + base64.StdEncoding.EncodeToString(fileContents) +
+			"\"/>"
 	} else {
-		for j := 1; j <= lines+1; j++ {
-			temp_html += "<div id=\"L-" + strconv.Itoa(j) + "\">" +
-				html.EscapeString(temp_content[j-1]) + "</div>"
-			temp += "<a href=\"#L-" + strconv.Itoa(j) + "\" class=\"line\">" +
-				strconv.Itoa(j) + "</a><br/>"
+		// If the file is not an image, deal with the line numbers. To
+		// do this, we want to prepend `<div id="L-n">` to each line,
+		// where n is the line number, and append `</div>`.  Also, we
+		// want to add line numbers.
+		lines := strings.SplitAfter(string(fileContents), "\n")
+		println(len(lines))
+		for n, l := range lines {
+			contents += "<div id=\"L-" + strconv.Itoa(n) + "\">" +
+				html.EscapeString(l) + "</div>"
 		}
 	}
 
-	pi.Content = template.HTML(temp_html)
+	pi.Content = template.HTML(contents)
 
 	// We return 500 here because the error will only be reported
 	// if t.ExecuteTemplate() results in an error.
