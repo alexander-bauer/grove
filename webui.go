@@ -234,66 +234,56 @@ func MakeRawPage(w http.ResponseWriter, file, ref string, g *git) (err error, st
 // contained within git projects. It writes the webpage to the
 // provided http.ResponseWriter.
 func MakeDirPage(w http.ResponseWriter, pi *pageinfo, directory string) (err error, status int) {
-
-	// First, check the permissions of the file to be displayed.
-	fi, err := os.Stat(directory)
-	if err != nil {
-		return err, http.StatusNotFound
-	}
-	if !CheckPerms(fi) {
-		return forbidden, http.StatusForbidden
-	}
-	// We only get beyond this point if we are allowed to serve the
-	// directory.
-
-	// We begin the template here so that we can fill it out.
-
-	pi.List = make([]*dirList, 0, 2)
-	if pi.Path != "/" {
-		// If we're not on the root directory, we need two links for
-		// navigation: "/" and ".."
-		pi.List = append(pi.List,
-			&dirList{ // append "/"
-				URL:  template.URL(*fPrefix + "/"),
-				Name: "/",
-			}, &dirList{ // and append ".."
-				URL:  template.URL(*fPrefix + pi.Path + "../"),
-				Name: "..",
-			})
-	}
-
 	// Open the file so that it can be read.
 	f, err := os.Open(directory)
 	if err != nil {
 		return err, http.StatusNotFound
 	}
+	// If there is no error, check the permissions of the directory.
+	if fi, err := f.Stat(); err != nil && !CheckPerms(fi) {
+		return forbidden, http.StatusForbidden
+	}
 
-	// To list the directory properly, we have to do it in two
-	// steps. First, retrieve the names, then perform os.Stat() on the
-	// result. This is so that simlinks are followed. We will also
-	// check file permissions.
+	// Now get the list of directory names. This is used to size
+	// pi.List. Note that we use f.Readdirnames( rather than
+	// f.Readdir() because the latter does not follow symlinks.
 	dirnames, err := f.Readdirnames(0)
 	f.Close()
 	if err != nil {
 		return err, http.StatusInternalServerError
 	}
+
+	// We begin the list here so that we can fill it out.
+	if pi.Path != "/" {
+		// If the path is not "/", then we will be prepending "/" and
+		// ".." links.
+		pi.List = make([]*dirList, 2, len(dirnames)+2)
+		pi.List[0] = &dirList{
+			URL:  template.URL(*fPrefix + "/"),
+			Name: "/",
+		}
+		pi.List[1] = &dirList{
+			URL:  template.URL(*fPrefix + pi.Path + "../"),
+			Name: "..",
+		}
+	} else {
+		// If we are at "/", then we only need to initialize pi.List.
+		pi.List = make([]*dirList, 0, len(dirnames))
+	}
+
 	// We have the directory names; go on to calling os.Stat() and
-	// checking their permissions. If they should be listed, add
-	// them to a buffer, then append that to the dirlist at the
-	// end.
-	dirbuf := make([]*dirList, 0, len(dirnames))
-	for _, n := range dirnames {
-		info, err := os.Stat(directory + "/" + n)
+	// checking their permissions. If appropriate, add them to the
+	// list.
+	for _, name := range dirnames {
+		info, err := os.Stat(directory + "/" + name)
 		if err == nil && CheckPerms(info) {
-			dirbuf = append(dirbuf, &dirList{
+			pi.List = append(pi.List, &dirList{
 				URL: template.URL(*fPrefix + pi.Path +
 					info.Name() + "/"),
 				Name: info.Name(),
 			})
-
 		}
 	}
-	pi.List = append(pi.List, dirbuf...)
 
 	// We return 500 here because the error will only be reported
 	// if t.ExecuteTemplate() results in an error.
