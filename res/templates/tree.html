@@ -31,7 +31,7 @@
 			<ul>
             	<a href="{{.URL}}..{{.Query}}"><li class="li-long">..</li></a>
 				{{range $l := .List}}
-					<a href="{{.Link}}"><li class="li-long">{{.Name}}</li></a>
+					<a href="{{$.Prefix}}{{$.Path}}{{.Link}}{{$.Query}}"><li class="li-long">{{.Name}}</li></a>
 				{{end}}
 			</ul>
 		</div>

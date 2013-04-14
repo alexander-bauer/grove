@@ -410,19 +410,16 @@ func MakeTreePage(w http.ResponseWriter, pi *pageinfo, g *git, ref, file string)
 
 	pi.List = make([]*dirList, len(files))
 	for n, f := range files {
-		d := &dirList{
-			URL:  template.URL(f) + pi.Query,
-			Name: f,
-		}
-
 		var t string
 		if strings.HasSuffix(f, "/") {
 			t = "tree"
 		} else {
 			t = "blob"
 		}
-		d.Link = *fPrefix + pi.Path + t + "/" + path.Join(file, f) + string(pi.Query)
-		pi.List[n] = d
+		pi.List[n] = &dirList{
+			Name: f,
+			Link: t + "/" + path.Join(file, f),
+		}
 	}
 
 	// We return 500 here because the error will only be reported
