@@ -1,0 +1,59 @@
+{
+	"ProjectName": "grove",
+	"ProjectOwners": [
+		{
+			"Name": "Alexander Bauer",
+			"Email": "sasha@crofter.org"
+		},
+		{
+			"Name": "Luke Evers",
+			"Email": "me@lukevers.com"
+		}
+	],
+	"Maintainer": {
+		"Name": "Alexander Bauer",
+		"Email": "sasha@crofter.org"
+	},
+	"Description": "git self-hosted repository browser",
+	"Homepage": "https://github.com/SashaCrofter/grove",
+	"InitScript": "grove.sh",
+	"Install": [
+		"grove usr/bin",
+		"res/* usr/share/grove"
+	],
+	"Docs": [
+		"README.md"
+	],
+	"ManPages": [
+		"docs/grove.1"
+	],
+	"Copyright": {
+		"Name": "grove",
+		"License": "GPL-3+",
+		"Files": [
+			{
+				"Glob": "*",
+				"License": "GPL-3+",
+				"Year": 2013,
+				"Owner": {
+					"Name": "Alexander Bauer",
+					"Email": "sasha@crofter.org"
+				}
+			}
+		]
+	},
+	"BuildDepends": [
+		"golang-go"
+	],
+	"Depends": [
+		"libc6", "git (>= 1.6.6)"
+	],
+	"Recommends": null,
+	"Suggests": null,
+	"Conflicts": null,
+	"Provides": null,
+	"Replaces": null,
+	"Section": "devel",
+	"Priority": "optional",
+	"Architecture": "any"
+}
