@@ -22,6 +22,7 @@ type pageinfo struct {
 	URL        string
 	GitDir     string
 	Branch     string
+	Branches   []string
 	RootLink   string
 	TagNum     string
 	Path       string
@@ -362,6 +363,9 @@ func MakeGitPage(w http.ResponseWriter, pi *pageinfo, g *git, ref, file string, 
 			Body:      template.HTML(strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1)),
 		}
 	}
+
+	// Grab the list of branches.
+	pi.Branches = g.Branches()
 
 	if len(file) == 0 {
 		// Load the README if it can be located. To locate, go through
