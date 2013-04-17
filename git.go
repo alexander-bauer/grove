@@ -48,6 +48,22 @@ func (g *git) Branch(ref string) (branch string) {
 	return strings.TrimRight(branch, "\n")
 }
 
+func (g *git) Branches() (branches []string) {
+	// Retrieve a list of branches separated by "\n" and indented by
+	// either two spaces or "* ".
+	branchList, _ := g.execute("branch", "--no-color")
+	// Prepare the slice by counting the number of newlines, including
+	// the final one.
+	branches = make([]string, strings.Count(branchList, "\n"))
+	for n, b := range strings.Split(
+		strings.TrimRight(branchList, "\n"), "\n") {
+		// The call to strings.TrimLeft() will remove any number of
+		// leading spaces and asterisks.
+		branches[n] = strings.TrimLeft(b, "* ")
+	}
+	return
+}
+
 // GetBranchDescription uses git config to retrieve the branch
 // description from the repository configuration file, if it's set. It
 // will attempt to parse branch names from refs like
