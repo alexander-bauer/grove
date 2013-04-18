@@ -103,3 +103,22 @@ func BenchmarkMakeRaw(b *testing.B) {
 		MakeRawPage(w, "1Kb.bin", "HEAD", g)
 	}
 }
+
+func BenchmarkMakeFile(b *testing.B) {
+	b.StopTimer()
+	g, err := prepareRepository()
+	if err != nil {
+		b.Fatalf("FAiled to prepare repository: %s", err)
+		return
+	}
+	defer removeTempDir()
+
+	w := LogResponseWriter{
+		Logf: b.Logf,
+	}
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		MakeFilePage(w, nil, g, "HEAD", "1kb.bin")
+	}
+}
