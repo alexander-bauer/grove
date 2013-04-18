@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -100,7 +101,11 @@ func BenchmarkMakeRaw(b *testing.B) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		MakeRawPage(w, "1Kb.bin", "HEAD", g)
+		err, _ = MakeRawPage(w, "1Kb.bin", "HEAD", g)
+		if err != nil {
+			b.Fatal(err)
+			return
+		}
 	}
 }
 
@@ -108,10 +113,16 @@ func BenchmarkMakeFile(b *testing.B) {
 	b.StopTimer()
 	g, err := prepareRepository()
 	if err != nil {
-		b.Fatalf("FAiled to prepare repository: %s", err)
+		b.Fatalf("Failed to prepare repository: %s", err)
 		return
 	}
 	defer removeTempDir()
+
+	t, err = template.ParseFiles("res/templates/file.html")
+	if err != nil {
+		b.Fatalf("Failed to load template: %s", err)
+		return
+	}
 
 	w := LogResponseWriter{
 		Logf: b.Logf,
@@ -119,6 +130,10 @@ func BenchmarkMakeFile(b *testing.B) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		MakeFilePage(w, nil, g, "HEAD", "1kb.bin")
+		err, _ = MakeFilePage(w, &pageinfo{}, g, "HEAD", "1Kb.bin")
+		if err != nil {
+			b.Fatal(err)
+			return
+		}
 	}
 }
