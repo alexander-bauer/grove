@@ -11,6 +11,7 @@ import (
 type Commit struct {
 	SHA     string // Full SHA of the commit
 	Author  string // Author of the commit
+	Email   string // Email attached to the commit
 	Time    string // Relative time of the commit
 	Subject string // Subject of the commit
 	Body    string // Body of the commit
@@ -18,7 +19,7 @@ type Commit struct {
 
 const (
 	gitHttpBackend = "git-http-backend"
-	gitLogFmt      = "%H%n%cr%n%an%n%s%n%b"
+	gitLogFmt      = "%H%n%cr%n%an%n%ae%n%s%n%b"
 	gitLogSep      = "----GROVE-LOG-SEPARATOR----"
 )
 
@@ -41,6 +42,13 @@ func gitVarUser() (user string) {
 	user, _ = g.execute("config", "--global", "user.name")
 	user = strings.TrimRight(user, "\n")
 	return
+}
+
+func (g *git) Email() (email string) {
+	// Use 'git config user.email to retrieve the variable. Note that
+	// it does not use '--global' so it can vary by repository.
+	email, _ = g.execute("config", "user.email")
+	return strings.TrimRight(email, "\n")
 }
 
 func (g *git) Branch(ref string) (branch string) {
@@ -180,6 +188,10 @@ func gitParseCommit(log []string) (commit *Commit) {
 		}
 		if len(commit.Author) == 0 {
 			commit.Author = l
+			continue
+		}
+		if len(commit.Email) == 0 {
+			commit.Email = l
 			continue
 		}
 		if len(commit.Subject) == 0 {

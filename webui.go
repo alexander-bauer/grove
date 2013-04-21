@@ -319,7 +319,6 @@ func MakeFilePage(w http.ResponseWriter, pi *pageinfo, g *git, ref string, file 
 		// where n is the line number, and append `</div>`.  Also, we
 		// want to add line numbers.
 		lines := strings.SplitAfter(string(fileContents), "\n")
-		println(len(lines))
 		for n, l := range lines {
 			contents += "<div id=\"L-" + strconv.Itoa(n) + "\">" +
 				html.EscapeString(l) + "</div>"
@@ -339,6 +338,9 @@ func MakeFilePage(w http.ResponseWriter, pi *pageinfo, g *git, ref string, file 
 // git reposiory, including the README and a directory listing. It
 // writes the webpage to the provided http.ResponseWriter.
 func MakeGitPage(w http.ResponseWriter, pi *pageinfo, g *git, ref, file string, maxCommits int) (err error, status int) {
+	// Get the Grove owner's email from the repository configuration.
+	ownerEmail := g.Email()
+
 	// Parse the log to retrieve the commits.
 	commits := g.Commits(ref, maxCommits)
 
@@ -350,7 +352,7 @@ func MakeGitPage(w http.ResponseWriter, pi *pageinfo, g *git, ref, file string, 
 			continue
 		}
 		var classtype string
-		if c.Author == pi.Owner {
+		if c.Email == ownerEmail {
 			classtype = "-owner"
 		}
 
