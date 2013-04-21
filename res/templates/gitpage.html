@@ -52,10 +52,10 @@
         </div>
 			<div class="log">
                 {{range $l := .Logs}}
-                <a href="#{{$l.SHA}}"><div class="loggy{{$l.Classtype}}" id="{{$l.SHA}}">
+                <a href="#{{$l.SHA}}"><div class="loggy{{if $l.IsOwner}}-owner{{end}}" id="{{$l.SHA}}">
                  <div class="logtitle">
                 {{$l.Author}} &mdash;
-                <span class="SHA{{$l.Classtype}}">
+                <span class="SHA{{if $l.IsOwner}}-owner{{end}}">
                 {{$l.SHA}}
                 </span> &mdash;
                 {{$l.Time}} <br/><br/>

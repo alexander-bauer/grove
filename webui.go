@@ -38,12 +38,12 @@ type pageinfo struct {
 }
 
 type gitLog struct {
-	Author    string
-	Classtype string
-	SHA       string
-	Time      string
-	Subject   template.HTML
-	Body      template.HTML
+	Author  string
+	SHA     string
+	Time    string
+	Subject template.HTML
+	Body    template.HTML
+	IsOwner bool
 }
 
 type dirList struct {
@@ -351,18 +351,14 @@ func MakeGitPage(w http.ResponseWriter, pi *pageinfo, g *git, ref, file string, 
 			// skip it.
 			continue
 		}
-		var classtype string
-		if c.Email == ownerEmail {
-			classtype = "-owner"
-		}
 
 		pi.Logs[n] = &gitLog{
-			Author:    c.Author,
-			Classtype: classtype,
-			SHA:       c.SHA,
-			Time:      c.Time,
-			Subject:   template.HTML(html.EscapeString(c.Subject)),
-			Body:      template.HTML(strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1)),
+			Author:  c.Author,
+			SHA:     c.SHA,
+			Time:    c.Time,
+			Subject: template.HTML(html.EscapeString(c.Subject)),
+			Body:    template.HTML(strings.Replace(html.EscapeString(c.Body), "\n", "<br/>", -1)),
+			IsOwner: c.Email == ownerEmail,
 		}
 	}
 
