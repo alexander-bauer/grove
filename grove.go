@@ -25,6 +25,8 @@ var (
 
 var (
 	l *log.Logger
+
+	user string // git username
 )
 
 const (

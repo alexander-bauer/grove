@@ -89,7 +89,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	// First, establish the template and fill out some of the pageinfo.
 	pi := &pageinfo{
 		Prefix:     *fPrefix,
-		Owner:      gitVarUser(),
+		Owner:      user,
 		InRepoPath: path.Join(path.Base(repository), file),
 		Path:       repository[len(handler.Dir):] + "/", // Path without in-git
 		Version:    Version,
@@ -199,7 +199,7 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 // connection using http.StatusText().
 func Error(w http.ResponseWriter, status int) {
 	pi := &pageinfo{
-		Owner:   gitVarUser(),
+		Owner:   user,
 		Status:  strconv.Itoa(status) + " - " + http.StatusText(status),
 		Version: Version,
 		Theme:   *fTheme,
@@ -210,7 +210,7 @@ func Error(w http.ResponseWriter, status int) {
 
 func MakeAboutPage(w http.ResponseWriter) {
 	pi := &pageinfo{
-		Owner:   gitVarUser(),
+		Owner:   user,
 		Version: Version,
 		Theme:   *fTheme,
 	}

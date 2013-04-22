@@ -50,6 +50,7 @@ func Serve(repodir string) {
 			"GIT_HTTP_EXPORT_ALL=TRUE"},
 		Logger: &l.Logger,
 	}
+	user = (&git{repodir}).User()
 
 	var err error
 	t, err = getTemplate()
@@ -62,6 +63,7 @@ func Serve(repodir string) {
 
 	l.Infof("Starting server on %s:%s\n", *fBind, *fPort)
 	l.Infof("Serving %q\n", repodir)
+	l.Infof("Username: %s\n", user)
 	l.Infof("Prefix: %s", *fPrefix)
 	l.Infof("Web access: %t\n", *fWeb)
 	l.Infof("Theme: %s", *fTheme)

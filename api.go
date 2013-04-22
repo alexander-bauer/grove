@@ -74,7 +74,7 @@ func ServeAPI(w http.ResponseWriter, req *http.Request, g *git, ref string, maxC
 
 	// If an encoding was provided, prepare a response.
 	r := &APIResponse{
-		GroveOwner:  gitVarUser(),
+		GroveOwner:  user,
 		HEAD:        g.SHA("HEAD"),
 		Description: g.GetBranchDescription(ref),
 		Commits:     g.Commits(ref, maxCommits),

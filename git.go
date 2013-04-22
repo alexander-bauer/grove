@@ -36,12 +36,10 @@ func gitVarExecPath() (execPath string) {
 	return
 }
 
-func gitVarUser() (user string) {
+func (g *git) User() (user string) {
 	// Use 'git config --global user.name to retrieve the variable.
-	g := &git{}
 	user, _ = g.execute("config", "--global", "user.name")
-	user = strings.TrimRight(user, "\n")
-	return
+	return strings.TrimRight(user, "\n")
 }
 
 func (g *git) Email() (email string) {
