@@ -164,9 +164,11 @@ func HandleWeb(w http.ResponseWriter, req *http.Request) {
 
 	// Figure out which directory is being requested, and check
 	// whether we're allowed to serve it.
-	repository, file, isFile, status := SplitRepository(handler.Dir, p)
+
+	repository, file, g, isDir, status := AnalyzePath(handler.Dir,
+		p, req.Form.Get("ref"))
 	if status == http.StatusOK {
-		MakePage(w, req, repository, file, isFile)
+		MakePage(w, req, g, repository, file, isDir)
 	}
 }
 
@@ -195,90 +197,91 @@ func (w gzipResponseWriter) Write(b []byte) (int, error) {
 	return w.Writer.Write(b)
 }
 
-// SplitRepository checks each directory in the path (p), traversing
-// upward, until it finds a .git folder. If the parent directory of
-// this .git directory is not permissable to serve (globally readable
-// and listable, by default), or a .git directory could not be found,
-// or the path is invalid, this function will return an appropriate
-// exit code.  This function will only recurse upward until it reaches
-// the path indicated by toplevel.
-func SplitRepository(toplevel, p string) (repository, file string, isFile bool, status int) {
-	path.Clean(toplevel)
-	// Set the repository to the path for the moment, to simplify the
-	// loop
-	repository = p
-	i := 0
+// AnalyzePath uses the provided information and appropriate git calls
+// to split apart the given path "p" into the containing repository,
+// file within that repository, whether that file is a directory, and
+// the appropriate http status. It will return g if "p" points to a
+// path within a git repository, such that g.Path is the top level of
+// that repository, and nil if it does not.
+func AnalyzePath(toplevel, p, ref string) (repository, file string, g *git, isDir bool, status int) {
+	toplevel, p = path.Clean(toplevel), path.Clean(p)
+
+	// l will be the length of the path which represents the
+	// repository level which is being checked.
+	l := len(p)
+
+	g = &git{}
+	// Loop through until the repository is set.
 	for {
-		// We behave differently on the first run through, so only do
-		// this step if i is not 0.
-		if i != 0 {
-			// Traverse upward.
-			file = path.Join(path.Base(repository), file)
-			repository = path.Dir(repository)
+		g.Path = p[:l]
+		repository = g.TopLevel()
+
+		// If we encounter an error, such as the file not existing,
+		// then we modify l to move the path up one directory, and
+		// then, if the next path is appropriate, continue. If it is
+		// not, go on to the next check and allow it to return.
+		if len(repository) == 0 && l > len(toplevel) {
+			l = strings.LastIndex(g.Path, "/")
+			if l > len(toplevel) { // implies l != -1
+				continue
+			}
 		}
 
-		// Check if we shouldn't continue.
-		if repository == toplevel {
-			repository = path.Join(repository, file)
-			file = ""
+		// If we do not encounter an error, but find the lowest level
+		// repository which we are in to be above the top level, then
+		// we must behave as if we did not find one.
+		if l < len(toplevel) || len(repository) < len(toplevel) {
+			repository = p
+			g = nil
 			status = http.StatusOK
 			return
 		}
 
-		// Check if the path has a .git folder.
-		_, err := os.Stat(repository + "/.git")
-		if err != nil {
-			// If not, traverse up and start again.
-			i++
-			continue
-		}
-
-		// If the .git directory was discovered, then we now have to
-		// check if we are allowed to serve the parent directory.
-		fi, err := os.Stat(repository)
-		if err != nil {
-			// An error at this point would imply that the server is
-			// in error.
-			status = http.StatusInternalServerError
-			return
-		}
-
-		// If all is well, check if it's servable.
-		if !CheckPerms(fi) {
-			// If not, 403 Forbidden.
-			status = http.StatusForbidden
-			return
-		}
-
-		// If the file is prefixed with /blob/, then treat it as a
-		// file. If it has /tree/, then treat it as a directory. In
-		// either case, chop off the prefix.  If it has neither, 404.
-		if len(file) != 0 {
-			// The trailing slash trickery involves avoiding runtime
-			// errors and splitting the strings sanely.
-			file += "/"
-			if strings.HasPrefix(file, "blob/") {
-				file = strings.SplitAfterN(file, "/", 2)[1]
-				isFile = true
-				file = strings.TrimRight(file, "/")
-			} else if strings.HasPrefix(file, "tree/") {
-				// Remove the /tree/, but be sure that, if the file is
-				// blank, to make it "/" instead.
-				file = strings.SplitAfterN(file, "/", 2)[1]
-				if len(file) == 0 {
-					file = "./"
-				}
-			} else if strings.HasPrefix(file, "raw/") {
-				file = strings.SplitAfterN(file, "/", 2)[1]
-				isFile = true
-				file = strings.TrimRight(file, "/")
-			} else {
-				status = http.StatusNotFound
+		if len(repository) > 0 && len(repository) > len(toplevel) {
+			// If the repository was discovered, then we now have to
+			// check if we are allowed to serve the parent directory.
+			fi, err := os.Stat(repository)
+			if err != nil {
+				// An error at this point would imply that the server
+				// is in error.
+				status = http.StatusInternalServerError
 				return
 			}
+
+			// If all is well, check if it's servable.
+			if !CheckPerms(fi) {
+				// If not, 403 Forbidden.
+				status = http.StatusForbidden
+				return
+			}
+
+			// If it can be served, split off the rest of the path and
+			// set the file to be returned.
+			file = strings.TrimLeft(p[len(repository):], "/")
+			println(file)
+
+			// Next, check the status of the file. We must sanitize
+			// the ref, if possible.
+			if !g.RefExists(ref) {
+				ref = "HEAD"
+			}
+
+			isDir, err = g.IsDir(ref, file)
+			if err != nil {
+				// If there is an error at this point, the file
+				// probably does not exist at the given ref.
+				status = http.StatusNotFound
+			}
+
+			// Set up g so that it can used properly. Note that it is
+			// *not* reallocated from earlier.
+			g.Path = repository
+
+			// If everything up to this point has been executed
+			// properly, we can set the status as OK and return.
+			status = http.StatusOK
+			return
 		}
-		status = http.StatusOK
-		return
 	}
 	// Something is very wrong if we get here.
 	status = http.StatusInternalServerError

@@ -67,25 +67,9 @@ var (
 		http.StatusText(http.StatusNotFound))
 )
 
-// Check for a .git directory in the repository argument. If one does
-// not exist, we will generate a directory listing, rather than a
-// repository view.
-func isGit(repository string) (git bool, gitDir string) {
-	_, err := os.Stat(path.Join(repository, ".git"))
-	if err == nil {
-		// Note that err EQUALS nil
-		git = true
-		gitDir = ".git"
-	}
-	return
-}
-
 // MakePage acts as a multiplexer for the various complex http
 // functions. It handles logging and web error reporting.
-func MakePage(w http.ResponseWriter, req *http.Request, repository string, file string, isFile bool) {
-	g := &git{
-		Path: repository,
-	}
+func MakePage(w http.ResponseWriter, req *http.Request, g *git, repository string, file string, isDir bool) {
 	// First, establish the template and fill out some of the pageinfo.
 	pi := &pageinfo{
 		Prefix:     *fPrefix,
@@ -110,8 +94,8 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 	// so, parse some of the possible http forms.
 	var ref string
 	var maxCommits int
-	git, gitDir := isGit(repository)
-	if git {
+	var raw bool
+	if g != nil {
 		// ref is the git commit reference. If the form is not submitted,
 		// (or is invalid), it is set to "HEAD".
 		ref = req.FormValue("ref")
@@ -134,6 +118,12 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 			maxCommits = 10
 		}
 
+		// raw is whether or not to display the file (if serving a
+		// file) in the raw form.
+		if !isDir {
+			_, raw = req.Form["raw"]
+		}
+
 		// Now, switch to using the API if it is requested. We access
 		// req.Form directly because the form can be empty. (In this
 		// case, we would fall back to checking the Accept field in
@@ -154,33 +144,36 @@ func MakePage(w http.ResponseWriter, req *http.Request, repository string, file 
 		pi.TagNum = strconv.Itoa(len(g.Tags()))
 		pi.CommitNum = strconv.Itoa(g.TotalCommits())
 		pi.SHA = g.SHA(ref)
-		pi.GitDir = gitDir
+		pi.GitDir = ".git" // This may be worth removing.
 	}
 
-	// TODO: all of the below case blocks may misbehave if the URL
-	// contains a keyword.
 	var err error
 	var status int
 	switch {
-	case !git:
+	case g == nil:
 		// This will catch all non-git cases, eliminating the need for
 		// them below.
 		err, status = MakeDirPage(w, pi, repository)
-	case strings.Contains(req.URL.Path, "/tree/"):
+	case isDir:
 		// This will catch cases needing to serve directories within
 		// git repositories.
 		err, status = MakeTreePage(w, pi, g, ref, file)
-	case strings.Contains(req.URL.Path, "/blob/"):
+	case !isDir && !raw:
 		// This will catch cases needing to serve files.
 		err, status = MakeFilePage(w, pi, g, ref, file)
-	case strings.Contains(req.URL.Path, "/raw/"):
+	case !isDir && raw:
 		// This will catch cases needing to serve files directly.
 		err, status = MakeRawPage(w, file, ref, g)
-	case git:
+	case g != nil:
 		// This will catch cases serving the main page of a repository
 		// directory. This needs to be last because the above cases
 		// for "tree" and "blob" will also have `git` as true.
+		println("here2")
 		err, status = MakeGitPage(w, pi, g, ref, file, maxCommits)
+	default:
+		// If this case is reached, report an error page.
+		err = errors.New("reached default case")
+		status = http.StatusInternalServerError
 	}
 
 	// If an error was encountered, ensure that an error page is
@@ -398,15 +391,9 @@ func MakeTreePage(w http.ResponseWriter, pi *pageinfo, g *git, ref, file string)
 
 	pi.List = make([]*dirList, len(files))
 	for n, f := range files {
-		var t string
-		if strings.HasSuffix(f, "/") {
-			t = "tree"
-		} else {
-			t = "blob"
-		}
 		pi.List[n] = &dirList{
 			Name: f,
-			Link: t + "/" + path.Join(file, f),
+			Link: path.Join(file, f),
 		}
 	}
 
