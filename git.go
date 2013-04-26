@@ -70,6 +70,29 @@ func (g *git) Branches() (branches []string) {
 	return
 }
 
+// TopLevel invokes git rev-parse in order to determine the top level
+// of current git repository. If it is not called from a git
+// repository, it will return a blank string.
+func (g *git) TopLevel() (toplevel string) {
+	toplevel, _ = g.execute("rev-parse", "--show-toplevel")
+	return strings.TrimRight(toplevel, "\n")
+}
+
+// Prefix invokes git rev-parse in order to retrieve the
+// relative-to-the-toplevel path of the current Path. If it is not
+// called from a git repository, it will return a blank string.
+func (g *git) Prefix() (prefix string) {
+	prefix, _ = g.execute("rev-parse", "--show-prefix")
+	return strings.TrimRight(prefix, "\n")
+}
+
+// IsDir invokes git cat-file to determine whether the given path is a
+// file or directory within a git repository.
+func (g *git) IsDir(ref, file string) (isDir bool, err error) {
+	output, err := g.execute("cat-file", "-t", ref+":"+file)
+	return (output == "tree\n"), err
+}
+
 // GetBranchDescription uses git config to retrieve the branch
 // description from the repository configuration file, if it's set. It
 // will attempt to parse branch names from refs like
