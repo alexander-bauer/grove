@@ -20,10 +20,10 @@ fi
 
 # Attempt to locate the directory from which to serve files if not set
 if [ -z "$SRC" ]; then
-	if [ -e ~/src ]; then
-		SRC=~/src
-	elif [ -e ~/dev ]; then
+	if [ -e ~/dev ]; then
 		SRC=~/dev
+	elif [ -e ~/src ]; then
+		SRC=~/src
 	elif [ $(git status >> /dev/null; echo $?) == 0 ]; then
 		# If the working directory is a git repository, use that. 
 		SRC=$(pwd)
