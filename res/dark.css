@@ -355,32 +355,3 @@ h6 {
 	margin: auto;
 	width: 60%;
 }
-
-/*
-==============================
-           CODE
-==============================
-*/
-
-pre {
-	background-color: #000;
-	border: 1px solid #CCC;
-	padding: 5px;
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
-}
-
-code {
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
-	border: 1px solid #333;
-	background-color: #000;
-	color: #CCC;
-}
-
-pre code {
-	border: none;
-	color: #333;
-}
