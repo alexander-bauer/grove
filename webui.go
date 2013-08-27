@@ -307,15 +307,7 @@ func MakeFilePage(w http.ResponseWriter, pi *pageinfo, g *git, ref string, file 
 			";base64," + base64.StdEncoding.EncodeToString(fileContents) +
 			"\"/>"
 	} else {
-		// If the file is not an image, deal with the line numbers. To
-		// do this, we want to prepend `<div id="L-n">` to each line,
-		// where n is the line number, and append `</div>`.  Also, we
-		// want to add line numbers.
-		lines := strings.SplitAfter(string(fileContents), "\n")
-		for n, l := range lines {
-			contents += "<div id=\"L-" + strconv.Itoa(n) + "\">" +
-				html.EscapeString(l) + "</div>"
-		}
+		contents += html.EscapeString(string(fileContents))
 	}
 
 	pi.Content = template.HTML(contents)
