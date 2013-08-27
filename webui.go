@@ -307,7 +307,10 @@ func MakeFilePage(w http.ResponseWriter, pi *pageinfo, g *git, ref string, file 
 			";base64," + base64.StdEncoding.EncodeToString(fileContents) +
 			"\"/>"
 	} else {
+		lang := strings.Split(file, ".")
+		contents += "<code data-language=\""+lang[len(lang)-1]+"\">"
 		contents += html.EscapeString(string(fileContents))
+		contents += "</code>"
 	}
 
 	pi.Content = template.HTML(contents)

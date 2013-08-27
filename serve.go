@@ -73,14 +73,11 @@ func Serve(repodir string) {
 
 	// Set up the appropriate handlers depending on whether web
 	// browsing is enabled or not.
-
-	http.HandleFunc(*fPrefix+"/res/"+*fTheme+".css", gzipHandler(HandleCSS))
-
+	http.HandleFunc(*fPrefix+"/res/", HandleRes)
+	
 	if *fWeb {
-		http.HandleFunc(*fPrefix+"/res/highlight.js", gzipHandler(HandleJS))
-		http.HandleFunc(*fPrefix+"/favicon.ico", gzipHandler(HandleIcon))
 		http.HandleFunc("/", gzipHandler(HandleWeb))
-	} else {
+ 	} else {
 		http.HandleFunc("/", gzipHandler(HandleAbout))
 	}
 
@@ -91,22 +88,9 @@ func Serve(repodir string) {
 	return
 }
 
-// HandleJS uses http.ServeFile() to serve `highlight.js` directly
-// from the file system.
-func HandleJS(w http.ResponseWriter, req *http.Request) {
-	http.ServeFile(w, req, path.Join(*fRes, "highlight.js"))
-}
-
-// HandleCSS uses http.ServeFile() to serve *fTheme.css directly from
-// the file system as `style.css`
-func HandleCSS(w http.ResponseWriter, req *http.Request) {
-	http.ServeFile(w, req, path.Join(*fRes, *fTheme+".css"))
-}
-
-// HandleIcon uses http.ServeFile() to serve the favicon directly from
-// the filesystem.
-func HandleIcon(w http.ResponseWriter, req *http.Request) {
-	http.ServeFile(w, req, path.Join(*fRes, "favicon.png"))
+func HandleRes (w http.ResponseWriter, req *http.Request) {
+	s := strings.Split(req.URL.Path, "/")
+	http.ServeFile(w, req, path.Join(*fPrefix, *fRes, s[len(s)-1]))
 }
 
 // HandleAbout makes an about page to be served regardless of the path
