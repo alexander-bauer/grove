@@ -110,7 +110,8 @@ func main() {
 
 	// Check to make sure that the CSS style is available, and exit if
 	// not.
-	fi, err := os.Stat(path.Join(*fRes, *fTheme+".css"))
+	
+	fi, err := os.Stat(path.Join(*fRes, "/themes/",*fTheme+".css"))
 	if err != nil {
 		l.Fatalf("Theme %q could not be loaded: %s", *fTheme, err)
 	} else if fi.IsDir() == true {

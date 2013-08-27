@@ -88,9 +88,16 @@ func Serve(repodir string) {
 	return
 }
 
+// HandleRes handles everything inside of the resources directory
+// (which is res/ by default). In order to take into consideration the
+// fact that it might not be always just in res/ we have to do some go
+// magic.
 func HandleRes (w http.ResponseWriter, req *http.Request) {
 	s := strings.Split(req.URL.Path, "/")
-	http.ServeFile(w, req, path.Join(*fPrefix, *fRes, s[len(s)-1]))
+	s[0] = ""
+	s[1] = ""
+	p := strings.Join(s, "/")
+	http.ServeFile(w, req, path.Join(*fPrefix, *fRes, p))
 }
 
 // HandleAbout makes an about page to be served regardless of the path
