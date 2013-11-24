@@ -1,4 +1,4 @@
-![Logo by Dansup, many many thanks :D](https://raw.github.com/SashaCrofter/grove/development/res/logo.png)
+![Logo by Dansup, many many thanks :D](https://raw.github.com/SashaCrofter/grove/development/res/img/logo.png)
 
 # Grove
 ## Git self-hosting for developers
